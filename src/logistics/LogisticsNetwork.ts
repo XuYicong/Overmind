@@ -26,10 +26,11 @@ export type LogisticsTarget =
 	| StructureNuker
 	| StructurePowerSpawn
 	| Tombstone
+	| Ruin
 	| Resource;
 
 export const ALL_RESOURCE_TYPE_ERROR =
-				 `Improper logistics request: 'all' can only be used for store structure or tombstone!`;
+				 `Improper logistics request: 'all' can only be used for store structure or tombstone or ruin!`;
 
 export type BufferTarget = StructureStorage | StructureTerminal;
 
@@ -81,14 +82,14 @@ export class LogisticsNetwork {
 	// private logisticPositions: { [roomName: string]: RoomPosition[] };
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
-		predictedTransporterCarry: { [transporterName: string]: StoreDefinition },
+		predictedTransporterCarry: { [transporterName: string]: { [resourceType: string]: number } },
 		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } },
 	};
 	static settings = {
 		flagDropAmount        : 1000,
 		rangeToPathHeuristic  : 1.1, 	// findClosestByRange * this ~= findClosestByPos except in pathological cases
 		carryThreshold        : 800, 	// only do stable matching on transporters at least this big (RCL4+)
-		droppedEnergyThreshold: 200,	// ignore dropped energy below this amount
+		droppedEnergyThreshold: 50,	// ignore dropped energy below this amount
 	};
 
 	constructor(colony: Colony) {
@@ -350,7 +351,7 @@ export class LogisticsNetwork {
 	 * Returns the predicted state of the transporter's carry after completing its current task
 	 */
 	private computePredictedTransporterCarry(transporter: Zerg,
-											 nextAvailability?: [number, RoomPosition]): StoreDefinition {
+											 nextAvailability?: [number, RoomPosition]):  { [resourceType: string]: number } {
 		if (transporter.task && transporter.task.target) {
 			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
@@ -393,7 +394,7 @@ export class LogisticsNetwork {
 	/**
 	 * Returns the predicted state of the transporter's carry after completing its task
 	 */
-	private predictedTransporterCarry(transporter: Zerg): StoreDefinition {
+	private predictedTransporterCarry(transporter: Zerg): { [resourceType: string]: number } {
 		if (!this.cache.predictedTransporterCarry[transporter.name]) {
 			this.cache.predictedTransporterCarry[transporter.name] = this.computePredictedTransporterCarry(transporter);
 		}
@@ -459,7 +460,7 @@ export class LogisticsNetwork {
 		const [ticksUntilFree, newPos] = this.nextAvailability(transporter);
 		const choices: { dQ: number, dt: number, targetRef: string }[] = [];
 		const amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
-		let carry: StoreDefinition;
+		let carry: { [resourceType: string]: number };
 		if (!transporter.task || transporter.task.target != request.target) {
 			// If you are not targeting the requestor, use predicted carry after completing current task
 			carry = this.predictedTransporterCarry(transporter);
@@ -621,6 +622,8 @@ export class LogisticsNetwork {
 				targetType = 'resource';
 			} else if (request.target instanceof Tombstone) {
 				targetType = 'tombstone';
+			} else if (request.target instanceof Ruin) {
+				targetType = 'ruin';
 			} else {
 				targetType = request.target.structureType;
 			}

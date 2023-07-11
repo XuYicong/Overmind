@@ -4,7 +4,7 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {derefCoords, minMax} from '../utilities/utils';
-import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds} from './layouts/bunker';
+import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds, getRoomSpecificBunkerLayout} from './layouts/bunker';
 import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
 
 export interface BarrierPlannerMemory {
@@ -163,10 +163,11 @@ export class BarrierPlanner {
 
 	private buildMissingBunkerRamparts(): void {
 		if (!this.roomPlanner.bunkerPos) return;
-		const bunkerCoords = getAllStructureCoordsFromLayout(bunkerLayout, this.colony.level);
-		bunkerCoords.push(bunkerLayout.data.anchor); // add center bunker tile
+		const layout = getRoomSpecificBunkerLayout(this.colony.name);
+		const bunkerCoords = getAllStructureCoordsFromLayout(layout, this.colony.level);
+		bunkerCoords.push(layout.data.anchor); // add center bunker tile
 		let bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		bunkerPositions = translatePositions(bunkerPositions, bunkerLayout.data.anchor, this.roomPlanner.bunkerPos);
+		bunkerPositions = translatePositions(bunkerPositions, layout.data.anchor, this.roomPlanner.bunkerPos);
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		for (const pos of bunkerPositions) {
 			if (count > 0 && !pos.lookForStructure(STRUCTURE_RAMPART)

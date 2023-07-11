@@ -4,12 +4,12 @@ import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} fr
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type withdrawTargetType =
-	EnergyStructure
-	| StoreStructure
-	| StructureLab
-	| StructurePowerSpawn
-	| Tombstone;
+export type withdrawTargetType = 
+EnergyStructure
+| StoreStructure
+| StructureLab
+| StructurePowerSpawn
+| Tombstone | Ruin;
 
 export const withdrawTaskName = 'withdraw';
 

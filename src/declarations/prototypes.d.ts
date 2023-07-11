@@ -29,6 +29,7 @@ type rechargeObjectType = StructureStorage
 	| StructureContainer
 	| StructureLink
 	| Tombstone
+	| Ruin
 	| Resource;
 
 interface Room {
@@ -39,6 +40,8 @@ interface Room {
 	reservedByMe: boolean;
 	signedByMe: boolean;
 	creeps: Creep[];
+	hostiles: Creep[];
+	friendlies: Creep[];
 	sourceKeepers: Creep[];
 	hostiles: Creep[];
 	dangerousHostiles: Creep[];
@@ -49,13 +52,16 @@ interface Room {
 	hostileStructures: Structure[];
 	structures: Structure[];
 	flags: Flag[];
+
 	// Cached structures
 	tombstones: Tombstone[];
 	drops: { [resourceType: string]: Resource[] };
 	droppedEnergy: Resource[];
 	droppedPower: Resource[];
+
 	// Room structures
 	_refreshStructureCache;
+
 	// Multiple structures
 	spawns: StructureSpawn[];
 	extensions: StructureExtension[];
@@ -73,9 +79,12 @@ interface Room {
 	labs: StructureLab[];
 	containers: StructureContainer[];
 	powerBanks: StructurePowerBank[];
+
 	// Single structures
 	observer: StructureObserver | undefined;
 	powerSpawn: StructurePowerSpawn | undefined;
+	factory: StructureFactory | undefined;
+	invaderCore: StructureInvaderCore | undefined;
 	extractor: StructureExtractor | undefined;
 	nuker: StructureNuker | undefined;
 	repairables: Structure[];
@@ -83,6 +92,9 @@ interface Room {
 	sources: Source[];
 	mineral: Mineral | undefined;
 	constructionSites: ConstructionSite[];
+	allConstructionSites: ConstructionSite[];
+	hostileConstructionSites: ConstructionSite[];
+	ruins: Ruin[];
 	// Used by movement library
 	// _defaultMatrix: CostMatrix;
 	// _directMatrix: CostMatrix;

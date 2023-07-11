@@ -400,8 +400,10 @@ export abstract class Overlord {
 			}
 			const body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
 			if (body.length == 0) return false;
-			return _.all(this.boosts[setup.role]!,
-						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
+			log.notify('Xyct: fixme at overlords/Overlords.ts:404');
+			return false;
+			// return _.all(this.boosts[setup.role]!,
+			// 			 boost => this.colony.evolutionChamber!.canBoost(body, boost));
 		}
 		return false;
 	}

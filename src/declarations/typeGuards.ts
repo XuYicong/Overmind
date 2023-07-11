@@ -34,6 +34,10 @@ export function isSource(obj: Source | Mineral): obj is Source {
 	return (<Source>obj).energy != undefined;
 }
 
+export function isRuin(obj: RoomObject): obj is Ruin {
+	return (<Ruin>obj).structure != undefined;
+}
+
 export function isTombstone(obj: RoomObject): obj is Tombstone {
 	return (<Tombstone>obj).deathTime != undefined;
 }

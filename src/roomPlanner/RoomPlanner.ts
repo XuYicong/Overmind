@@ -12,7 +12,7 @@ import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
-import {bunkerLayout} from './layouts/bunker';
+import {bunkerLayout, getRoomSpecificBunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
@@ -271,7 +271,7 @@ export class RoomPlanner {
 			case 'commandCenter':
 				return commandCenterLayout;
 			case 'bunker':
-				return bunkerLayout;
+				return getRoomSpecificBunkerLayout(this.colony.name);
 		}
 	}
 
@@ -371,9 +371,10 @@ export class RoomPlanner {
 	 * Get bunker building placements as a StructureMap
 	 */
 	getStructureMapForBunkerAt(anchor: { x: number, y: number }, level = 8): StructureMap {
-		const dx = anchor.x - bunkerLayout.data.anchor.x;
-		const dy = anchor.y - bunkerLayout.data.anchor.y;
-		const structureLayout = _.mapValues(bunkerLayout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
+		const layout = getRoomSpecificBunkerLayout(this.colony.name);
+		const dx = anchor.x - layout.data.anchor.x;
+		const dy = anchor.y - layout.data.anchor.y;
+		const structureLayout = _.mapValues(layout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
 		return _.mapValues(structureLayout, coordArr =>
 			_.map(coordArr, coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name)));
 	}
@@ -383,9 +384,10 @@ export class RoomPlanner {
 	 */
 	getBunkerStructurePlacement(structureType: string, anchor: { x: number, y: number },
 								level = 8): RoomPosition[] {
-		const dx = anchor.x - bunkerLayout.data.anchor.x;
-		const dy = anchor.y - bunkerLayout.data.anchor.y;
-		return _.map(bunkerLayout[level]!.buildings[structureType].pos,
+		const layout = getRoomSpecificBunkerLayout(this.colony.name);
+		const dx = anchor.x - layout.data.anchor.x;
+		const dy = anchor.y - layout.data.anchor.y;
+		return _.map(layout[level]!.buildings[structureType].pos,
 					 coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name));
 	}
 
@@ -911,7 +913,7 @@ export class RoomPlanner {
 			if (expansionData) {
 				const bunkerPos = derefCoords(expansionData.bunkerAnchor, this.colony.room.name);
 				if (bunkerPos) {
-					Visualizer.drawLayout(bunkerLayout, bunkerPos, {opacity: 0.2});
+					Visualizer.drawLayout(getRoomSpecificBunkerLayout(this.colony.name), bunkerPos, {opacity: 0.2});
 				}
 			}
 		}

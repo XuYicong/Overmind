@@ -20,7 +20,18 @@ interface Memory {
 		signature: string;
 		operationMode: operationMode;
 		log: LoggerMemory;
-		enableVisuals: boolean;
+		enableVisuals: boolean;allies: string[];
+		resourceCollectionMode: resourceCollectionMode;
+		powerCollection: {
+			enabled: boolean;
+			maxRange: number;
+			minPower: number;
+		};
+		autoPoison: {
+			enabled: boolean;
+			maxRange: number;
+			maxConcurrent: number;
+		},
 	};
 	profiler?: any;
 	stats: any;

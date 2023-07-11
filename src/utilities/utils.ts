@@ -40,7 +40,7 @@ export function hasMinerals(store: { [resourceType: string]: number }): boolean 
 export function getUsername(): string {
 	for (const i in Game.rooms) {
 		const room = Game.rooms[i];
-		if (room.controller && room.controller.my) {
+		if (room.controller && room.controller.owner && room.controller.my) {
 			return room.controller.owner.username;
 		}
 	}
@@ -92,6 +92,9 @@ export function bulleted(text: string[], aligned = true, startWithNewLine = true
 	}
 }
 
+export function isAlly(username: string): boolean {
+	return (Memory.settings.allies || []).includes(username);
+}
 /**
  * Create column-aligned text array from object with string key/values
  */
@@ -294,4 +297,11 @@ export function rotatedMatrix<T>(matrix: T[][], clockwiseTurns: 0 | 1 | 2 | 3): 
 		rotateMatrix(mat);
 	}
 	return mat;
+}
+
+export function isRoomAvailable(roomName: string) {
+	const roomStatus = Game.map.getRoomStatus(roomName);
+	const expiration = roomStatus.timestamp;
+	// TODO: cache result and only recheck after expiration
+	return roomStatus.status === 'normal';
 }

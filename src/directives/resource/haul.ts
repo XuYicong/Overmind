@@ -2,7 +2,7 @@ import {isStoreStructure} from '../../declarations/typeGuards';
 import {HaulingOverlord} from '../../overlords/situational/hauler';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
-
+import {log} from '../../console/log';
 
 interface DirectiveHaulMemory extends FlagMemory {
 	totalResources?: number;
@@ -51,11 +51,16 @@ export class DirectiveHaul extends Directive {
 		return _.keys(this.drops).length > 0;
 	}
 
-	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | undefined {
+	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer 
+									| Ruin | Tombstone |StructureExtension | undefined {
 		if (this.pos.isVisible) {
-			return <StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
+			return <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0] ||
+					<Tombstone>this.pos.lookFor(LOOK_TOMBSTONES).filter(tomb => _.sum(tomb.store) > 0)[0] ||
+					<StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
-				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER);
+				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
+				   <StructureContainer>this.pos.lookForStructure(STRUCTURE_CONTAINER) ||
+				   <StructureExtension>this.pos.lookForStructure(STRUCTURE_EXTENSION);
 		}
 		return undefined;
 	}
@@ -65,13 +70,10 @@ export class DirectiveHaul extends Directive {
 			// Merge the "storage" of drops with the store of structure
 			let store: { [resourceType: string]: number } = {};
 			if (this.storeStructure) {
-				if (isStoreStructure(this.storeStructure)) {
-					store = this.storeStructure.store;
-				} else {
-					store = {energy: this.storeStructure.energy};
-				}
+				store = this.storeStructure.store;
 			} else {
 				store = {energy: 0};
+				log.info('store target with specific type not found');
 			}
 			// Merge with drops
 			for (const resourceType of _.keys(this.drops)) {
@@ -106,9 +108,14 @@ export class DirectiveHaul extends Directive {
 	}
 
 	run(): void {
-		if (this.totalResources == 0) {
-			this.remove();
+		// if neither haulers nor target has resource, end the directive
+		if (this.totalResources > 0) {
+			return;
 		}
+		for (const hauler of (this.overlords.haul as HaulingOverlord).haulers) {
+			if(_.sum(hauler.carry) > 0) return;
+		}
+		this.remove();
 	}
 
 }

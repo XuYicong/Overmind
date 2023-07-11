@@ -1,7 +1,7 @@
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isResource, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
+import {isEnergyStructure, isResource, isRuin, isStoreStructure, isTombstone} from '../../declarations/typeGuards';
 import {ALL_RESOURCE_TYPE_ERROR, BufferTarget, LogisticsRequest} from '../../logistics/LogisticsNetwork';
 import {Pathing} from '../../movement/Pathing';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
@@ -86,8 +86,8 @@ export class TransportOverlord extends Overlord {
 			const amount = this.colony.logisticsNetwork.predictedRequestAmount(transporter, request);
 			// Target is requesting input
 			if (amount > 0) {
-				if (isResource(request.target) || isTombstone(request.target)) {
-					log.warning(`Improper logistics request: should not request input for resource or tombstone!`);
+				if (isResource(request.target) || isTombstone(request.target) || isRuin(request.target)) {
+					log.warning(`Improper logistics request: should not request input for resource or tombstone or ruin!`);
 					return;
 				} else if (request.resourceType == 'all') {
 					log.error(`${this.print}: cannot request 'all' as input!`);
@@ -112,7 +112,7 @@ export class TransportOverlord extends Overlord {
 					task = Tasks.pickup(request.target);
 				} else {
 					if (request.resourceType == 'all') {
-						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
+						if (!isStoreStructure(request.target) && !isTombstone(request.target) && !isRuin(request.target)) {
 							log.error(`TransportOverlord: ` + ALL_RESOURCE_TYPE_ERROR);
 							return;
 						}
@@ -183,18 +183,27 @@ export class TransportOverlord extends Overlord {
 		this.handleTransporter(smolTransporter, bestRequestViaGreedy);
 	}
 
-	private pickupDroppedResources(transporter: Zerg) {
+	private pickupDroppedResources(transporter: Zerg): Boolean {
 		const droppedResource = transporter.pos.lookFor(LOOK_RESOURCES)[0];
 		if (droppedResource) {
 			transporter.pickup(droppedResource);
-			return;
+			return true;
 		}
 		const tombstone = transporter.pos.lookFor(LOOK_TOMBSTONES)[0];
 		if (tombstone) {
 			const resourceType = _.last(_.sortBy(_.keys(tombstone.store),
 											   resourceType => (tombstone.store[<ResourceConstant>resourceType] || 0)));
 			transporter.withdraw(tombstone, <ResourceConstant>resourceType);
+			return true;
 		}
+		const ruin = transporter.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
+		if (ruin) {
+			const resourceType = _.last(_.sortBy(_.keys(ruin.store),
+											   resourceType => (ruin.store[<ResourceConstant>resourceType] || 0)));
+			transporter.withdraw(ruin, <ResourceConstant>resourceType);
+			return true;
+		}
+		return false;
 	}
 
 	run() {

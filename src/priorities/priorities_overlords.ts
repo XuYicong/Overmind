@@ -54,15 +54,15 @@ export let OverlordPriority = {
 		haul: 700
 	},
 
-	scouting: {
-		stationary  : 800,
-		randomWalker: 801
+	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
+		reserve      : 800,
+		mine         : 801,
+		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 
-	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
-		reserve      : 900,
-		mine         : 901,
-		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
+	scouting: {
+		stationary  : 900,
+		randomWalker: 901
 	},
 
 	remoteSKRoom: {

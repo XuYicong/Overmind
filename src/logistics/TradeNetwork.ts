@@ -1,9 +1,9 @@
-import {assimilationLocked} from '../assimilation/decorator';
-import {log} from '../console/log';
-import {Mem} from '../memory/Memory';
-import {profile} from '../profiler/decorator';
-import {alignedNewline, bullet, leftArrow, rightArrow} from '../utilities/stringConstants';
-import {maxBy, minBy, onPublicServer, printRoomName} from '../utilities/utils';
+import { assimilationLocked } from '../assimilation/decorator';
+import { log } from '../console/log';
+import { Mem } from '../memory/Memory';
+import { profile } from '../profiler/decorator';
+import { alignedNewline, bullet, leftArrow, rightArrow } from '../utilities/stringConstants';
+import { maxBy, minBy, onPublicServer, printRoomName } from '../utilities/utils';
 
 interface MarketCache {
 	sell: { [resourceType: string]: { high: number, low: number } };
@@ -33,9 +33,9 @@ interface TraderStats {
 }
 
 const TraderMemoryDefaults: TraderMemory = {
-	cache        : {
+	cache: {
 		sell: {},
-		buy : {},
+		buy: {},
 		tick: 0,
 	},
 	equalizeIndex: 0
@@ -43,22 +43,22 @@ const TraderMemoryDefaults: TraderMemory = {
 
 const TraderStatsDefaults: TraderStats = {
 	credits: 0,
-	bought : {},
-	sold   : {},
+	bought: {},
+	sold: {},
 };
 
 // Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
 // (might not always be up to date)
 export const maxMarketPrices: { [resourceType: string]: number } = {
-	default             : 5.0,
-	[RESOURCE_HYDROGEN] : 0.3,
-	[RESOURCE_OXYGEN]   : 0.25,
-	[RESOURCE_UTRIUM]   : 0.3,
+	default: 5.0,
+	[RESOURCE_HYDROGEN]: 0.3,
+	[RESOURCE_OXYGEN]: 0.25,
+	[RESOURCE_UTRIUM]: 0.3,
 	[RESOURCE_LEMERGIUM]: 0.25,
-	[RESOURCE_KEANIUM]  : 0.25,
-	[RESOURCE_ZYNTHIUM] : 0.25,
-	[RESOURCE_CATALYST] : 0.5,
-	[RESOURCE_ENERGY]   : 0.05,
+	[RESOURCE_KEANIUM]: 0.25,
+	[RESOURCE_ZYNTHIUM]: 0.25,
+	[RESOURCE_CATALYST]: 0.5,
+	[RESOURCE_ENERGY]: 0.05,
 };
 
 export const MAX_ENERGY_SELL_ORDERS = 5;
@@ -73,15 +73,15 @@ export const MAX_ENERGY_BUY_ORDERS = 5;
 export class TraderJoe implements ITradeNetwork {
 
 	static settings = {
-		cache : {
+		cache: {
 			timeout: 25,
 		},
 		market: {
 			reserveCredits: 10000,	// Always try to stay above this amount
-			boostCredits  : 25000,	// You can buy boosts directly off market while above this amount
-			energyCredits : 50000, 	// Can buy energy off market if above this amount
-			orders        : {
-				timeout      : 100000,	// Remove orders after this many ticks if remaining amount < cleanupAmount
+			boostCredits: 25000,	// You can buy boosts directly off market while above this amount
+			energyCredits: 50000, 	// Can buy energy off market if above this amount
+			orders: {
+				timeout: 100000,	// Remove orders after this many ticks if remaining amount < cleanupAmount
 				cleanupAmount: 10,		// RemainingAmount threshold to remove expiring orders
 			}
 		},
@@ -114,7 +114,7 @@ export class TraderJoe implements ITradeNetwork {
 		this.invalidateMarketCache();
 		const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
 		const allOrders = Game.market.getAllOrders(order => !myActiveOrderIDs.includes(order.id) &&
-															order.amount >= orderThreshold); // don't include tiny orders
+			order.amount >= orderThreshold); // don't include tiny orders
 		const groupedBuyOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_BUY), o => o.resourceType);
 		const groupedSellOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_SELL), o => o.resourceType);
 		for (const resourceType in groupedBuyOrders) {
@@ -124,7 +124,7 @@ export class TraderJoe implements ITradeNetwork {
 			const low = _.min(prices);
 			if (verbose) console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
 			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
-			this.memory.cache.buy[resourceType] = {high: high, low: low};
+			this.memory.cache.buy[resourceType] = { high: high, low: low };
 		}
 		for (const resourceType in groupedSellOrders) {
 			// Store sell order with minimum price in cache
@@ -133,7 +133,7 @@ export class TraderJoe implements ITradeNetwork {
 			const low = _.min(prices);
 			if (verbose) console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
 			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
-			this.memory.cache.sell[resourceType] = {high: high, low: low};
+			this.memory.cache.sell[resourceType] = { high: high, low: low };
 		}
 		this.memory.cache.tick = Game.time;
 	}
@@ -141,7 +141,7 @@ export class TraderJoe implements ITradeNetwork {
 	private invalidateMarketCache(): void {
 		this.memory.cache = {
 			sell: {},
-			buy : {},
+			buy: {},
 			tick: 0,
 		};
 	}
@@ -206,7 +206,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (resource === RESOURCE_POWER) {
 			amount = 100;
 		}
-		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY});
+		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY });
 		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
 		if (ordersForMineral === undefined) {
 			return;
@@ -237,7 +237,7 @@ export class TraderJoe implements ITradeNetwork {
 		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
 			return;
 		}
-		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_SELL});
+		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL });
 		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= amount);
 		const bestOrder = minBy(ordersForMineral, (order: Order) => order.price);
 		let maxPrice = maxMarketPrices[resource] || maxMarketPrices.default;
@@ -254,7 +254,7 @@ export class TraderJoe implements ITradeNetwork {
 	 * Sell a resource on the market, either through a sell order or directly
 	 */
 	sell(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-		 maxOrdersOfType = Infinity): number | undefined {
+		maxOrdersOfType = Infinity): number | undefined {
 		if (Game.market.credits < TraderJoe.settings.market.reserveCredits) {
 			return this.sellDirectly(terminal, resource, amount);
 		} else {
@@ -266,10 +266,10 @@ export class TraderJoe implements ITradeNetwork {
 	 * Sell resources directly to a buyer rather than making a sell order
 	 */
 	sellDirectly(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-				 flexibleAmount = true): number | undefined {
+		flexibleAmount = true): number | undefined {
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
 		const minAmount = flexibleAmount ? TERMINAL_MIN_SEND : amount;
-		let ordersForMineral = Game.market.getAllOrders({resourceType: resource, type: ORDER_BUY});
+		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY });
 		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= minAmount);
 		const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
 		if (order) {
@@ -287,7 +287,31 @@ export class TraderJoe implements ITradeNetwork {
 	 * Create or maintain a buy order
 	 */
 	maintainBuyOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-					 maxOrdersOfType = Infinity): void {
+		maxOrdersOfType = Infinity): void {
+		this.maintainOrder(terminal, ORDER_BUY, resource, amount, maxOrdersOfType);
+	}
+
+	/**
+	 * Create or maintain a sell order
+	 */
+	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
+		maxOrdersOfType = Infinity): void {
+			this.maintainOrder(terminal, ORDER_SELL, resource, amount, maxOrdersOfType);
+	}
+
+	/**
+	 * Create or maintain an order, extending and repricing as needed
+	 */
+	private maintainOrder(terminal: StructureTerminal, type: ORDER_BUY | ORDER_SELL,
+		resource: ResourceConstant, amount: number, maxOrdersOfType = Infinity): void {
+		this.notify(`maintain ${type} order for ${terminal.room.print}: ${amount} ${resource}`);
+		// Cap the amount based on the maximum you can make a buy/sell order with
+		amount = Math.min(amount, 8000);
+
+		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
+		if (!marketLow) {
+			return;
+		}
 		const marketHigh = this.memory.cache.buy[resource] ? this.memory.cache.buy[resource].high : undefined;
 		if (!marketHigh) {
 			return;
@@ -296,82 +320,82 @@ export class TraderJoe implements ITradeNetwork {
 		if (marketHigh > maxPrice) {
 			return;
 		}
-
-		const order = _.find(Game.market.orders,
-							 o => o.type == ORDER_BUY &&
-								  o.resourceType == resource &&
-								  o.roomName == terminal.room.name);
-		if (order) {
-
-			if (order.price < marketHigh || (order.price > marketHigh && order.remainingAmount == 0)) {
-				const ret = Game.market.changeOrderPrice(order.id, marketHigh);
-				this.notify(`${terminal.room.print}: updating buy order price for ${resource} from ` +
-							`${order.price} to ${marketHigh}. Response: ${ret}`);
-			}
-			if (order.remainingAmount < 2000) {
-				const addAmount = (amount - order.remainingAmount);
-				const ret = Game.market.extendOrder(order.id, addAmount);
-				this.notify(`${terminal.room.print}: extending buy order for ${resource} by ${addAmount}.` +
-							` Response: ${ret}`);
-			}
-
-		} else {
-
-			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_BUY && o.resourceType == resource);
-			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder(ORDER_BUY, resource, marketHigh, amount, terminal.room.name);
-				this.notify(`${terminal.room.print}: creating buy order for ${resource} at price ${marketHigh}. ` +
-							`Response: ${ret}`);
-			}
-			// else {
-			// 	this.notify(`${terminal.room.print}: cannot create another buy order for ${resource}:` +
-			// 				` too many (${ordersOfType.length})`);
-			// }
-
-		}
-	}
-
-	/**
-	 * Create or maintain a sell order
-	 */
-	private maintainSellOrder(terminal: StructureTerminal, resource: ResourceConstant, amount: number,
-							  maxOrdersOfType = Infinity): void {
-		const marketLow = this.memory.cache.sell[resource] ? this.memory.cache.sell[resource].low : undefined;
-		if (!marketLow) {
+		// Compute the buy or sell price
+		const price = +(type == ORDER_BUY ? marketHigh : marketLow
+			.toFixed(3)); // market only allows for 3 decimal places of precision
+		if (price == Infinity || price == 0) {
+			log.warning(`TradeNetwork: sanity checks not passed to create ${type} order ${resource} in ` +
+				`${printRoomName(terminal.room.name)}!`);
 			return;
 		}
-		const order = _.find(Game.market.orders,
-							 o => o.type == ORDER_SELL &&
-								  o.resourceType == resource &&
-								  o.roomName == terminal.room.name);
-		if (order) {
+		const existingOrder = _.find(Game.market.orders,
+			o => o.type == type &&
+				o.resourceType == resource &&
+				o.roomName == terminal.room.name);
 
-			if (order.price > marketLow || (order.price < marketLow && order.remainingAmount == 0)) {
-				const ret = Game.market.changeOrderPrice(order.id, marketLow);
-				this.notify(`${terminal.room.print}: updating sell order price for ${resource} from ` +
-							`${order.price} to ${marketLow}. Response: ${ret}`);
-			}
-			if (order.remainingAmount < 2000) {
-				const addAmount = (amount - order.remainingAmount);
-				const ret = Game.market.extendOrder(order.id, addAmount);
-				this.notify(`${terminal.room.print}: extending sell order for ${resource} by ${addAmount}.` +
-							` Response: ${ret}`);
+		// Maintain an existing order
+		if (existingOrder) {
+			const ratio = existingOrder.price / price;
+			const tolerance = 0.03; // might need to tune this, we'll see
+			const normalFluctuation = (1 + tolerance > ratio && ratio > 1 - tolerance);
+
+			// Extend the order if you need to sell more of the resource
+			if (amount > existingOrder.remainingAmount && normalFluctuation) {
+				const addAmount = amount - existingOrder.remainingAmount;
+				const ret = Game.market.extendOrder(existingOrder.id, addAmount);
+				this.notify(`${terminal.room.print}: extending ${type} order for ${resource} by ${addAmount}.` +
+					` Response: ${ret}`);
+				return;
 			}
 
-		} else {
-
-			const ordersOfType = _.filter(Game.market.orders, o => o.type == ORDER_SELL && o.resourceType == resource);
-			if (ordersOfType.length < maxOrdersOfType) {
-				const ret = Game.market.createOrder(ORDER_SELL, resource, marketLow, amount, terminal.room.name);
-				this.notify(`${terminal.room.print}: creating sell order for ${resource} at price ${marketLow}. ` +
-							`Response: ${ret}`);
+			// Small chance of changing the price if it's not competitive; don't do too often or you are high risk
+			if (!normalFluctuation && Math.random() < 1 / 2000) {
+				const ret = Game.market.changeOrderPrice(existingOrder.id, price);
+				this.notify(`${terminal.room.print}: changing ${type} order price for ${resource} from ` +
+					`${existingOrder.price} to ${price}. Response: ${ret}`);
+				return;
 			}
-			// else {
-			// 	this.notify(`${terminal.room.print}: cannot create another sell order for ${resource}:` +
-			// 				` too many (${ordersOfType.length})`);
-			// }
+
+			// No action needed
+			return;
+		}
+		// Create a new order
+		else {
+			// Only place up to a certain amount of orders
+			const existingOrdersForThis = _.filter(Game.market.orders, o => o.type == type && o.resourceType == resource);
+			if (existingOrdersForThis.length > maxOrdersOfType) {
+				this.notify(`${printRoomName(terminal.room.name)}: could not create ${type} order for ` +
+					`${Math.round(amount)} ${resource} - too many existing!`);
+				return;
+			}
+
+			// Create the order
+			const params = {
+				type: type,
+				resourceType: resource,
+				price: price,
+				totalAmount: amount,
+				roomName: terminal.room.name
+			};
+			const ret = Game.market.createOrder(params);
+			let msg = '';
+			if (type == ORDER_BUY) {
+				msg += `${printRoomName(terminal.room.name)} creating buy order:  ` +
+					`${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+			} else {
+				msg += `${printRoomName(terminal.room.name)} creating sell order: ` +
+					`${Math.round(amount)} ${resource} at price ${price.toFixed(4)}`;
+			}
+			if (ret == OK) {
+				this.notify('Xyct: order OK');
+			} else {
+				msg += ` ERROR: ${ret}`;
+			}
+			this.notify(msg);
+			return;
 
 		}
+
 	}
 
 	priceOf(mineralType: ResourceConstant): number {
@@ -393,10 +417,10 @@ export class TraderJoe implements ITradeNetwork {
 		let msg: string;
 		if (order.type == ORDER_SELL) {
 			msg = `${roomName} ${leftArrow} ${amount} ${order.resourceType} ${leftArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
+				`${printRoomName(order.roomName!)} (result: ${response})`;
 		} else {
 			msg = `${roomName} ${rightArrow} ${amount} ${order.resourceType} ${rightArrow} ` +
-				  `${printRoomName(order.roomName!)} (result: ${response})`;
+				`${printRoomName(order.roomName!)} (result: ${response})`;
 		}
 		this.notify(msg);
 	}
@@ -417,7 +441,7 @@ export class TraderJoe implements ITradeNetwork {
 					const amount = transaction.amount;
 					const price = transaction.order.price;
 					if (!this.stats.bought[resourceType]) {
-						this.stats.bought[resourceType] = {amount: 0, credits: 0};
+						this.stats.bought[resourceType] = { amount: 0, credits: 0 };
 					}
 					this.stats.bought[resourceType].amount += amount;
 					this.stats.bought[resourceType].credits += amount * price;
@@ -434,7 +458,7 @@ export class TraderJoe implements ITradeNetwork {
 					const amount = transaction.amount;
 					const price = transaction.order.price;
 					if (!this.stats.sold[resourceType]) {
-						this.stats.sold[resourceType] = {amount: 0, credits: 0};
+						this.stats.sold[resourceType] = { amount: 0, credits: 0 };
 					}
 					this.stats.sold[resourceType].amount += amount;
 					this.stats.sold[resourceType].credits += amount * price;

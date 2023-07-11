@@ -21,7 +21,7 @@ import {Overlord} from './overlords/Overlord';
 import {profile} from './profiler/decorator';
 import {CombatPlanner} from './strategy/CombatPlanner';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
-import {derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
+import {isRoomAvailable, derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
 import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
 
 
@@ -154,6 +154,14 @@ export class Overseer implements IOverseer {
 					}
 				}
 			}
+			// Pick up all nontrivial ruin resources
+			for (const ruin of room.ruins) {
+				if (_.sum(ruin.store) > LogisticsNetwork.settings.droppedEnergyThreshold
+					|| _.sum(ruin.store) > ruin.store.energy) {
+					if (colony.bunker && ruin.pos.isEqualTo(colony.bunker.anchor)) continue;
+					colony.logisticsNetwork.requestOutput(ruin, {resourceType: 'all'});
+				}
+			}
 		}
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (const tombstone of colony.tombstones) {
@@ -195,8 +203,9 @@ export class Overseer implements IOverseer {
 			if (Cartographer.roomType(room.name) != ROOMTYPE_SOURCEKEEPER) { // SK rooms can fend for themselves
 				const defenseFlags = _.filter(room.flags, flag => DirectiveGuard.filter(flag) ||
 																  DirectiveOutpostDefense.filter(flag));
-				if (room.dangerousHostiles.length > 0 && defenseFlags.length == 0) {
-					DirectiveGuard.create(room.dangerousHostiles[0].pos);
+				const inDanger = room.dangerousHostiles.length > 0 || room.invaderCore;
+				if (inDanger && defenseFlags.length == 0) {
+					DirectiveGuard.create((room.invaderCore && room.invaderCore.pos) || room.dangerousHostiles[0].pos);
 				}
 			}
 		}
@@ -244,13 +253,22 @@ export class Overseer implements IOverseer {
 			}
 			const alreadyOwned = RoomIntel.roomOwnedBy(roomName);
 			const alreadyReserved = RoomIntel.roomReservedBy(roomName);
+			const isBlocked = Game.flags[roomName + '-Block'] != null; // TODO: this is ugly
+			if (isBlocked) {
+				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
+			}
 			const disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
 			if (alreadyOwned || (alreadyReserved && !disregardReservations)) {
 				return false;
 			}
 			const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
 			const isReachableFromColony = _.any(neighboringRooms, r => colony.roomNames.includes(r));
-			return isReachableFromColony && Game.map.isRoomAvailable(roomName);
+			if(!isReachableFromColony || !isRoomAvailable(roomName)){
+				return false;
+			}
+			const shouldBackOff = _.any(neighboringRooms,
+						r => RoomIntel.roomOwnedBy(r) || RoomIntel.roomReservedBy(r));
+			return !shouldBackOff;
 		});
 	}
 

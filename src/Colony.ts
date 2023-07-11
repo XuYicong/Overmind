@@ -110,6 +110,7 @@ export class Colony {
 	// claimedLinks: StructureLink[];						// | Links belonging to hive cluseters excluding mining groups
 	// dropoffLinks: StructureLink[]; 						// | Links not belonging to a hiveCluster, used as dropoff
 	terminal: StructureTerminal | undefined;			// |
+	factory: StructureFactory | undefined;				// |
 	towers: StructureTower[];							// |
 	labs: StructureLab[];								// |
 	powerSpawn: StructurePowerSpawn | undefined;		// |
@@ -175,9 +176,9 @@ export class Colony {
 			3: 3,
 			4: 4,
 			5: 5,
-			6: 6,
-			7: 7,
-			8: 9,
+			6: 5,
+			7: 5,
+			8: 5,
 		},
 		maxSourceDistance   : 100
 	};
@@ -258,6 +259,7 @@ export class Colony {
 		this.links = this.room.links;
 		this.availableLinks = _.clone(this.room.links);
 		this.terminal = this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined;
+		this.factory = this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined;
 		this.towers = this.room.towers;
 		this.labs = _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 							 lab => 50 * lab.pos.y + lab.pos.x); // Labs are sorted in reading order of positions
@@ -304,6 +306,7 @@ export class Colony {
 		$.set(this, 'storage', () => this.room.storage && this.room.storage.isActive() ? this.room.storage : undefined);
 		// this.availableLinks = _.clone(this.room.links);
 		$.set(this, 'terminal', () => this.room.terminal && this.room.terminal.isActive() ? this.room.terminal : undefined);
+		$.set(this, 'factory', () => this.room.factory && this.room.factory.isActive() ? this.room.factory : undefined);
 		$.set(this, 'labs', () => _.sortBy(_.filter(this.room.labs, lab => lab.my && lab.isActive()),
 										   lab => 50 * lab.pos.y + lab.pos.x));
 		this.pos = (this.storage || this.terminal || this.spawns[0] || this.controller).pos;
@@ -337,7 +340,7 @@ export class Colony {
 	 */
 	private refreshRoomObjects(): void {
 		$.refresh(this, 'controller', 'extensions', 'links', 'towers', 'powerSpawn', 'nuker', 'observer', 'spawns',
-				  'storage', 'terminal', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
+				  'storage', 'terminal', 'factory', 'labs', 'sources', 'extractors', 'constructionSites', 'repairables',
 				  'rechargeables');
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
@@ -417,7 +420,7 @@ export class Colony {
 			// log.debug(JSON.stringify(`anchor for ${this.name}: ${anchor}`));
 			const spawnPositions = _.map(bunkerLayout[8]!.buildings.spawn.pos, c => getPosFromBunkerCoord(c, this));
 			// log.debug(JSON.stringify(`spawnPositions for ${this.name}: ${spawnPositions}`));
-			const rightSpawnPos = maxBy(spawnPositions, pos => pos.x) as RoomPosition;
+			const rightSpawnPos = maxBy(spawnPositions, pos => pos.y) as RoomPosition;
 			const topSpawnPos = minBy(spawnPositions, pos => pos.y) as RoomPosition;
 			const coreSpawnPos = anchor.findClosestByRange(spawnPositions) as RoomPosition;
 			// log.debug(JSON.stringify(`spawnPoses: ${rightSpawnPos}, ${topSpawnPos}, ${coreSpawnPos}`));

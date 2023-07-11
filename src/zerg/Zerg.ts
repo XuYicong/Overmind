@@ -426,13 +426,13 @@ export class Zerg {
 		}
 	}
 
-	withdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	withdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		const result = this.creep.withdraw(target, resourceType, amount);
 		if (!this.actionLog.withdraw) this.actionLog.withdraw = (result == OK);
 		return result;
 	}
 
-	goWithdraw(target: Structure | Tombstone, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	goWithdraw(target: Structure | Tombstone | Ruin, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		if (this.pos.inRangeToPos(target.pos, RANGES.WITHDRAW)) {
 			return this.withdraw(target, resourceType, amount);
 		} else {

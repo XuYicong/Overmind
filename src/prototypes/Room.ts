@@ -1,5 +1,5 @@
 // Room prototypes - commonly used room properties and methods
-
+import {isAlly} from '../utilities/utils';
 import {MY_USERNAME} from '../~settings';
 
 // Logging =============================================================================================================
@@ -65,9 +65,19 @@ Object.defineProperty(Room.prototype, 'creeps', {
 Object.defineProperty(Room.prototype, 'hostiles', {
 	get() {
 		if (!this._hostiles) {
-			this._hostiles = this.find(FIND_HOSTILE_CREEPS);
+			this._hostiles = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => !isAlly(creep.owner.username)});
 		}
 		return this._hostiles;
+	},
+	configurable: true,
+});
+
+Object.defineProperty(Room.prototype, 'friendlies', {
+	get() {
+		if (!this._friendlies) {
+			this._friendlies = this.find(FIND_HOSTILE_CREEPS, {filter: (creep: Creep) => isAlly(creep.owner.username)});
+		}
+		return this._friendlies;
 	},
 	configurable: true,
 });
@@ -111,13 +121,11 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 				this._dangerousHostiles = _.filter(this.hostiles,
 												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
 																	 || creep.getActiveBodyparts(WORK) > 0
-																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
-																	 || creep.getActiveBodyparts(HEAL) > 0);
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 			} else {
 				this._dangerousHostiles = _.filter(this.hostiles,
 												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
-																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
-																	 || creep.getActiveBodyparts(HEAL) > 0);
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
 			}
 		}
 		return this._dangerousHostiles;
@@ -128,11 +136,16 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 Object.defineProperty(Room.prototype, 'dangerousPlayerHostiles', {
 	get() {
 		if (!this._dangerousPlayerHostiles) {
-			this._dangerousPlayerHostiles = _.filter(this.playerHostiles,
-													 (c: Creep) => c.getActiveBodyparts(ATTACK) > 0
-																   || c.getActiveBodyparts(WORK) > 0
-																   || c.getActiveBodyparts(RANGED_ATTACK) > 0
-																   || c.getActiveBodyparts(HEAL) > 0);
+			if (this.my) {
+				this._dangerousPlayerHostiles = _.filter(this.playerHostiles,
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(WORK) > 0);
+			} else {
+				this._dangerousPlayerHostiles = _.filter(this.playerHostiles,
+												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
+			}
 		}
 		return this._dangerousPlayerHostiles;
 	},
@@ -170,7 +183,9 @@ Object.defineProperty(Room.prototype, 'structures', {
 Object.defineProperty(Room.prototype, 'hostileStructures', {
 	get() {
 		if (!this._hostileStructures) {
-			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {filter: (s: Structure) => s.hitsMax});
+			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {
+				filter: (s: Structure) => (s.hitsMax) && !isAlly(_.get(s, ['owner', 'username']))
+			});
 		}
 		return this._hostileStructures;
 	},
@@ -202,6 +217,17 @@ Object.defineProperty(Room.prototype, 'constructionSites', {
 	configurable: true,
 });
 
+
+Object.defineProperty(Room.prototype, 'hostileConstructionSites', {
+	get() {
+		if (!this._hostileConstructionSites) {
+			this._hostileConstructionSites = this.find(FIND_HOSTILE_CONSTRUCTION_SITES);
+		}
+		return this._hostileConstructionSites;
+	},
+	configurable: true,
+});
+
 Object.defineProperty(Room.prototype, 'tombstones', {
 	get() {
 		if (!this._tombstones) {
@@ -211,7 +237,15 @@ Object.defineProperty(Room.prototype, 'tombstones', {
 	},
 	configurable: true,
 });
-
+Object.defineProperty(Room.prototype, 'ruins', {
+	get() {
+		if (!this._ruins) {
+			this._ruins = this.find(FIND_RUINS);
+		}
+		return this._ruins;
+	},
+	configurable: true,
+});
 Object.defineProperty(Room.prototype, 'drops', {
 	get() {
 		if (!this._drops) {
