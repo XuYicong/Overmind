@@ -206,7 +206,8 @@ export class Hatchery extends HiveCluster {
 
 	private generateCreepName(roleName: string): string {
 		// Generate a creep name based on the role and add a suffix to make it unique
-		let i = 0;
+		// Xyct: in multi-shard cases, change suffix to Game tick.
+		let i = Game.time % 1e6;
 		while (Game.creeps[(roleName + '_' + i)]) {
 			i++;
 		}
@@ -236,6 +237,7 @@ export class Hatchery extends HiveCluster {
 				return ERR_ROOM_ENERGY_CAPACITY_NOT_ENOUGH;
 			}
 			protoCreep.memory.data.origin = spawnToUse.pos.roomName;
+			protoCreep.memory[_MEM.SHARD] = Game.shard.name;
 			const result = spawnToUse.spawnCreep(protoCreep.body, protoCreep.name, {
 				memory          : protoCreep.memory,
 				energyStructures: this.energyStructures,

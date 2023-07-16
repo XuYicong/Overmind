@@ -112,7 +112,8 @@ Object.defineProperty(Room.prototype, 'repairables', {
 			} else {
 				let repairables: Structure[] = [];
 				for (const structureType of singleList) {
-					if (this[structureType]) {
+					if (this[structureType] &&
+						!notRepairable.includes(structureType)) {
 						repairables.push(this[structureType]);
 					}
 				}

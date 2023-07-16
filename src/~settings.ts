@@ -46,8 +46,8 @@ export const USE_TRY_CATCH: boolean = true;
  * "overmind" or the small-caps variant.
  */
 const OVERMIND_PLAIN = 'Overmind';
-export const OVERMIND_SMALL_CAPS = '\u1D0F\u1D20\u1D07\u0280\u1D0D\u026A\u0274\u1D05';
-export const DEFAULT_OVERMIND_SIGNATURE = leftAngleQuote + OVERMIND_SMALL_CAPS + rightAngleQuote;
+export const OVERMIND_SMALL_CAPS = '可怜无定河边骨，犹是春闺梦里人';
+export const DEFAULT_OVERMIND_SIGNATURE = OVERMIND_SMALL_CAPS;
 global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
 
 /**
@@ -63,7 +63,7 @@ export const MAX_OWNED_ROOMS = Infinity;
 /**
  * If you are running on shard3 (CPU limit 20), only claim this many rooms
  */
-export const SHARD3_MAX_OWNED_ROOMS = 3;
+export const SHARD3_MAX_OWNED_ROOMS = 1;
 
 /**
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.

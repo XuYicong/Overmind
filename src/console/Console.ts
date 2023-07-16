@@ -108,12 +108,8 @@ export class OvermindConsole {
 
 	static info(aligned = false): string {
 		const b = bullet;
-		const checksum = Assimilator.generateChecksum();
-		const clearanceCode = Assimilator.getClearanceCode(MY_USERNAME);
 		const baseInfo = [
 			`${b}Version:        Overmind v${__VERSION__}`,
-			`${b}Checksum:       ${checksum}`,
-			`${b}Assimilated:    ${clearanceCode ? 'Yes' : 'No'} (clearance code: ${clearanceCode}) [WIP]`,
 			`${b}Operating mode: ${Memory.settings.operationMode}`,
 		];
 		const joinChar = aligned ? alignedNewline : '\n';
@@ -149,7 +145,7 @@ export class OvermindConsole {
 		const sig = signature ? signature : DEFAULT_OVERMIND_SIGNATURE;
 		if (sig.length > 100) {
 			throw new Error(`Invalid signature: ${signature}; length is over 100 chars.`);
-		} else if (sig.toLowerCase().includes('overmind') || sig.includes(DEFAULT_OVERMIND_SIGNATURE)) {
+		} else if (sig.length > 1 || sig.includes(DEFAULT_OVERMIND_SIGNATURE)) {
 			Memory.settings.signature = sig;
 			return `Controller signature set to ${sig}`;
 		} else {

@@ -95,6 +95,7 @@ interface PublicSegment {
 interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
 	[_MEM.COLONY]: string | null;
+	[_MEM.SHARD]?: string;
 	role: string;
 	task: ProtoTask | null;
 	data: {
@@ -164,6 +165,7 @@ declare const enum _MEM {
 	COLONY     = 'C',
 	OVERLORD   = 'O',
 	DISTANCE   = 'D',
+	SHARD	   = 'S',
 }
 
 declare const enum _RM {
@@ -262,6 +264,21 @@ interface RoomMemory {
 	[_RM.SAFETY]?: SafetyData;
 	[_RM.PREV_POSITIONS]?: { [creepID: string]: ProtoPos };
 	[_RM.CREEPS_IN_ROOM]?: { [tick: number]: string[] };
+}
+
+interface InterShardMemory {
+	connection: {
+		[peer: string]: {
+			[id: string]: InterShardPacket;
+		};
+	}
+}
+
+interface InterShardPacket {
+	id: string;
+	// At least one of them must not be null
+	ack: string | null;
+	payload: string | null;
 }
 
 interface SavedRoomObject {

@@ -9,6 +9,7 @@ import {
 	EnergyStructure,
 	isEnergyStructure,
 	isResource,
+	isRuin,
 	isStoreStructure,
 	isTombstone,
 	StoreStructure
@@ -249,7 +250,7 @@ export class LogisticsNetwork {
 
 	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant | 'all'): number {
 		if (resourceType == 'all') {
-			if (isTombstone(target) || isStoreStructure(target)) {
+			if (isTombstone(target) || isStoreStructure(target) || isRuin(target)) {
 				return _.sum(target.store);
 			} else {
 				log.error(ALL_RESOURCE_TYPE_ERROR);

@@ -31,9 +31,17 @@ export class ReservingOverlord extends Overlord {
 			if (this.room.controller!.needsReserving(this.reserveBuffer)) {
 				amount = 1;
 			}
-		} else if (RoomIntel.roomReservedBy(this.pos.roomName) == MY_USERNAME &&
-				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000) {
-			amount = 1;
+			if(this.room.controller && this.room.controller.reservation
+				&& this.room.controller.reservation.username == 'Invader') {
+				amount = 1;
+			}
+		} else {
+			const reserver = RoomIntel.roomReservedBy(this.pos.roomName);
+			if (reserver == 'Invader' || 
+				(reserver == MY_USERNAME &&
+				   RoomIntel.roomReservationRemaining(this.pos.roomName) < 1000)) {
+				amount = 1;
+			}
 		}
 		this.wishlist(amount, Setups.infestors.reserve);
 	}
@@ -49,7 +57,14 @@ export class ReservingOverlord extends Overlord {
 					reserver.task = Tasks.signController(this.room.controller!);
 				}
 			} else {
-				reserver.task = Tasks.reserve(this.room.controller!);
+				const reservation = this.room.controller!.reservation;
+				if(reservation && reservation.username == 'Invader') {
+					if(reserver.attackController(this.room.controller!) != OK) {
+						reserver.goTo(this.pos);
+					}
+				} else {
+					reserver.task = Tasks.reserve(this.room.controller!);
+				}
 			}
 		} else {
 			// reserver.task = Tasks.goTo(this.pos);

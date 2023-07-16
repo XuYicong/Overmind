@@ -67,6 +67,7 @@ export class Pathing {
 			ignoreCreeps: true,
 			maxOps      : DEFAULT_MAXOPS,
 			range       : 1,
+			avoidSK     : true,
 			terrainCosts: {plainCost: 1, swampCost: 5},
 		});
 

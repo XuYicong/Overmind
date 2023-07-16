@@ -15,7 +15,7 @@ export const NO_ACTION = -20;
 export const CROSSING_PORTAL = -21;
 export const ERR_CANNOT_PUSH_CREEP = -30;
 
-const REPORT_CPU_THRESHOLD = 1000; 	// Report when creep uses more than this amount of CPU over lifetime
+const REPORT_CPU_THRESHOLD = 800; 	// Report when creep uses more than this amount of CPU over lifetime
 const REPORT_SWARM_CPU_THRESHOLD = 1500;
 
 const DEFAULT_STUCK_VALUE = 2;		// Marked as stuck after this many ticks
@@ -56,7 +56,7 @@ export interface MoveOptions {
 	ignoreStructures?: boolean;					// ignore pathing around structures
 	preferHighway?: boolean;					// prefer alley-type rooms
 	allowHostile?: boolean;						// allow to path through hostile rooms; origin/destination room excluded
-	avoidSK?: boolean;							// avoid walking within range 4 of source keepers
+	avoidSK?: boolean;							// avoid walking within range 6 of source keepers
 	range?: number;								// range to approach target
 	fleeRange?: number;							// range to flee from targets
 	obstacles?: RoomPosition[];					// don't path through these room positions
@@ -135,6 +135,7 @@ export class Movement {
 		// Set default options
 		_.defaults(options, {
 			ignoreCreeps     : true,
+			avoidSK     : true,
 			repathOnceVisible: !!options.waypoints || !!options.avoidSK,
 		});
 
@@ -193,7 +194,8 @@ export class Movement {
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination)) {
+		if (options.waypoints && !destination.isEqualTo(finalDestination) &&
+			(moveData.portaling || creep.pos.isNearTo(destination))) {
 			const portalTraversed = this.traversePortalWaypoint(creep, destination);
 			if (portalTraversed) {
 				return this.goTo(creep, finalDestination, options);
@@ -399,7 +401,7 @@ export class Movement {
 	 * other side of the portal and no longer standing on a portal.
 	 */
 	private static crossPortal(creep: Zerg, portalPos: RoomPosition): boolean {
-		if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 5) {
+		if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 2) {
 			// if you're on the other side of the portal
 			const creepOnPortal = !!creep.pos.lookForStructure(STRUCTURE_PORTAL);
 			if (!creepOnPortal) {
@@ -1160,14 +1162,14 @@ export class Movement {
 		const closest = creep.pos.findClosestByRange(avoidGoals);
 		const rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;
 
-		if (rangeToClosest > options.fleeRange) { // Out of range of baddies
-
-			if (!creep.memory._go) {
-				return;
-			}
+		if (rangeToClosest >= options.fleeRange) { // Out of range of baddies
 
 			if (creep.pos.isEdge) {
 				return creep.moveOffExit();
+			}
+
+			if (!creep.memory._go) {
+				return;
 			}
 
 			// wait until safe
@@ -1186,6 +1188,7 @@ export class Movement {
 				return;
 			}
 
+		// } else if (rangeToClosest == options.fleeRange) { // Flee target range and not moving forward anymore	
 		} else { // Still need to run away
 
 			// initialize data object

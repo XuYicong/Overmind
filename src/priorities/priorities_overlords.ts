@@ -60,18 +60,18 @@ export let OverlordPriority = {
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
 	},
 
-	scouting: {
-		stationary  : 900,
-		randomWalker: 901
-	},
-
 	remoteSKRoom: {
-		sourceReaper : 1000,
-		mineral      : 1001,
-		mine         : 1002,
+		sourceReaper : 900,
+		mineral      : 901,
+		mine         : 902,
 		roomIncrement: 5,
 	},
 
+	scouting: {
+		stationary  : 1000,
+		randomWalker: 1001
+	},
+ 
 	collection: {				// Non-urgent collection of resources, like from a deserted storage
 		haul: 1100
 	},

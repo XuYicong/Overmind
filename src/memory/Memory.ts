@@ -236,6 +236,63 @@ export class Mem {
 		};
 	}
 
+	static getInterShardMemory(shard: string): InterShardMemory | null {
+		let raw: string|null;
+		if(shard == Game.shard.name) {
+			raw = InterShardMemory.getLocal();
+		} else {
+			raw = InterShardMemory.getRemote(shard);
+		}
+		if(raw == null) return null;
+		return JSON.parse(raw);
+	}
+
+	static setInterShardMemory(data: InterShardMemory): void {
+		InterShardMemory.setLocal(JSON.stringify(data));
+	}
+	
+	static receiveInterShardPackets(): void {
+		const myData = Memory.getInterShardMemory(Game.shard.name);
+		for(let i = 0; i <= 3; i++) {
+			const shard = 'shard' + i;
+			if(shard == Game.shard.name) continue;
+			const data = Memory.getInterShardMemory(shard);
+			if(data == null) continue;
+
+			for(const packet of data.connection[Game.shard.name]) {
+				if(packet.ack != null) {
+					// Received ack, stop sending that data
+					myData.connection[shard][packet.ack].payload = null;
+					if(myData.connection[shard][packet.ack].ack == null) {
+						myData.connection[shard][packet.ack] = undefined;
+					}
+				} 
+				if (packet.payload != null) {
+					// Received data. For creeps, should not be handled until creep actually appears
+				}
+			}
+		}
+		Memory.setInterShardMemory(myData);
+	}
+
+	static acceptAlienCreeps(creep: Creep) {
+		// Get creep memory from other shards and fill in
+		if(creep.memory) {
+			log.alert('Cannot acceptAlienCreeps: ' + creep.name + ' already exists');
+			return;
+		}
+		const myData = Memory.getInterShardMemory(Game.shard.name);
+		for(let i = 0; i <= 3; i++) {
+			const shard = 'shard' + i;
+			if(shard == Game.shard.name) continue;
+		}
+			
+	}
+
+	static sendAlienCreeps(creep: Creep, targetShard: string) {
+		// Send creep memory in an inter-shard packet to specified shard
+	}
+
 	static clean() {
 		// Clean the memory of non-existent objects every tick
 		this.cleanHeap();

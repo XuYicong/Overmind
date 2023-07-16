@@ -172,13 +172,13 @@ export class Colony {
 	static settings = {
 		remoteSourcesByLevel: {
 			1: 1,
-			2: 2,
-			3: 3,
-			4: 4,
-			5: 5,
-			6: 5,
-			7: 5,
-			8: 5,
+			2: 1,
+			3: 1,
+			4: 1,
+			5: 1,
+			6: 1,
+			7: 1,
+			8: 1,
 		},
 		maxSourceDistance   : 100
 	};

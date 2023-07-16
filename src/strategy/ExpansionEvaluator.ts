@@ -12,7 +12,7 @@ import {
 } from '../utilities/Cartographer';
 import {derefCoords} from '../utilities/utils';
 
-export const EXPANSION_EVALUATION_FREQ = 500;
+export const EXPANSION_EVALUATION_FREQ = 503;
 export const MIN_EXPANSION_DISTANCE = 2;
 
 @profile

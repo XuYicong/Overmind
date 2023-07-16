@@ -1,6 +1,7 @@
+import { normalizePos } from 'movement/helpers';
 import {Colony} from '../Colony';
 import {log} from '../console/log';
-import {isCreep, isZerg} from '../declarations/typeGuards';
+import {hasPos, isCreep, isZerg} from '../declarations/typeGuards';
 import {CombatIntel} from '../intel/CombatIntel';
 import {Movement, MoveOptions} from '../movement/Movement';
 import {Overlord} from '../overlords/Overlord';
@@ -107,6 +108,7 @@ export class Zerg {
 	ticksToLive: number | undefined;	// |
 	lifetime: number;
 	actionLog: { [actionName: string]: boolean }; // Tracks the actions that a creep has completed this tick
+	taskPreference: { [id: string]: number };	// Prefer efficient tasks to avoid task jamming
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
@@ -133,6 +135,7 @@ export class Zerg {
 		// Extra properties
 		this.lifetime = this.getBodyparts(CLAIM) > 0 ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		this.actionLog = {};
+		this.taskPreference = {};
 		this.blockMovement = false;
 		// Register global references
 		Overmind.zerg[this.name] = this;
@@ -616,6 +619,11 @@ export class Zerg {
 	// Movement and location -------------------------------------------------------------------------------------------
 
 	goTo(destination: RoomPosition | HasPos, options: MoveOptions = {}) {
+		// setting avoidSK here allows repathOnVision enabled
+		// log.debug(this.creep.name + 'goto '+ normalizePos(destination).print +' with avoidSK: '+ options.avoidSK);
+		// _.defaults(options, {
+		// 	avoidSK     : true,
+		// });
 		return Movement.goTo(this, destination, options);
 	}
 
@@ -668,6 +676,22 @@ export class Zerg {
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
+			if(!moveOptions.fleeRange) {
+				const mayChase = _.find(avoidGoals, goal => {
+					if(hasPos(goal)) {
+						goal = goal.pos;
+					}
+					if(goal.lookForStructure(STRUCTURE_KEEPER_LAIR)) return false;
+					const creeps = goal.lookFor(LOOK_CREEPS);
+					for(const creep of creeps) {
+						if(creep.owner.username != "Source Keeper") return true;
+					}
+					return false;
+				});
+				if(!mayChase) {
+					moveOptions.fleeRange = 5;
+				}
+			}
 			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
 			if (fleeing) {
 				// Drop energy if needed
@@ -680,7 +704,14 @@ export class Zerg {
 					}
 				}
 				// Invalidate task
-				if (fleeOptions.invalidateTask) {
+				if (fleeOptions.invalidateTask && this.task) {
+					const target = this.task.target;
+					if(target) {
+						if(this.taskPreference[target.ref]) {
+							this.taskPreference[target.ref]-=50;
+							log.debug(this.name + ' fleed from ' + avoidGoals[0] + ', preference becomes ' +this.taskPreference[target.ref]);
+						}
+					}
 					this.task = null;
 				}
 			}

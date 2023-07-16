@@ -5,7 +5,7 @@ import {exponentialMovingAverage} from '../utilities/utils';
 /**
  * Operational statistics, stored in Memory.stats, will be updated every (this many) ticks
  */
-export const LOG_STATS_INTERVAL = 8;
+export const LOG_STATS_INTERVAL = 11;
 
 @profile
 export class Stats {

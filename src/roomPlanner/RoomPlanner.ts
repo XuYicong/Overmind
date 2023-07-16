@@ -12,7 +12,7 @@ import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
-import {bunkerLayout, getRoomSpecificBunkerLayout} from './layouts/bunker';
+import {getRoomSpecificBunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';

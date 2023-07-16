@@ -1,3 +1,4 @@
+import { MoveOptions } from 'movement/Movement';
 import {$} from '../../caching/GlobalCache';
 import {ColonyStage} from '../../Colony';
 import {log} from '../../console/log';
@@ -18,7 +19,7 @@ export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.gen
 export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generateBody(Infinity));
 
 
-const BUILD_OUTPUT_FREQUENCY = 15;
+const BUILD_OUTPUT_FREQUENCY = 37;
 const SUICIDE_CHECK_FREQUENCY = 3;
 const MINER_SUICIDE_THRESHOLD = 200;
 
@@ -357,15 +358,16 @@ export class MiningOverlord extends Overlord {
 		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
 			return;
 		}
-
+		let moveOptions: MoveOptions = {waypoints : this.directive.waypoints};
 		// Move onto harvesting position or near to source (depending on early/standard mode)
 		if (this.mode == 'early' || !this.harvestPos) {
 			if (!miner.pos.inRangeToPos(this.pos, 1)) {
-				return miner.goTo(this);
+				return miner.goTo(this, moveOptions);
 			}
 		} else {
+			moveOptions.range = 0;
 			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
-				return miner.goTo(this.harvestPos, {range: 0});
+				return miner.goTo(this.harvestPos, moveOptions);
 			}
 		}
 

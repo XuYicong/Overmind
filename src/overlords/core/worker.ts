@@ -1,3 +1,4 @@
+import { log } from 'console/log';
 import {$} from '../../caching/GlobalCache';
 import {Colony, ColonyStage, DEFCON} from '../../Colony';
 import {Roles, Setups} from '../../creepSetups/setups';
@@ -216,9 +217,16 @@ export class WorkerOverlord extends Overlord {
 		const groupedSites = _.groupBy(this.constructionSites, site => site.structureType);
 		for (const structureType of BuildPriorities) {
 			if (groupedSites[structureType]) {
-				const target = worker.pos.findClosestByMultiRoomRange(groupedSites[structureType]);
+				const sites = groupedSites[structureType];
+				const target = worker.pos.findClosestByMultiRoomRange(_.filter(groupedSites[structureType], site => {
+					if(!worker.taskPreference[site.ref]) {
+						worker.taskPreference[site.ref] = -1;
+					}
+					return worker.taskPreference[site.ref] > -10;
+				}));
 				if (target) {
 					worker.task = Tasks.build(target);
+					log.debug(worker.name + ' get build task at ' + target.pos);
 					return true;
 				}
 			}

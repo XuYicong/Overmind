@@ -1,3 +1,4 @@
+import { RoomIntel } from 'intel/RoomIntel';
 import {GuardSwarmOverlord} from '../../overlords/defense/guardSwarm';
 import {DefenseNPCOverlord} from '../../overlords/defense/npcDefense';
 import {profile} from '../../profiler/decorator';
@@ -25,14 +26,20 @@ export class DirectiveGuard extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		if (this.colony.level >= DefenseNPCOverlord.requiredRCL) {
-			// if (this.memory.enhanced || this.name.includes('enhanced')) {
-			// 	this.overlords.guardPair = new GuardPairOverlord(this);
-			// } else {
-			this.overlords.guard = new DefenseNPCOverlord(this);
-			// }
-		} else {
+		const reserver = RoomIntel.roomReservedBy(this.pos.roomName);
+		if(reserver && reserver == 'Invader') {
+			this.memory.amount = 1;
 			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
+		} else {
+			if (this.colony.level >= DefenseNPCOverlord.requiredRCL) {
+				// if (this.memory.enhanced || this.name.includes('enhanced')) {
+				// 	this.overlords.guardPair = new GuardPairOverlord(this);
+				// } else {
+				this.overlords.guard = new DefenseNPCOverlord(this);
+				// }
+			} else {
+				this.overlords.swarmGuard = new GuardSwarmOverlord(this);
+			}
 		}
 	}
 

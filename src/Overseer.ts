@@ -267,7 +267,8 @@ export class Overseer implements IOverseer {
 				return false;
 			}
 			const shouldBackOff = _.any(neighboringRooms,
-						r => RoomIntel.roomOwnedBy(r) || RoomIntel.roomReservedBy(r));
+						r => false// RoomIntel.roomOwnedBy(r) || RoomIntel.roomReservedBy(r)
+						);
 			return !shouldBackOff;
 		});
 	}
@@ -314,7 +315,7 @@ export class Overseer implements IOverseer {
 				this.handleNewOutposts(colony);
 			}
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
-			if (Game.time % 25 == 0 && colony.spawns.length == 0 &&
+			if (Game.time % 29 == 0 && colony.spawns.length == 0 &&
 				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
 				// verify that there are no spawns (not just a caching glitch)
 				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
@@ -326,6 +327,19 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	/* Move creeps from other shards along their previous routes */
+	private handleInterShardCreeps(): void {
+		const alienCreeps = _.filter(Game.creeps, creep => 
+			creep.memory[_MEM.SHARD] &&
+			creep.memory[_MEM.SHARD] != Game.shard.name
+		);
+		
+	}
+
+	private handleInterShard(): void {
+		Memory.receiveInterShardPackets();
+		this.handleInterShardCreeps();
+	}
 
 	// Safe mode condition =============================================================================================
 
@@ -419,7 +433,7 @@ export class Overseer implements IOverseer {
 			for (const role in overlord.creepUsageReport) {
 				const report = overlord.creepUsageReport[role];
 				if (report == undefined) {
-					if (Game.time % 100 == 0) {
+					if (Game.time % 101 == 0) {
 						log.info(`Role ${role} is not reported by ${overlord.ref}!`);
 					}
 				} else {

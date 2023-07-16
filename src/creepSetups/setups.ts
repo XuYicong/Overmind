@@ -20,6 +20,7 @@ export const Roles = {
 	// guardRanged: 'mutalisk',
 	melee     : 'zergling',
 	ranged    : 'hydralisk',
+	armedHealer: 'armedHealer',
 	healer    : 'transfuser',
 	bunkerGuard : 'bunkerGuard',
 	dismantler: 'lurker',
@@ -257,6 +258,14 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+	},
+
+	armedHealer: {
+		default: new CreepSetup(Roles.armedHealer, {
+			pattern  : [RANGED_ATTACK],
+			suffix	 : [HEAL, MOVE],
+			proportionalPrefixSuffix: true
+		}),
 	},
 
 	/**

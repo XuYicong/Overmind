@@ -4,6 +4,7 @@ import {profile} from '../../profiler/decorator';
 import {maxBy, minMax} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Task} from '../Task';
+import { TaskGoToRoom } from './goToRoom';
 import {TaskHarvest} from './harvest';
 import {pickupTaskName, TaskPickup} from './pickup';
 import {TaskWithdraw, withdrawTaskName} from './withdraw';
@@ -75,6 +76,9 @@ export class TaskRecharge extends Task {
 					creep.task = new TaskHarvest(availableSource);
 					return;
 				}
+			} else if (creep.colony != null && creep.room != creep.colony.room) {
+				creep.task = new TaskGoToRoom(creep.colony.name);
+				return;
 			}
 		}
 		if (target) {

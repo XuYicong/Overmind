@@ -14,7 +14,7 @@ interface CombatZergMemory extends CreepMemory {
 	swarm?: string;
 }
 
-export const DEFAULT_PARTNER_TICK_DIFFERENCE = 650;
+export const DEFAULT_PARTNER_TICK_DIFFERENCE = 900;
 export const DEFAULT_SWARM_TICK_DIFFERENCE = 500;
 
 /**

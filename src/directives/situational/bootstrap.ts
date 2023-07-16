@@ -43,7 +43,7 @@ export class DirectiveBootstrap extends Directive {
 
 	init(): void {
 		this.alert(`Colony in bootstrap mode!`, NotifierPriority.High);
-		if (Game.time % 100 == 0) {
+		if (Game.time % 101 == 0) {
 			log.alert(`Colony ${this.room.print} is in emergency recovery mode.`);
 		}
 	}

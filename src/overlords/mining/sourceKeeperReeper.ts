@@ -23,7 +23,7 @@ interface SourceReaperOverlordMemory extends OverlordMemory {
 @profile
 export class SourceReaperOverlord extends CombatOverlord {
 
-	static requiredRCL = 7;
+	static requiredRCL = 5;
 
 	directive: DirectiveSKOutpost;
 	memory: SourceReaperOverlordMemory;
@@ -37,15 +37,16 @@ export class SourceReaperOverlord extends CombatOverlord {
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.remoteSKRoom.roomIncrement;
 		this.reapers = this.combatZerg(Roles.melee);
-		this.defenders = this.combatZerg(Roles.ranged);
+		this.defenders = this.combatZerg(Roles.ranged).concat(this.combatZerg(Roles.armedHealer));
 		this.memory = Mem.wrap(this.directive.memory, 'sourceReaper');
 		this.computeTargetLair();
 	}
 
 	private computeTargetLair() {
 		this.targetLair = this.memory.targetLairID ? <StructureKeeperLair>deref(this.memory.targetLairID) : undefined;
-		if (!this.targetLair || (this.targetLair.ticksToSpawn || Infinity) >= 299) {
+		if (!this.targetLair || this.targetLair.pos.findInRange(this.targetLair.room.sourceKeepers, 5).length <= 0) {
 			this.targetLair = this.getNextTargetLair();
+			if(this.targetLair) this.memory.targetLairID = this.targetLair.id;
 		}
 	}
 
@@ -58,16 +59,23 @@ export class SourceReaperOverlord extends CombatOverlord {
 	init() {
 		const defenderAmount = this.room && (this.room.invaders.length > 0
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
+		if(this.directive.colony.level < 7) {
+			this.wishlist(2, CombatSetups.armedHealer.default);
+		} else {
+			this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
+		}
 		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
 
 	private getNextTargetLair(): StructureKeeperLair | undefined {
 		if (!this.room) return;
 		// If any lairs have an active keeper, target that
-		const activeLair = _.find(this.room.keeperLairs,
+		const activeLairs = _.filter(this.room.keeperLairs,
 								lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
+		let activeLair = _.find(activeLairs, lair => lair.pos.findInRange(lair.room.sources, 5).length > 0);
 		if (activeLair) return activeLair;
+		else
+		if(activeLairs[0]) return activeLairs[0];
 		// Otherwise target whatever is closest to spawning
 		return minBy(this.room.keeperLairs,
 					 lair => lair.ticksToSpawn || Infinity); // not sure why ticksToSpawn is number | undefined
@@ -79,7 +87,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.targetLair || !this.room || reaper.room != this.room || reaper.pos.isEdge) {
 			// log.debugCreep(reaper, `Going to room!`);
 			reaper.healSelfIfPossible();
-			reaper.goTo(this.pos);
+			reaper.goTo(this.pos, {avoidSK: false});
 			return;
 		}
 
@@ -120,9 +128,9 @@ export class SourceReaperOverlord extends CombatOverlord {
 				if (keeper) { // attack the source keeper
 					// stop and heal at range 4 if needed
 					const approachRange = (reaper.hits == reaper.hitsMax || reaper.pos.getRangeTo(keeper) <= 3) ? 1 : 4;
-					reaper.goTo(keeper, {range: approachRange});
+					reaper.goTo(keeper, {range: approachRange, avoidSK: false});
 				} else { // travel to next lair
-					reaper.goTo(this.targetLair, {range: 1});
+					reaper.goTo(this.targetLair, {range: 1, avoidSK: false});
 				}
 			}
 			reaper.healSelfIfPossible();
@@ -158,20 +166,33 @@ export class SourceReaperOverlord extends CombatOverlord {
 					defender.goTo(reaper, {
 						movingTarget: defender.pos.getRangeTo(reaper) > 8,
 						maxRooms    : 1,
-						repath      : 0.1
+						repath      : 0.1,
+						avoidSK: false
 					});
 				} else {
 					const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 					if (keeper) { // attack the source keeper
+						const partner = defender.findPartner(_.filter(this.defenders, other => other.name != defender.name));
 						const range = defender.pos.getRangeTo(keeper);
-						const keepAtRange = defender.hits < defender.hitsMax * .9 ? 4 : 3;
-						if (range < keepAtRange) {
-							defender.kite(this.room.hostiles, {range: keepAtRange});
-						} else if (range > keepAtRange) {
-							defender.goTo(keeper, {maxRooms: 1, range: keepAtRange});
+						const partnerRange = partner ? partner.pos.getRangeTo(keeper) : range;
+						const hits = partner ? defender.hits + partner.hits : defender.hits;
+						const hitsMax = partner ? defender.hitsMax + partner.hitsMax : defender.hitsMax;
+						const lowHealth = hits < hitsMax * .9;
+						const minRange = lowHealth ? 4 : partner ? 2 : 3;
+						const maxRange = lowHealth ? 4 : 3;
+						if (Math.min(range, partnerRange) < minRange) {
+							defender.kite(this.room.hostiles, {range: minRange});
+						} else if (Math.max(range, partnerRange) > maxRange) {
+							if(partner) {
+								if(defender.ticksToLive && partner.ticksToLive && defender.ticksToLive < partner.ticksToLive){
+									Movement.pairwiseMove(defender, partner, keeper, {avoidSK: false});
+								}
+							} else {
+								defender.goTo(keeper, {maxRooms: 1, range: maxRange, avoidSK: false});
+							}
 						}
 					} else { // travel to next lair
-						defender.goTo(this.targetLair, {range: 5});
+						defender.goTo(this.targetLair, {range: 5, avoidSK: false});
 					}
 				}
 			} else {
