@@ -2,7 +2,7 @@ import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {isIVM} from '../utilities/utils';
-import {DEFAULT_OPERATION_MODE, DEFAULT_OVERMIND_SIGNATURE,
+import {DEFAULT_OPERATION_MODE,
 		PROFILER_COLONY_LIMIT, USE_PROFILER, MY_USERNAME,} from '../~settings';
 
 export enum Autonomy {
@@ -199,7 +199,7 @@ export class Mem {
 			delete Memory.profiler;
 		}
 		_.defaults(Memory.settings, {
-			signature    : DEFAULT_OVERMIND_SIGNATURE,
+			signature    : MY_USERNAME,
 			operationMode: DEFAULT_OPERATION_MODE,
 			log          : {},
 			enableVisuals: true,resourceCollectionMode: 0,

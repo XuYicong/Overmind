@@ -3,7 +3,7 @@ import {Directive} from '../directives/Directive';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
 import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
-import {DEFAULT_OVERMIND_SIGNATURE, MY_USERNAME, USE_PROFILER} from '../~settings';
+import {MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
 
 type RecursiveObject = { [key: string]: number | RecursiveObject };
@@ -142,15 +142,12 @@ export class OvermindConsole {
 
 
 	static setSignature(signature: string | undefined): string | undefined {
-		const sig = signature ? signature : DEFAULT_OVERMIND_SIGNATURE;
+		const sig = signature ? signature : MY_USERNAME;
 		if (sig.length > 100) {
 			throw new Error(`Invalid signature: ${signature}; length is over 100 chars.`);
-		} else if (sig.length > 1 || sig.includes(DEFAULT_OVERMIND_SIGNATURE)) {
+		} else {
 			Memory.settings.signature = sig;
 			return `Controller signature set to ${sig}`;
-		} else {
-			throw new Error(`Invalid signature: ${signature}; must contain the string "Overmind" or ` +
-							`${DEFAULT_OVERMIND_SIGNATURE} (accessible on global with __DEFAULT_OVERMIND_SIGNATURE__)`);
 		}
 	}
 

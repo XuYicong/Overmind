@@ -46,9 +46,7 @@ export const USE_TRY_CATCH: boolean = true;
  * "overmind" or the small-caps variant.
  */
 const OVERMIND_PLAIN = 'Overmind';
-export const OVERMIND_SMALL_CAPS = '可怜无定河边骨，犹是春闺梦里人';
-export const DEFAULT_OVERMIND_SIGNATURE = OVERMIND_SMALL_CAPS;
-global.__DEFAULT_OVERMIND_SIGNATURE__ = DEFAULT_OVERMIND_SIGNATURE;
+global.__DEFAULT_OVERMIND_SIGNATURE__ = OVERMIND_PLAIN;
 
 /**
  * If this is enabled, Memory.bot will default to true. This will not change the mode if already set - use setMode().

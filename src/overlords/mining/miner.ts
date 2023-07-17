@@ -369,6 +369,7 @@ export class MiningOverlord extends Overlord {
 			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
 				return miner.goTo(this.harvestPos, moveOptions);
 			}
+			moveOptions.range = 1;
 		}
 
 		switch (this.mode) {
