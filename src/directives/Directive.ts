@@ -50,6 +50,9 @@ export abstract class Directive {
 		if (!this.memory[_MEM.TICK]) {
 			this.memory[_MEM.TICK] = Game.time;
 		}
+		if(!this.memory.waypoints) {
+			this.memory.waypoints = this.getWaypoints();
+		}
 		if (this.memory.waypoints) {
 			this.waypoints = _.map(this.memory.waypoints, posName => getPosFromString(posName)!);
 		}
@@ -154,6 +157,13 @@ export abstract class Directive {
 			return true;
 		}
 		return false;
+	}
+
+	private getWaypoints(): string[] | undefined {
+		// Flag names that start with pattern W10S10:45:14,W10S10:19:18; contain waypoints
+		if(this.name.includes(';') && this.name.includes(':')) {
+			return this.name.split(';')[0].split(',');
+		}
 	}
 
 	private getColony(colonyFilter?: (colony: Colony) => boolean, verbose = false): Colony | undefined {

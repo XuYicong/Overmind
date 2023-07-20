@@ -1,9 +1,11 @@
+import { Zerg } from 'zerg/Zerg';
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Stats} from '../stats/stats';
 import {isIVM} from '../utilities/utils';
 import {DEFAULT_OPERATION_MODE,
 		PROFILER_COLONY_LIMIT, USE_PROFILER, MY_USERNAME,} from '../~settings';
+import { Overseer } from 'Overseer';
 
 export enum Autonomy {
 	Manual        = 0,
@@ -31,7 +33,7 @@ let lastMemory: any;
 let lastTime: number = 0;
 
 const MAX_BUCKET = 10000;
-const HEAP_CLEAN_FREQUENCY = 200;
+const HEAP_CLEAN_FREQUENCY = 800;
 const BUCKET_CLEAR_CACHE = 7000;
 const BUCKET_CPU_HALT = 4000;
 
@@ -50,7 +52,7 @@ export class Mem {
 		if (USE_PROFILER && Game.time % 10 == 0) {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
-		if (Game.cpu.bucket < 500) {
+		if (Game.cpu.bucket < 15) {
 			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
@@ -71,7 +73,7 @@ export class Mem {
 		}
 		if (Memory.haltTick) {
 			if (Memory.haltTick == Game.time) {
-				(<any>Game.cpu).halt(); // TODO: remove any typing when typed-screeps updates to include this method
+				Game.cpu.halt!();
 				shouldRun = false;
 			} else if (Memory.haltTick < Game.time) {
 				delete Memory.haltTick;
@@ -234,63 +236,6 @@ export class Mem {
 			roomPositions: {},
 			things       : {},
 		};
-	}
-
-	static getInterShardMemory(shard: string): InterShardMemory | null {
-		let raw: string|null;
-		if(shard == Game.shard.name) {
-			raw = InterShardMemory.getLocal();
-		} else {
-			raw = InterShardMemory.getRemote(shard);
-		}
-		if(raw == null) return null;
-		return JSON.parse(raw);
-	}
-
-	static setInterShardMemory(data: InterShardMemory): void {
-		InterShardMemory.setLocal(JSON.stringify(data));
-	}
-	
-	static receiveInterShardPackets(): void {
-		const myData = Memory.getInterShardMemory(Game.shard.name);
-		for(let i = 0; i <= 3; i++) {
-			const shard = 'shard' + i;
-			if(shard == Game.shard.name) continue;
-			const data = Memory.getInterShardMemory(shard);
-			if(data == null) continue;
-
-			for(const packet of data.connection[Game.shard.name]) {
-				if(packet.ack != null) {
-					// Received ack, stop sending that data
-					myData.connection[shard][packet.ack].payload = null;
-					if(myData.connection[shard][packet.ack].ack == null) {
-						myData.connection[shard][packet.ack] = undefined;
-					}
-				} 
-				if (packet.payload != null) {
-					// Received data. For creeps, should not be handled until creep actually appears
-				}
-			}
-		}
-		Memory.setInterShardMemory(myData);
-	}
-
-	static acceptAlienCreeps(creep: Creep) {
-		// Get creep memory from other shards and fill in
-		if(creep.memory) {
-			log.alert('Cannot acceptAlienCreeps: ' + creep.name + ' already exists');
-			return;
-		}
-		const myData = Memory.getInterShardMemory(Game.shard.name);
-		for(let i = 0; i <= 3; i++) {
-			const shard = 'shard' + i;
-			if(shard == Game.shard.name) continue;
-		}
-			
-	}
-
-	static sendAlienCreeps(creep: Creep, targetShard: string) {
-		// Send creep memory in an inter-shard packet to specified shard
 	}
 
 	static clean() {

@@ -1,3 +1,4 @@
+import { Overshard } from 'Overshard';
 import {log} from '../console/log';
 import {Roles} from '../creepSetups/setups';
 import {isZerg} from '../declarations/typeGuards';
@@ -151,6 +152,10 @@ export class Movement {
 
 		if (options.waypoints) {
 			destination = this.getDestination(destination, options.waypoints, moveData);
+			if(!moveData.destination || !moveData.waypoints) {
+				moveData.waypoints = _.map(options.waypoints, pos => pos.name);
+				moveData.destination = finalDestination;
+			}
 		}
 
 		Pathing.updateRoomStatus(creep.room);
@@ -158,6 +163,17 @@ export class Movement {
 		// Fixes bug that causes creeps to idle on the other side of a room
 		if (options.range != undefined && destination.rangeToEdge <= options.range) {
 			options.range = Math.min(Math.abs(destination.rangeToEdge - 1), 0);
+		}
+
+		// traverse through a portal waypoint or check that has just been traversed
+		if (options.waypoints && !destination.isEqualTo(finalDestination) &&
+			(moveData.portaling || creep.pos.isNearTo(destination))) {
+			const portalTraversed = this.traversePortalWaypoint(creep, destination);
+			if (portalTraversed) {
+				return this.goTo(creep, finalDestination, options);
+			} else {
+				return CROSSING_PORTAL;
+			}
 		}
 
 		// manage case where creep is nearby destination
@@ -190,17 +206,6 @@ export class Movement {
 					delete creep.memory._go;
 				}
 				return NO_ACTION;
-			}
-		}
-
-		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination) &&
-			(moveData.portaling || creep.pos.isNearTo(destination))) {
-			const portalTraversed = this.traversePortalWaypoint(creep, destination);
-			if (portalTraversed) {
-				return this.goTo(creep, finalDestination, options);
-			} else {
-				return CROSSING_PORTAL;
 			}
 		}
 
@@ -241,8 +246,25 @@ export class Movement {
 		if (!options.stuckValue) {
 			options.stuckValue = DEFAULT_STUCK_VALUE;
 		}
-		if (state.stuckCount >= options.stuckValue && Math.random() > .5) {
-			options.ignoreCreeps = false;
+		if (state.stuckCount >= options.stuckValue) {
+			if(Math.random() > .5) {
+				options.ignoreCreeps = false;
+			}
+			if(Math.random() > .5) {
+				options.avoidSK = !options.avoidSK;
+			}
+			if(Math.random() > .5) {
+				options.range = 5;
+			}
+			if(Math.random() > .5) {
+				options.direct = !options.direct;
+			}
+			if(Math.random() > .5) {
+				options.force = !options.force;
+			}
+			// if(Math.random() > .5) {
+			// 	options.maxOps;
+			// }
 			delete moveData.path;
 		}
 
@@ -368,17 +390,21 @@ export class Movement {
 	 */
 	private static traversePortalWaypoint(creep: Zerg, portalPos: RoomPosition): boolean {
 
-		if (creep.pos.roomName == portalPos.roomName && creep.pos.getRangeTo(portalPos) > 1) {
+		const moveData = creep.memory._go || {} as MoveData;
+		if (creep.pos.roomName == portalPos.roomName && !moveData.portaling && creep.pos.getRangeTo(portalPos) > 1) {
 			log.error(`Movement.travelPortalWaypoint() should only be called in range 1 of portal!`);
 		}
 
-		const moveData = creep.memory._go || {} as MoveData;
-
-		if (portalPos.room && !portalPos.lookForStructure(STRUCTURE_PORTAL)) {
-			log.error(`Portal not found at ${portalPos.print}!`);
-			return false;
+		let shard;
+		if (portalPos.room && !moveData.portaling) {
+			let portal = portalPos.lookForStructure(STRUCTURE_PORTAL);
+			if (!portal) {
+				log.error(`Portal not found at ${portalPos.print}!`);
+				return false;
+			}
+			shard = (<{shard:string}>(<StructurePortal>portal).destination).shard;
 		}
-
+		const shouldSendData = !moveData.portaling;
 		moveData.portaling = true;
 		const crossed = this.crossPortal(creep, portalPos);
 
@@ -391,6 +417,10 @@ export class Movement {
 
 			return true; // done crossing portal
 		} else {
+			if(shard && shouldSendData) {
+				// Crossing an inter shard portal, send creep memory to target shard
+				Overshard.sendCreepMemory(creep.creep, shard);
+			}
 			return false; // still trying to cross portal
 		}
 
@@ -401,7 +431,8 @@ export class Movement {
 	 * other side of the portal and no longer standing on a portal.
 	 */
 	private static crossPortal(creep: Zerg, portalPos: RoomPosition): boolean {
-		if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 2) {
+		if (Game.map.getRoomLinearDistance(creep.pos.roomName, portalPos.roomName) > 5 ||
+			!portalPos.lookForStructure(STRUCTURE_PORTAL)) {
 			// if you're on the other side of the portal
 			const creepOnPortal = !!creep.pos.lookForStructure(STRUCTURE_PORTAL);
 			if (!creepOnPortal) {

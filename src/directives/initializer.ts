@@ -25,11 +25,11 @@ import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_emergency';
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
-
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
  */
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
+	const raw = {"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":15,"y":43},{"shard":"shard0","roomName":"W40S51","x":4,"y":1},{"shard":"shard0","roomName":"W51S50","x":48,"y":7},{"shard":"shard0","roomName":"W51S10","x":48,"y":18},{"shard":"shard0","roomName":"W50N10","x":40,"y":34},{"shard":"shard1","roomName":"W30N10","x":35,"y":37},{"shard":"shard2","roomName":"W30N10","x":19,"y":40}],"distance":366,"totalRooms":20};
 
 	switch (flag.color) {
 
@@ -42,6 +42,9 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:
 					return new DirectiveIncubate(flag);
+				case COLOR_CYAN:
+					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
+					return new DirectiveColonize(flag);
 				case COLOR_GREY:
 					return new DirectiveColonize(flag);
 				case COLOR_ORANGE:
@@ -56,6 +59,9 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSwarmDestroy(flag);
 				case COLOR_CYAN:
 					return new DirectivePairDestroy(flag);
+				case COLOR_GREEN:
+					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
+					return new DirectiveControllerAttack(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 			}
@@ -89,7 +95,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_YELLOW:
 					return new DirectiveHarvest(flag);
 				case COLOR_GREY:
-					const raw = {"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":26,"y":8},{"shard":"shard0","roomName":"W31S60","x":47,"y":4},{"shard":"shard0","roomName":"W30S40","x":17,"y":5},{"shard":"shard1","roomName":"W20S20","x":44,"y":9},{"shard":"shard0","roomName":"W29S30","x":1,"y":9},{"shard":"shard0","roomName":"W31N0","x":48,"y":17},{"shard":"shard0","roomName":"W29N10","x":1,"y":19},{"shard":"shard0","roomName":"W30N30","x":43,"y":43},{"shard":"shard1","roomName":"W20N20","x":38,"y":12},{"shard":"shard0","roomName":"W30N39","x":40,"y":1},{"shard":"shard0","roomName":"W20N40","x":24,"y":23},{"shard":"shard1","roomName":"W10N20","x":14,"y":38},{"shard":"shard0","roomName":"W10N31","x":37,"y":48},{"shard":"shard0","roomName":"E10N30","x":41,"y":22},{"shard":"shard1","roomName":"E10N20","x":25,"y":8},{"shard":"shard2","roomName":"E10N20","x":13,"y":42}],"distance":584,"totalRooms":39};
 					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
 					return new DirectiveHarvest(flag);
 				case COLOR_CYAN:

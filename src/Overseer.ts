@@ -47,7 +47,6 @@ export class Overseer implements IOverseer {
 	private sorted: boolean;
 	private overlordsByColony: { [col: string]: Overlord[] };	// Overlords grouped by colony
 	private directives: Directive[];							// Directives across the colony
-
 	combatPlanner: CombatPlanner;
 	notifier: Notifier;
 
@@ -140,6 +139,13 @@ export class Overseer implements IOverseer {
 
 	suspendOverlordUntil(overlord: Overlord, untilTick: number): void {
 		this.memory.suspendUntil[overlord.ref] = untilTick;
+	}
+
+	remainingSuspendTime(overlord: Overlord): number {
+		if (this.memory.suspendUntil[overlord.ref]) {
+			return this.memory.suspendUntil[overlord.ref] - Game.time;
+		}
+		return 0;
 	}
 
 	private registerLogisticsRequests(colony: Colony): void {
@@ -327,20 +333,6 @@ export class Overseer implements IOverseer {
 		}
 	}
 
-	/* Move creeps from other shards along their previous routes */
-	private handleInterShardCreeps(): void {
-		const alienCreeps = _.filter(Game.creeps, creep => 
-			creep.memory[_MEM.SHARD] &&
-			creep.memory[_MEM.SHARD] != Game.shard.name
-		);
-		
-	}
-
-	private handleInterShard(): void {
-		Memory.receiveInterShardPackets();
-		this.handleInterShardCreeps();
-	}
-
 	// Safe mode condition =============================================================================================
 
 	private handleSafeMode(colony: Colony): void {
@@ -397,10 +389,10 @@ export class Overseer implements IOverseer {
 		}
 		// Initialize overlords
 		for (const overlord of this.overlords) {
-			if (!this.isOverlordSuspended(overlord)) {
+			// if (!this.isOverlordSuspended(overlord)) {
 				overlord.preInit();
 				this.try(() => overlord.init());
-			}
+			// }
 		}
 		// Register cleanup requests to logistics network
 		for (const colony of this.colonies) {
@@ -415,9 +407,9 @@ export class Overseer implements IOverseer {
 			directive.run();
 		}
 		for (const overlord of this.overlords) {
-			if (!this.isOverlordSuspended(overlord)) {
+			// if (!this.isOverlordSuspended(overlord)) {
 				this.try(() => overlord.run());
-			}
+			// }
 		}
 		for (const colony of this.colonies) {
 			this.handleSafeMode(colony);

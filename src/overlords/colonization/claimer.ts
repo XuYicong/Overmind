@@ -1,3 +1,4 @@
+import { DirectiveColonize } from 'directives/colony/colonize';
 import {$} from '../../caching/GlobalCache';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {Directive} from '../../directives/Directive';
@@ -7,6 +8,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import { Overseer } from 'Overseer';
 
 /**
  * Claim an unowned room
@@ -16,15 +18,18 @@ export class ClaimingOverlord extends Overlord {
 
 	claimers: Zerg[];
 	directive: Directive;
+	canSpawn: () => boolean;
 
-	constructor(directive: Directive, priority = OverlordPriority.colonization.claim) {
+	constructor(directive: Directive, priority = OverlordPriority.colonization.claim, canSpawn: ()=>boolean = ()=>true) {
 		super(directive, 'claim', priority);
 		this.directive = directive;
 		this.claimers = this.zerg(Roles.claim);
+		this.canSpawn = canSpawn;
 	}
 
 	init() {
 		const amount = $.number(this, 'claimerAmount', () => {
+			if(!this.canSpawn()) return 0;
 			if (this.room) { // if you have vision
 				if (this.room.my) { // already claimed
 					return 0;

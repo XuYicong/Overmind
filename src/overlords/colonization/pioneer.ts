@@ -33,7 +33,12 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(4, Setups.pioneer);
+		if(this.directive.waypoints && this.directive.waypoints.length > 4) {
+			// We are crossing shards to reach the room. Reduce shards CPU use by sending less
+			this.wishlist(1, Setups.pioneer);
+		} else {
+			this.wishlist(4, Setups.pioneer);
+		}
 	}
 
 	private findStructureBlockingController(pioneer: Zerg): Structure | undefined {

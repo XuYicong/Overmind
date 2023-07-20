@@ -1,3 +1,4 @@
+import { NotifierPriority } from 'directives/Notifier';
 import { assimilationLocked } from '../assimilation/decorator';
 import { log } from '../console/log';
 import { Mem } from '../memory/Memory';
@@ -103,8 +104,12 @@ export class TraderJoe implements ITradeNetwork {
 		this.notifications = [];
 	}
 
-	private notify(msg: string): void {
-		this.notifications.push(bullet + msg);
+	private notify(msg: string, roomName = ""): void {
+		if(roomName){
+			this.notifications.push(bullet + msg + ';' + roomName);
+		} else {
+			this.notifications.push(bullet + msg);
+		}
 	}
 
 	/**
@@ -112,6 +117,8 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	private buildMarketCache(verbose = false, orderThreshold = 1000): void {
 		this.invalidateMarketCache();
+		// Do not cache this lot in memory if cpu is limited
+		if(Game.cpu.limit < 5) return;
 		const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
 		const allOrders = Game.market.getAllOrders(order => !myActiveOrderIDs.includes(order.id) &&
 			order.amount >= orderThreshold); // don't include tiny orders
@@ -304,7 +311,7 @@ export class TraderJoe implements ITradeNetwork {
 	 */
 	private maintainOrder(terminal: StructureTerminal, type: ORDER_BUY | ORDER_SELL,
 		resource: ResourceConstant, amount: number, maxOrdersOfType = Infinity): void {
-		this.notify(`maintain ${type} order for ${terminal.room.print}: ${amount} ${resource}`);
+		this.notify(`maintain ${type} order: ${amount} ${resource}`, terminal.room.name);
 		// Cap the amount based on the maximum you can make a buy/sell order with
 		amount = Math.min(amount, 8000);
 
@@ -479,7 +486,15 @@ export class TraderJoe implements ITradeNetwork {
 			this.cleanUpInactiveOrders();
 		}
 		if (this.notifications.length > 0) {
-			log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
+			for(const notification of this.notifications) {
+				if(notification.includes(';')) {
+					Overmind.overseer.notifier.alert(`Trade network activity: ` + notification.split(';')[0],
+						notification.split(';')[1], NotifierPriority.Low);
+				} else {
+					log.info(`Trade network activity: ` + alignedNewline + notification);
+				}
+			}
+			// log.info(`Trade network activity: ` + alignedNewline + this.notifications.join(alignedNewline));
 		}
 		this.recordStats();
 	}

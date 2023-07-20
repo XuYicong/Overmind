@@ -5,7 +5,7 @@ import {DirectiveControllerAttack} from '../../directives/offense/controllerAtta
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Zerg} from '../../zerg/Zerg';
-import {Overlord} from '../Overlord';
+import {Overlord, hasColony} from '../Overlord';
 
 /**
  * Controller attacker overlord.  Spawn CLAIM creeps to mass up on a controller and attack all at once
@@ -59,7 +59,7 @@ export class ControllerAttackerOverlord extends Overlord {
 		for (const controllerAttacker of this.controllerAttackers) {
 			const attackPos = this.assignments[controllerAttacker.name];
 			if (attackPos) {
-				controllerAttacker.goTo(attackPos);
+				controllerAttacker.goTo(attackPos, {waypoints: hasColony(this.initializer) ?  this.initializer.waypoints : []});
 			} else {
 				log.debug(`No attack position for ${controllerAttacker.print}!`);
 			}

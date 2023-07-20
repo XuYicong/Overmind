@@ -5,7 +5,7 @@ interface RawMemory {
 }
 
 interface Memory {
-	assimilator: any;
+	assimilator?: any;
 	Overmind: {};
 	overseer: any;
 	segmenter: any;
@@ -267,18 +267,19 @@ interface RoomMemory {
 }
 
 interface InterShardMemory {
-	connection: {
-		[peer: string]: {
-			[id: string]: InterShardPacket;
+	// connection: {
+	// 	[peer: string]: {
+	// 		[id: string]: InterShardPacket;
+	// 	};
+	// }
+	[peer: string]: {
+		packets: {
+			[tick: number]: {
+				[id: string]: any;
+			};
 		};
+		ack: number;
 	}
-}
-
-interface InterShardPacket {
-	id: string;
-	// At least one of them must not be null
-	ack: string | null;
-	payload: string | null;
 }
 
 interface SavedRoomObject {

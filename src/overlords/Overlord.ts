@@ -374,6 +374,7 @@ export abstract class Overlord {
 				spawnQuantity--;
 			}
 		}
+		if(this.isSuspended) spawnQuantity = 0;
 		// A bug in outpostDefenseOverlord caused infinite requests and cost me two botarena rounds before I found it...
 		if (spawnQuantity > MAX_SPAWN_REQUESTS) {
 			log.warning(`Too many requests for ${setup.role}s submitted by ${this.print}! (Check for errors.)`);

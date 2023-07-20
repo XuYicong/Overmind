@@ -1,3 +1,4 @@
+import { OverlordPriority } from 'priorities/priorities_overlords';
 import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {Roles} from '../../creepSetups/setups';
@@ -8,6 +9,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from '../../utilities/Cartographer';
 import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
+import { ShardVisibilityScoutOverlord } from 'overlords/scouting/shardVisibility';
 
 
 /**
@@ -26,6 +28,7 @@ export class DirectiveColonize extends Directive {
 	overlords: {
 		claim: ClaimingOverlord;
 		pioneer: PioneerOverlord;
+		shardVisibility: ShardVisibilityScoutOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -42,8 +45,25 @@ export class DirectiveColonize extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		this.overlords.claim = new ClaimingOverlord(this);
+		this.overlords.claim = new ClaimingOverlord(this, 
+			OverlordPriority.colonization.claim, 
+			() => {
+				if(this.waypoints && this.waypoints.length > 4) {
+					// We are crossing shards. To save CPU, wait for pioneers to go first
+					const pioneerOverlord = this.overlords.pioneer;
+					// Wait for pioneers to leave this shard
+					if(!pioneerOverlord.isSuspended) return false;
+					const pioneerSuspendTime = Overmind.overseer.remainingSuspendTime(pioneerOverlord);
+					// TODO: Calculate shard crossing time instead of hardcoding
+					if(pioneerSuspendTime < 700) {
+						return true;
+					}
+					return false;
+				}
+				return true
+			});
 		this.overlords.pioneer = new PioneerOverlord(this);
+		this.overlords.shardVisibility = new ShardVisibilityScoutOverlord(this);
 	}
 
 	init() {

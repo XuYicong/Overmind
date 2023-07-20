@@ -97,6 +97,7 @@ interface IOvermind {
 	expiration: number;
 	cache: ICache;								// is actually GameCache
 	overseer: IOverseer;						// is actually Overseer
+	overshard: IOvershard;
 	directives: { [flagName: string]: any }; 	// is actually { [flagName: string]: Directive }
 	zerg: { [creepName: string]: any };			// is actually { [creepName: string]: Zerg }
 	colonies: { [roomName: string]: any }; 		// is actually { [roomName: string]: Colony }
@@ -148,6 +149,8 @@ interface IOverseer {
 
 	suspendOverlordUntil(overlord: any, untilTick: number): void;
 
+	remainingSuspendTime(overlord: any): number;
+
 	init(): void;
 
 	run(): void;
@@ -157,6 +160,16 @@ interface IOverseer {
 	visuals(): void;
 }
 
+interface IOvershard {
+
+	build(): void;
+
+	init(): void;
+
+	refresh(): void;
+
+	run(): void;
+}
 
 interface TerminalState {
 	name: string;

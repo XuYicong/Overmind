@@ -26,20 +26,22 @@ export class DirectiveGuard extends Directive {
 	}
 
 	spawnMoarOverlords() {
-		const reserver = RoomIntel.roomReservedBy(this.pos.roomName);
-		if(reserver && reserver == 'Invader') {
-			this.memory.amount = 1;
-			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
-		} else {
-			if (this.colony.level >= DefenseNPCOverlord.requiredRCL) {
-				// if (this.memory.enhanced || this.name.includes('enhanced')) {
-				// 	this.overlords.guardPair = new GuardPairOverlord(this);
-				// } else {
-				this.overlords.guard = new DefenseNPCOverlord(this);
-				// }
-			} else {
+		if(this.room) {
+			const core = this.pos.lookForStructure(STRUCTURE_INVADER_CORE);
+			if(core && (<StructureInvaderCore>core).level <= 0) {
+				this.memory.amount = 1;
 				this.overlords.swarmGuard = new GuardSwarmOverlord(this);
+				return;
 			}
+		} 
+		if (this.colony.level >= DefenseNPCOverlord.requiredRCL) {
+			// if (this.memory.enhanced || this.name.includes('enhanced')) {
+			// 	this.overlords.guardPair = new GuardPairOverlord(this);
+			// } else {
+			this.overlords.guard = new DefenseNPCOverlord(this);
+			// }
+		} else {
+			this.overlords.swarmGuard = new GuardSwarmOverlord(this);
 		}
 	}
 
