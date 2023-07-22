@@ -80,14 +80,6 @@ interface IAssimilator {
 
 	validate(code: any): void;
 
-	generateChecksum(): string;
-
-	updateValidChecksumLedger(): void;
-
-	isAssimilated(username: string): boolean;
-
-	getClearanceCode(username: string): string | null;
-
 	run(): void;
 
 }

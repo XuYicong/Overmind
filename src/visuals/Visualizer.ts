@@ -1,7 +1,5 @@
 import {profile} from '../profiler/decorator';
 import {StructureLayout, StructureMap} from '../roomPlanner/RoomPlanner';
-import {asciiLogo, logoComponents, logoText} from './logos';
-
 
 const TEXT_COLOR = '#c9c9c9';
 const TEXT_SIZE = .8;
@@ -253,36 +251,15 @@ export class Visualizer {
 	}
 
 	static drawHUD(): void {
-		// Draw Overmind logo
-		new RoomVisual().multitext(asciiLogo, 0, 0, {textfont: 'monospace'});
 		// // Display CPU Information
 		// new RoomVisual().text('CPU:' + ' bucket:' + Game.cpu.bucket +
 		// 					  ' tickLimit:' + Game.cpu.tickLimit, column, row, style);
 	}
 
-	/* Draws the Overmind logo using component coordinates extracted with Mathematica. This  uses about 0.2 CPU/tick */
-	static drawLogo(): void {
-		new RoomVisual().poly(logoComponents.black.points, logoComponents.black.style)
-						.poly(logoComponents.dgray.points, logoComponents.dgray.style)
-						.poly(logoComponents.lgray.points, logoComponents.lgray.style)
-						.poly(logoComponents.blue.points, logoComponents.blue.style)
-						.poly(logoComponents.red.points, logoComponents.red.style)
-						.poly(logoComponents.purple.points, logoComponents.purple.style)
-						.poly(logoComponents.pink.points, logoComponents.pink.style)
-						.poly(logoText.V.points, logoText.V.style)
-						.poly(logoText.E.points, logoText.E.style)
-						.poly(logoText.R1.points, logoText.R1.style)
-						.poly(logoText.R2.points, logoText.R2.style)
-						.poly(logoText.M.points, logoText.M.style)
-						.poly(logoText.I.points, logoText.I.style)
-						.poly(logoText.N.points, logoText.N.style)
-						.poly(logoText.D.points, logoText.D.style);
-	}
-
 	static drawNotifications(notificationMessages: string[]): void {
 		// const vis = new RoomVisual();
-		const x = 10.5;
-		const y = 7;
+		const x = 1;
+		const y = 1;
 		if (notificationMessages.length == 0) {
 			notificationMessages = ['No notifications'];
 		}
@@ -306,7 +283,7 @@ export class Visualizer {
 	}
 
 	static summary(): void {
-		this.text(`Colonies: ${_.keys(Overmind.colonies).length} | Creeps: ${_.keys(Game.creeps).length}`, {
+		this.text(`领地: ${_.keys(Overmind.colonies).length} | 爬爬: ${_.keys(Game.creeps).length}`, {
 			x: 1,
 			y: 10
 		}, .93);
@@ -314,7 +291,6 @@ export class Visualizer {
 
 	// This typically takes about 0.3-0.6 CPU in total
 	static visuals(): void {
-		this.drawLogo();
 		this.drawGraphs();
 		// this.drawNotifications();
 		this.summary();

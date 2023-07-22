@@ -1,14 +1,5 @@
 
 //
-// ___________________________________________________________
-//
-//  _____  _    _ _______  ______ _______ _____ __   _ ______
-// |     |  \  /  |______ |_____/ |  |  |   |   | \  | |     \
-// |_____|   \/   |______ |    \_ |  |  | __|__ |  \_| |_____/
-//
-// _______________________ Screeps AI ________________________
-//
-//
 // Overmind repository: github.com/bencbartlett/overmind
 //
 
@@ -30,7 +21,7 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {MUON, MY_USERNAME, RL_TRAINING_MODE, USE_PROFILER} from './~settings';
+import {RL_TRAINING_MODE, USE_PROFILER} from './~settings';
 import {sandbox} from './sandbox';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
@@ -86,13 +77,8 @@ function onGlobalReset(): void {
 	if (USE_PROFILER) profiler.enable();
 	Mem.format();
 	OvermindConsole.init();
-	VersionMigration.run();
 	Memory.stats.persistent.lastGlobalReset = Game.time;
 	OvermindConsole.printUpdateMessage();
-	// Update the master ledger of valid checksums
-	if (MY_USERNAME == MUON) {
-		Assimilator.updateValidChecksumLedger();
-	}
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
 	// Make a remote debugger
@@ -127,9 +113,6 @@ if (RL_TRAINING_MODE) {
 	OvermindConsole.printTrainingMessage();
 	onGlobalReset_RL();
 } else {
-	// Register these functions for checksum computations with the Assimilator
-	Assimilator.validate(main);
-	Assimilator.validate(loop);
 	// Run the global reset code
 	onGlobalReset();
 }

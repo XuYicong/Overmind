@@ -163,6 +163,7 @@ export class Overshard implements IOvershard {
 	private handleInterShardCreeps(): void {
 		for(const creep of this.creeps) {
             if(!Overmind.zerg[creep.name] || !creep.memory._go) continue; // Creep is dead
+            if(Overmind.colonies[creep.memory[_MEM.COLONY]||""]) continue; // Creep belongs to a colony
             const ret = creep.goTo(
                 // TODO: dynamically determine target based on creep role
                 new RoomPosition(25, 15, creep.pos.roomName),

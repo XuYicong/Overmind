@@ -183,7 +183,7 @@ export class Overseer implements IOverseer {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
 		if (!colony.isIncubating) {
-			const noQueen = colony.getCreepsByRole(Roles.queen).length == 0;
+			const noQueen = colony.getCreepsByRole(Roles.loader).length == 0;
 			if (noQueen && colony.hatchery && !colony.spawnGroup) {
 				const setup = colony.hatchery.overlord.queenSetup;
 				const energyToMakeQueen = bodyCost(setup.generateBody(colony.room.energyCapacityAvailable));

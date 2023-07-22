@@ -25,7 +25,7 @@ export class ExtractorOverlord extends Overlord {
 	drones: Zerg[];
 
 	static settings = {
-		maxDrones: 2,
+		maxDrones: 1,
 	};
 
 	constructor(directive: DirectiveExtract, priority: number) {

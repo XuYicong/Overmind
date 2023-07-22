@@ -33,7 +33,7 @@ export class QueenOverlord extends Overlord {
 		if (this.colony.terminalState == TERMINAL_STATE_REBUILD) {
 			this.queenSetup = Setups.queens.early;
 		}
-		this.queens = this.zerg(Roles.queen);
+		this.queens = this.zerg(Roles.loader);
 		this.settings = {
 			refillTowersBelow: 500,
 		};

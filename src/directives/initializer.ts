@@ -29,7 +29,7 @@ import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebui
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
  */
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
-	const raw = {"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":15,"y":43},{"shard":"shard0","roomName":"W40S51","x":4,"y":1},{"shard":"shard0","roomName":"W51S50","x":48,"y":7},{"shard":"shard0","roomName":"W51S10","x":48,"y":18},{"shard":"shard0","roomName":"W50N10","x":40,"y":34},{"shard":"shard1","roomName":"W30N10","x":35,"y":37},{"shard":"shard2","roomName":"W30N10","x":19,"y":40}],"distance":366,"totalRooms":20};
+	const raw = {"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":41,"y":11},{"shard":"shard0","roomName":"W30S51","x":35,"y":1},{"shard":"shard0","roomName":"W21S50","x":48,"y":16},{"shard":"shard0","roomName":"W20S40","x":5,"y":32},{"shard":"shard1","roomName":"W10S20","x":37,"y":32},{"shard":"shard2","roomName":"W10S20","x":33,"y":38}],"distance":491,"totalRooms":18};
 
 	switch (flag.color) {
 
@@ -46,6 +46,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
 					return new DirectiveColonize(flag);
 				case COLOR_GREY:
+					// flag.memory.waypoints = ['W25S35:30:28'];
 					return new DirectiveColonize(flag);
 				case COLOR_ORANGE:
 					return new DirectiveClearRoom(flag);

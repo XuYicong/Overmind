@@ -5,25 +5,25 @@ import {CreepSetup} from './CreepSetup';
  */
 export const Roles = {
 	// Civilian roles
-	drone     : 'drone',
-	filler    : 'filler',
-	claim     : 'infestor',
-	pioneer   : 'pioneer',
-	manager   : 'manager',
-	queen     : 'queen',
-	scout     : 'scout',
+	drone     : 'miner',
+	filler    : 'bootstrap',
+	claim     : 'claim',
+	pioneer   : 'startup',
+	manager   : 'bus',
+	loader     : 'loader',
+	scout     : 'visibility',
 	transport : 'transport',
 	worker    : 'worker',
-	upgrader  : 'upgrader',
+	upgrader  : 'upgrade',
 	// Combat roles
-	guardMelee: 'broodling',
+	guardMelee: 'healedMelee',
 	// guardRanged: 'mutalisk',
-	melee     : 'zergling',
-	ranged    : 'hydralisk',
-	armedHealer: 'armedHealer',
-	healer    : 'transfuser',
-	bunkerGuard : 'bunkerGuard',
-	dismantler: 'lurker',
+	melee     : 'melee',
+	ranged    : 'healedRanged',
+	armedHealer: 'rangedHeal',
+	healer    : 'heal',
+	bunkerGuard : 'meleeMelee',
+	dismantler: 'recycle',
 };
 
 /**
@@ -122,12 +122,12 @@ export const Setups = {
 
 	queens: {
 
-		default: new CreepSetup(Roles.queen, {
+		default: new CreepSetup(Roles.loader, {
 			pattern  : [CARRY, CARRY, MOVE],
 			sizeLimit: Infinity,
 		}),
 
-		early: new CreepSetup(Roles.queen, {
+		early: new CreepSetup(Roles.loader, {
 			pattern  : [CARRY, MOVE],
 			sizeLimit: Infinity,
 		}),

@@ -29,7 +29,7 @@ export class UpgradeSite extends HiveCluster {
 	// energyPerTick: number;
 
 	static settings = {
-		energyBuffer     : 100000,	// Number of upgrader parts scales with energy - this value
+		energyBuffer     : 50000,	// Number of upgrader parts scales with energy - this value
 		energyPerBodyUnit: 10000,	// Scaling factor: this much excess energy adds one extra body repetition
 		minLinkDistance  : 10,		// Required distance to build link
 		linksRequestBelow: 200,		// Links request energy when less than this amount
@@ -98,6 +98,10 @@ export class UpgradeSite extends HiveCluster {
 					upgradePower *= 4; // double upgrade power if we have lots of surplus energy
 				} else if (amountOver > 500000) {
 					upgradePower *= 2;
+				}
+				// We want to upgrade quicker to catch up with the central portal
+				if (Memory.stats.gcl.level == 2 && Memory.stats.gcl.progress > 3786620) {
+					upgradePower *= 8;
 				}
 				if (this.controller.level == 8) {
 					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8

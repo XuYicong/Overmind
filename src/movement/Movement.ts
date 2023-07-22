@@ -33,7 +33,7 @@ const STATE_CURRENT_Y = 8;
 
 export const MovePriorities = {
 	[Roles.manager]   : 1,
-	[Roles.queen]     : 2,
+	[Roles.loader]     : 2,
 	[Roles.bunkerGuard]: 3,
 	[Roles.melee]     : 3,
 	[Roles.ranged]    : 4,

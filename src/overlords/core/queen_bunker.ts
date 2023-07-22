@@ -56,7 +56,7 @@ export class BunkerQueenOverlord extends Overlord {
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
 		super(hatchery, 'supply', priority);
 		this.queenSetup = Setups.queens.default;
-		this.queens = this.zerg(Roles.queen);
+		this.queens = this.zerg(Roles.loader);
 		this.batteries = _.filter(this.room.containers, container => insideBunkerBounds(container.pos, this.colony));
 		this.storeStructures = _.compact([this.colony.terminal!, this.colony.storage!, ...this.batteries]);
 		this.quadrants = {

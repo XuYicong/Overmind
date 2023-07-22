@@ -3,36 +3,13 @@ var _0x9e16 = function (id) {
         "Flag [", " @ ", "print", "] does not match ", "a valid directive color code! (Refer to /src/directives/initializer.ts)", "Use removeErrantFlags() to remove flags which do not match a directive.", "init", "cpu", "getUsed", "log", "cpu.usage.", ".init", "run", "postRun", "visuals", "bucket", "newestVersion", "isVersionOutdated", "[!] Update available: ", " → ", "info", "CPU bucket is too low (", ") - skip rendering visuals.", "runRoomIntel_1", "defcon", "creeps", "signedByScreeps", "sign", "text", "toLowerCase", "includes", "overmind", "ᴏᴠᴇʀᴍɪɴᴅ", "undefined", "settings", "signature", "Invalid controller signatures detected:",
         "Signatures must contain the string \"Overmind\" or ", "Invalid controller signatures detected; won't run this tick!", "runRoomIntel_2", "isAssimilated", "color", "secondaryColor", "wrap", "versionUpdater", "slave_fetchVersion", "CheckFrequency", "CheckOnTick", "requestForeignSegment", "VersionSegment", "getForeignSegment", "version", "split", "master_pushVersion", "requestSegments", "markSegmentAsPublic", "setSegmentProperty", "generateUpdateMessage",
         "<a href=\"https://github.com/bencbartlett/Overmind/releases\">Download</a>", "<a href=\"https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md\">Patch notes</a>",
-        "╔═════════════════════════════════════════════════════════╗\n\
-    ", "║            Update available: ", "              ║\n\
-    ", "║            > ", " <    > ", " <              ║\n\
-    ", "╚═════════════════════════════════════════════════════════╝",
-        "generateUpdateMessageSmall", "╔═════════════════════════════════╗\n\
-    ", "║       OVERMIND SCREEPS AI       ║\n\
-    ", "╠═════════════════════════════════╣\n\
-    ", "║ Update available: ", " ║\n\
-    ", "║ > ", " < ║\n\
-    ", "╚═════════════════════════════════╝",
+        "头", "中上左", "中上右", "中下左", "中下中", "中下右 ", "底",
+        "generateUpdateMessageSmall", "头", "上", "中上", "中左", "中右", "中下左", "中下右", "下",
         "displayUpdateMessage", "<font color='#ff00ff'>", "</font>", "sayUpdateMessage", "say", "Update me!", "notifyNewVersion", "notify",];
     return s[Number(id)];
 };
 //
 // Overmind_obfuscated.js: this file is intentially obfuscated to prevent tampering.
-//
-// Q: Why is this file obfuscated?
-//
-// A: Using Overmind as your AI puts you at a huge advantage if you are a new player in a novice zone. Screeps has
-//    always had problems with people downloading bots from the internet and stomping new players. I have kept Overmind
-//    open-sourced because I think it can be a good resource for learning how to play Screeps, but I don't want it to
-//    be abused as a noob-crushing machine. In the future, I will be implementing behavioral locks in this file which
-//    limit unreasonable aggression toward peaceful new players.
-//
-// Q: What kind of behavioral locks?
-//
-// A: Players will be able to opt out of aggression by setting a property in their public memory. Overmind bots will not
-//    attack the player unless they attack you, claim a room in Overmind's territory, or occupy a room which is
-//    critically important (for example, very desirable mineral deposits that aren't available elsewhere). Overmind
-//    will attempt to expand around players which pose no threat to it rather than eliminating them.
 //
 // Q: What does this file do?
 //
@@ -40,15 +17,6 @@ var _0x9e16 = function (id) {
 //    also responsible for some high-level decision making. You can see the enumerated properties of the Overmind class
 //    in IOvermind in declarations/index.d.ts. Since this file is sufficiently complex and is critical for the AI to be
 //    able to run, it was a natural choice of location to put code which should be tamper-resistant.
-//
-// Q: What happens if I modify this code?
-//
-// A: This code is self-defending, so any modification to it will likely break the script.
-//
-// Q: I would like to view the original source code for this file.
-//
-// A: If you have a compelling reason that you'd like to see the non-obfuscated source for this file, message me in
-//    game, on slack, or send me an email at benbartlett@stanford.edu.
 //
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -280,9 +248,9 @@ let _Overmind = class _Overmind {
         this.registerDirectives(!![]);
     }
     ["init"]() {
-        this["try"](() => this.terminalNetwork["init"]());
         this["try"](() => this[_0x9e16('0x14')]["init"]());
         this.overseer["init"]();
+        this["try"](() => this.terminalNetwork["init"]());
         for (const _0x24fb7d in this.colonies) {
             const _0x10bc23 = Game[_0x9e16('0x4c')][_0x9e16('0x4d')]();
             this["try"](() => this.colonies[_0x24fb7d]["init"](), _0x24fb7d);

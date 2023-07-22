@@ -208,10 +208,10 @@ export class Hatchery extends HiveCluster {
 		// Generate a creep name based on the role and add a suffix to make it unique
 		// Xyct: in multi-shard cases, change suffix to Game tick.
 		let i = Game.time % 1e6;
-		while (Game.creeps[(roleName + '_' + i)]) {
+		while (Game.creeps[(roleName + i)]) {
 			i++;
 		}
-		return (roleName + '_' + i);
+		return (roleName + i);
 	}
 
 	private spawnCreep(protoCreep: ProtoCreep, options: SpawnRequestOptions = {}): number {

@@ -401,7 +401,7 @@ export abstract class Overlord {
 			}
 			const body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
 			if (body.length == 0) return false;
-			log.notify('Xyct: fixme at overlords/Overlords.ts:404');
+			// TODO: enable boosting with my own algorithm
 			return false;
 			// return _.all(this.boosts[setup.role]!,
 			// 			 boost => this.colony.evolutionChamber!.canBoost(body, boost));

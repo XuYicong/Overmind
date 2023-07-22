@@ -6,7 +6,7 @@ import {Autonomy, getAutonomyLevel, Mem} from '../memory/Memory';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
 import {Cartographer} from '../utilities/Cartographer';
-import {maxBy} from '../utilities/utils';
+import {isRoomAvailable, maxBy} from '../utilities/utils';
 import {MAX_OWNED_ROOMS, SHARD3_MAX_OWNED_ROOMS} from '../~settings';
 import {MIN_EXPANSION_DISTANCE} from './ExpansionEvaluator';
 
@@ -55,7 +55,10 @@ export class ExpansionPlanner implements IExpansionPlanner {
 		const roomName = this.chooseNextColonyRoom();
 		if (roomName) {
 			const pos = Pathing.findPathablePosition(roomName);
-			DirectiveColonize.createIfNotPresent(pos, 'room');
+			const flagName = DirectiveColonize.createIfNotPresent(pos, 'room');
+			// if(flagName && typeof flagName != 'number' && roomName) {
+			// 	Game.flags[flagName].memory.waypoints = 
+			// }
 			log.notify(`Room ${roomName} selected as next colony! Creating colonization directive.`);
 		}
 	}
@@ -96,6 +99,8 @@ export class ExpansionPlanner implements IExpansionPlanner {
 			if (typeof score != 'number') continue;
 			// Compute modified score
 			if (score + MAX_SCORE_BONUS > bestScore) {
+				// Exclude all rooms on the west
+				// if(roomName.startsWith('W')) continue;
 				// Is the room too close to an existing colony?
 				const range2Rooms = Cartographer.findRoomsInRange(roomName, MIN_EXPANSION_DISTANCE);
 				if (_.any(range2Rooms, roomName => allColonyRooms[roomName])) {
@@ -107,7 +112,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 				}
 				// Are there powerful hostile rooms nearby?
 				const adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
-				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName][_RM.AVOID])) {
+				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName] ? Memory.rooms[roomName][_RM.AVOID] : false)) {
 					continue;
 				}
 				// Reward new minerals and catalyst rooms
@@ -123,7 +128,7 @@ export class ExpansionPlanner implements IExpansionPlanner {
 					}
 				}
 				// Update best choices
-				if (score > bestScore && Game.map.isRoomAvailable(roomName)) {
+				if (score > bestScore && isRoomAvailable(roomName)) {
 					bestScore = score;
 					bestRoom = roomName;
 				}

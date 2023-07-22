@@ -77,11 +77,11 @@ export class BootstrappingOverlord extends Overlord {
 			}
 		}
 		// Spawn fillers
-		if (this.colony.getCreepsByRole(Roles.queen).length == 0 && this.colony.hatchery) { // no queen
+		if (this.colony.getCreepsByRole(Roles.loader).length == 0 && this.colony.hatchery) { // no queen
 			const transporter = _.first(this.colony.getZergByRole(Roles.transport));
 			if (transporter) {
 				// reassign transporter to be queen
-				transporter.reassign(this.colony.hatchery.overlord, Roles.queen);
+				transporter.reassign(this.colony.hatchery.overlord, Roles.loader);
 			} else {
 				// wish for a filler
 				this.wishlist(1, Setups.filler);

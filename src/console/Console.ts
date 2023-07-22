@@ -2,7 +2,7 @@ import {Colony, ColonyMemory} from '../Colony';
 import {Directive} from '../directives/Directive';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
-import {asciiLogoRL, asciiLogoSmall} from '../visuals/logos';
+import {asciiLogoRL} from '../visuals/logos';
 import {MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
 
@@ -49,11 +49,7 @@ export class OvermindConsole {
 	// Help, information, and operational changes ======================================================================
 
 	static help() {
-		let msg = '\n<font color="#ff00ff">';
-		for (const line of asciiLogoSmall) {
-			msg += line + '\n';
-		}
-		msg += '</font>';
+		let msg = '\n';
 
 		const descr: { [functionName: string]: string } = {};
 		descr.help = 'show this message';
@@ -97,7 +93,6 @@ export class OvermindConsole {
 	static printUpdateMessage(aligned = false): void {
 		const joinChar = aligned ? alignedNewline : '\n';
 		const msg = `Codebase updated or global reset. Type "help" for a list of console commands.` + joinChar +
-					color(asciiLogoSmall.join(joinChar), '#ff00ff') + joinChar +
 					OvermindConsole.info(aligned);
 		log.alert(msg);
 	}
@@ -109,7 +104,7 @@ export class OvermindConsole {
 	static info(aligned = false): string {
 		const b = bullet;
 		const baseInfo = [
-			`${b}Version:        Overmind v${__VERSION__}`,
+			`${b}Version:        ${__VERSION__}`,
 			`${b}Operating mode: ${Memory.settings.operationMode}`,
 		];
 		const joinChar = aligned ? alignedNewline : '\n';

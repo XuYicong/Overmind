@@ -21,10 +21,10 @@ export class Energetics {
 			},
 			energy: {
 				sendSize    : 25000,	// Send energy in chunks of this size
-				inThreshold : 25000, 	// Terminals with < this amount of energy in room actively store energy
-				outThreshold: 100000,	// Terminals with more than this amount of energy in store send elsewhere
+				inThreshold : 10000, 	// Terminals with < this amount of energy in room actively store energy
+				outThreshold: 500000,	// Terminals with more than this amount of energy in store send elsewhere
 				equilibrium : 50000, 	// Try to maintain this amount; should be energyInThreshold + 2*energySendSize
-				tolerance   : 5000,		// Don't care about deviation by less than this amount
+				tolerance   : 10000,	// Don't care about deviation by less than this amount
 				tradeAmount : 10000,	// Buy/sell energy in increments of this amount
 			},
 		},

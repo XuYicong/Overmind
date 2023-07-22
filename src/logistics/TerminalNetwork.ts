@@ -42,6 +42,8 @@ const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
 };
 
 function colonyOf(terminal: StructureTerminal): Colony {
+	if( _.keys(Overmind.colonies).length !=2 || !terminal.room.name.startsWith('W'))
+		log.warning('colony count: '+_.keys( Overmind.colonies).length+', current room: '+terminal.room.name);
 	return Overmind.colonies[terminal.room.name];
 }
 
@@ -55,7 +57,6 @@ function wantedAmount(colony: Colony, resource: ResourceConstant): number {
  * responding to on-demand resource requests
  */
 @profile
-@assimilationLocked
 export class TerminalNetwork implements ITerminalNetwork {
 	allTerminals: StructureTerminal[];				// All terminals
 	terminals: StructureTerminal[];					// Terminals in standard state

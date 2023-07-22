@@ -53,7 +53,7 @@ export class Mem {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
 		if (Game.cpu.bucket < 15) {
-			if (_.keys(Game.spawns).length > 1 && !Memory.resetBucket && !Memory.haltTick) {
+			if (_.keys(Game.spawns).length > 3 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
 				Memory.resetBucket = true;
