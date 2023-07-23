@@ -7,7 +7,9 @@ export const fortifyTaskName = 'fortify';
 
 @profile
 export class TaskFortify extends Task {
-	target: fortifyTargetType;
+	public get target(): fortifyTargetType {
+		return <fortifyTargetType>super.target;
+	}
 
 	constructor(target: fortifyTargetType, options = {} as TaskOptions) {
 		super(fortifyTaskName, target, options);

@@ -143,7 +143,7 @@ export class MiningOverlord extends Overlord {
 		}
 		// Shouldn't ever get here
 		log.warning(`Last resort container position calculation for ${this.print}!`);
-		return _.first(this.pos.availableNeighbors(true));
+		return _.first(this.pos.availableNeighbors(true))!;
 	}
 
 	/**
@@ -184,7 +184,7 @@ export class MiningOverlord extends Overlord {
 		if (this.container) {
 			const transportCapacity = 200 * this.colony.level;
 			const threshold = this.colony.stage > ColonyStage.Larva ? 0.8 : 0.5;
-			if (_.sum(this.container.store) > threshold * transportCapacity) {
+			if (_.sum(_.values(this.container.store)) > threshold * transportCapacity) {
 				this.colony.logisticsNetwork.requestOutput(this.container, {
 					resourceType: 'all',
 					dAmountdt   : this.energyPerTick
@@ -220,7 +220,7 @@ export class MiningOverlord extends Overlord {
 				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.goRepair(this.container);
 			} else {
-				if (_.sum(miner.carry) < miner.carryCapacity) {
+				if (_.sum(_.values(miner.carry)) < miner.carryCapacity) {
 					return miner.goHarvest(this.source!);
 				} else {
 					return miner.goTransfer(this.container);

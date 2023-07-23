@@ -24,7 +24,7 @@ export function setOverlord(creep: Zerg | Creep, newOverlord: Overlord | null) {
 	const ref = creep.memory[_MEM.OVERLORD];
 	const oldOverlord: Overlord | null = ref ? Overmind.overlords[ref] : null;
 	if (ref && Overmind.cache.overlords[ref] && Overmind.cache.overlords[ref][roleName]) {
-		_.remove(Overmind.cache.overlords[ref][roleName], name => name == creep.name);
+		_.remove(Overmind.cache.overlords[ref][roleName], (name: string) => name == creep.name);
 	}
 	if (newOverlord) {
 		// Change to the new overlord's colony
@@ -116,8 +116,8 @@ export class Zerg {
 		// Copy over creep references
 		this.creep = creep;
 		this.body = creep.body;
-		this.carry = creep.carry;
-		this.carryCapacity = creep.carryCapacity;
+		this.carry = creep.store;
+		this.carryCapacity = creep.store.getCapacity();
 		this.fatigue = creep.fatigue;
 		this.hits = creep.hits;
 		this.hitsMax = creep.hitsMax;
@@ -157,8 +157,8 @@ export class Zerg {
 			this.pos = creep.pos;
 			this.nextPos = creep.pos;
 			this.body = creep.body;
-			this.carry = creep.carry;
-			this.carryCapacity = creep.carryCapacity;
+			this.carry = creep.store;
+			this.carryCapacity = creep.store.getCapacity();
 			this.fatigue = creep.fatigue;
 			this.hits = creep.hits;
 			this.memory = creep.memory;
@@ -545,7 +545,7 @@ export class Zerg {
 		if (oldProtoTask) {
 			const oldRef = oldProtoTask._target.ref;
 			if (Overmind.cache.targets[oldRef]) {
-				_.remove(Overmind.cache.targets[oldRef], name => name == this.name);
+				_.remove(Overmind.cache.targets[oldRef], (name: string) => name == this.name);
 			}
 		}
 		// Set the new task
@@ -661,7 +661,7 @@ export class Zerg {
 	private defaultFleeGoals() {
 		let fleeGoals: (RoomPosition | HasPos)[] = [];
 		fleeGoals = fleeGoals.concat(this.room.hostiles)
-							 .concat(_.filter(this.room.keeperLairs, lair => (lair.ticksToSpawn || Infinity) < 10));
+							 .concat(_.filter(this.room.keeperLairs, (lair: { ticksToSpawn: any; }) => (lair.ticksToSpawn || Infinity) < 10));
 		return fleeGoals;
 	}
 
@@ -677,7 +677,7 @@ export class Zerg {
 			return false;
 		} else {
 			if(!moveOptions.fleeRange) {
-				const mayChase = _.find(avoidGoals, goal => {
+				const mayChase = _.find(avoidGoals, (goal: RoomPosition | HasPos) => {
 					if(hasPos(goal)) {
 						goal = goal.pos;
 					}
@@ -689,7 +689,7 @@ export class Zerg {
 					return false;
 				});
 				if(!mayChase) {
-					moveOptions.fleeRange = 5;
+					moveOptions.fleeRange = 4;
 				}
 			}
 			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
@@ -698,7 +698,7 @@ export class Zerg {
 				if (fleeOptions.dropEnergy && this.carry.energy > 0) {
 					const nearbyContainers = this.pos.findInRange(this.room.storageUnits, 1);
 					if (nearbyContainers.length > 0) {
-						this.transfer(_.first(nearbyContainers), RESOURCE_ENERGY);
+						this.transfer(_.first(nearbyContainers)!, RESOURCE_ENERGY);
 					} else {
 						this.drop(RESOURCE_ENERGY);
 					}

@@ -46,10 +46,10 @@ export class CombatZerg extends Zerg {
 				this.findPartner(partners, tickDifference);
 			}
 		} else {
-			let partner = _.find(partners, partner => partner.memory.partner == this.name);
+			let partner = _.find(partners, (partner: { memory: { partner: string; }; }) => partner.memory.partner == this.name);
 			if (!partner) {
 				partner = _(partners)
-					.filter(partner => !partner.memory.partner &&
+					.filter((partner: { memory: { partner: any; }; ticksToLive: any; }) => !partner.memory.partner &&
 									   Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
 												- (partner.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)
 					.min(partner => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
@@ -69,13 +69,13 @@ export class CombatZerg extends Zerg {
 			return this.memory.swarm;
 		} else {
 			// Find a swarm that isn't too old and that has space for the creep's role
-			const partnersBySwarm = _.groupBy(partners, partner => partner.memory.swarm);
+			const partnersBySwarm = _.groupBy(partners, (partner: { memory: { swarm: any; }; }) => partner.memory.swarm);
 			for (const swarmRef in partnersBySwarm) {
 				if (swarmRef == undefined || swarmRef == 'undefined') continue;
-				if (_.all(partnersBySwarm[swarmRef],
-						  c => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
+				if (_.every(partnersBySwarm[swarmRef],
+					(						  c: { ticksToLive: any; }) => Math.abs((this.ticksToLive || CREEP_LIFE_TIME)
 										- (c.ticksToLive || CREEP_LIFE_TIME)) <= tickDifference)) {
-					const swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], c => c.memory.role);
+					const swarmCreepsByRole = _.groupBy(partnersBySwarm[swarmRef], (c: { memory: { role: any; }; }) => c.memory.role);
 					if ((swarmCreepsByRole[this.memory.role] || []).length + 1 <= maxByRole[this.memory.role]) {
 						this.memory.swarm = swarmRef;
 						return swarmRef;
@@ -262,7 +262,7 @@ export class CombatZerg extends Zerg {
 			const avoid = [];
 			// Avoid melee hostiles if you are a ranged creep
 			if (preferRanged) {
-				const meleeHostiles = _.filter(this.room.hostiles, h => CombatIntel.getAttackDamage(h) > 0);
+				const meleeHostiles = _.filter(this.room.hostiles, (h: Creep | Zerg) => CombatIntel.getAttackDamage(h) > 0);
 				for (const hostile of meleeHostiles) {
 					avoid.push({pos: hostile.pos, range: 2});
 				}
@@ -288,7 +288,7 @@ export class CombatZerg extends Zerg {
 
 		// TODO check if right colony, also yes colony check is in there to stop red squigglies
 		const siegingCreeps = this.room.hostiles.filter(creep =>
-			_.any(creep.pos.neighbors, pos => this.colony && insideBunkerBounds(pos, this.colony)));
+			_.some(creep.pos.neighbors, (pos: RoomPosition) => this.colony && insideBunkerBounds(pos, this.colony)));
 
 		const target = CombatTargeting.findTarget(this, siegingCreeps);
 

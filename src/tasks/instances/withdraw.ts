@@ -16,7 +16,9 @@ export const withdrawTaskName = 'withdraw';
 @profile
 export class TaskWithdraw extends Task {
 
-	target: withdrawTargetType;
+	public get target(): withdrawTargetType {
+		return <withdrawTargetType>super.target;
+	}
 	data: {
 		resourceType: ResourceConstant,
 		amount: number | undefined,
@@ -33,7 +35,7 @@ export class TaskWithdraw extends Task {
 
 	isValidTask() {
 		const amount = this.data.amount || 1;
-		return (_.sum(this.creep.carry) <= this.creep.carryCapacity - amount);
+		return (_.sum(_.values(this.creep.carry)) <= this.creep.carryCapacity - amount);
 	}
 
 	isValidTarget() {

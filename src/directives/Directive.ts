@@ -345,7 +345,7 @@ export abstract class Directive {
 					if (opts.memory && opts.memory[_MEM.COLONY]) {
 						createAtPos = Pathing.findPathablePosition(opts.memory[_MEM.COLONY]!);
 					} else {
-						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
+						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies())!.room.name);
 					}
 					return this.create(createAtPos, opts);
 				}
@@ -359,7 +359,7 @@ export abstract class Directive {
 					if (opts.memory && opts.memory[_MEM.COLONY]) {
 						createAtPos = Pathing.findPathablePosition(opts.memory[_MEM.COLONY]!);
 					} else {
-						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies()).room.name);
+						createAtPos = Pathing.findPathablePosition(_.first(getAllColonies())!.room.name);
 					}
 					return this.create(createAtPos, opts);
 				}

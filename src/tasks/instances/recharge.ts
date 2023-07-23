@@ -16,8 +16,10 @@ export const rechargeTaskName = 'recharge';
 
 @profile
 export class TaskRecharge extends Task {
-	target: rechargeTargetType;
 
+	public get target(): rechargeTargetType {
+		return <rechargeTargetType>super.target;
+	}
 	data: {
 		minEnergy: number;
 	};

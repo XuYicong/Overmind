@@ -3,7 +3,7 @@
 
 import {getCacheExpiration, onPublicServer} from '../utilities/utils';
 
-const roomStructureIDs: { [roomName: string]: { [structureType: string]: string[] } } = {};
+const roomStructureIDs: { [roomName: string]: { [structureType: string]: Id<_HasId>[] } } = {};
 const roomStructuresExpiration: { [roomName: string]: number } = {};
 
 const multipleList = [
@@ -28,9 +28,13 @@ Room.prototype._refreshStructureCache = function() {
 		|| !roomStructureIDs[this.name]
 		|| Game.time > roomStructuresExpiration[this.name]) {
 		roomStructuresExpiration[this.name] = getCacheExpiration(STRUCTURE_TIMEOUT);
-		roomStructureIDs[this.name] = _.mapValues(_.groupBy(this.find(FIND_STRUCTURES),
-															(s: Structure) => s.structureType),
-												  (structures: Structure[]) => _.map(structures, s => s.id));
+		roomStructureIDs[this.name] = <any>_.mapValues(
+			_.groupBy(
+				this.find(FIND_STRUCTURES),
+				(s: Structure) => s.structureType
+			),
+			(structures: Structure[]) => _.map(structures, (s: { id: any; }) => s.id)
+		);
 	}
 };
 
@@ -125,7 +129,7 @@ Object.defineProperty(Room.prototype, 'repairables', {
 						repairables = repairables.concat(this[structureType + 's']);
 					}
 				}
-				roomStructureIDs[this.name].repairables = _.map(repairables, s => s.id);
+				roomStructureIDs[this.name].repairables = _.map(repairables, (s: { id: any; }) => s.id);
 				return this._repairables = repairables;
 			}
 		}
@@ -144,7 +148,7 @@ Object.defineProperty(Room.prototype, 'walkableRamparts', {
 			} else {
 				const walkableRamparts = _.filter(this.ramparts,
 												  (r: StructureRampart) => r.pos.isWalkable(true));
-				roomStructureIDs[this.name].walkableRamparts = _.map(walkableRamparts, r => r.id);
+				roomStructureIDs[this.name].walkableRamparts = _.map(walkableRamparts, (r: { id: any; }) => r.id);
 				return this._walkableRamparts = walkableRamparts;
 			}
 		}

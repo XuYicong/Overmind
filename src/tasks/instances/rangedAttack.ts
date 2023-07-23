@@ -6,8 +6,10 @@ export const rangedAttackTaskName = 'rangedAttack';
 
 @profile
 export class TaskRangedAttack extends Task {
-	target: rangedAttackTargetType;
 
+	public get target(): rangedAttackTargetType {
+		return <rangedAttackTargetType>super.target;
+	}
 	constructor(target: rangedAttackTargetType, options = {} as TaskOptions) {
 		super(rangedAttackTaskName, target, options);
 		// Settings

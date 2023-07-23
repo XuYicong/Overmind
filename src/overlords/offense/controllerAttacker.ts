@@ -41,7 +41,7 @@ export class ControllerAttackerOverlord extends Overlord {
 	private getPositionAssignments(): { [attackerName: string]: RoomPosition } {
 		const assignments: { [attackerName: string]: RoomPosition } = {};
 		const maxLoops = Math.min(this.attackPositions.length, this.controllerAttackers.length);
-		const controllerAttackers = _.sortBy(this.controllerAttackers, zerg => zerg.name);
+		const controllerAttackers = _.sortBy(this.controllerAttackers, (zerg: { name: any; }) => zerg.name);
 		for (let i = 0; i < maxLoops; i++) {
 			assignments[controllerAttackers[i].name] = this.attackPositions[i];
 		}
@@ -65,8 +65,8 @@ export class ControllerAttackerOverlord extends Overlord {
 			}
 		}
 		if (this.room && this.room.controller && !this.room.controller.upgradeBlocked) {
-			if (_.all(this.controllerAttackers, creep => creep.pos.isEqualTo(this.assignments[creep.name]))
-				|| _.any(this.controllerAttackers, creep => creep.pos.isNearTo(this.room!.controller!)
+			if (!_.find(this.controllerAttackers, (creep: { pos: { isEqualTo: (arg0: RoomPosition) => any; }; name: string | number; }) => !creep.pos.isEqualTo(this.assignments[creep.name]))
+				|| _.find(this.controllerAttackers, (creep: { pos: { isNearTo: (arg0: StructureController) => any; }; ticksToLive: any; }) => creep.pos.isNearTo(this.room!.controller!)
 															&& (creep.ticksToLive || 10) <= 2)) {
 				this.launchAttack();
 			}

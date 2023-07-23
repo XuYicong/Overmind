@@ -83,7 +83,7 @@ export class LogisticsNetwork {
 	// private logisticPositions: { [roomName: string]: RoomPosition[] };
 	private cache: {
 		nextAvailability: { [transporterName: string]: [number, RoomPosition] },
-		predictedTransporterCarry: { [transporterName: string]: { [resourceType: string]: number } },
+		predictedTransporterCarry: { [transporterName: string]: StoreDefinition } ,
 		resourceChangeRate: { [requestID: string]: { [transporterName: string]: number } },
 	};
 	static settings = {
@@ -171,7 +171,7 @@ export class LogisticsNetwork {
 			dAmountdt   : 0,
 		});
 		if (opts.resourceType == 'all' && (isStoreStructure(target) || isTombstone(target))) {
-			if (_.sum(target.store) == target.store.energy) {
+			if (target.store.getUsedCapacity() == target.store.energy) {
 				opts.resourceType = RESOURCE_ENERGY; // convert "all" requests to energy if that's all they have
 			}
 		}
@@ -216,7 +216,7 @@ export class LogisticsNetwork {
 			log.error(`Improper logistics request: should not request input for resource or tombstone!`);
 			return 0;
 		} else if (isStoreStructure(target)) {
-			return target.storeCapacity - _.sum(target.store);
+			return target.storeCapacity - _.sum(_.values(target.store));
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
 			return target.energyCapacity - target.energy;
 		}
@@ -251,7 +251,7 @@ export class LogisticsNetwork {
 	private getOutputAmount(target: LogisticsTarget, resourceType: ResourceConstant | 'all'): number {
 		if (resourceType == 'all') {
 			if (isTombstone(target) || isStoreStructure(target) || isRuin(target)) {
-				return _.sum(target.store);
+				return target.store.getUsedCapacity();
 			} else {
 				log.error(ALL_RESOURCE_TYPE_ERROR);
 				return 0;
@@ -352,29 +352,30 @@ export class LogisticsNetwork {
 	 * Returns the predicted state of the transporter's carry after completing its current task
 	 */
 	private computePredictedTransporterCarry(transporter: Zerg,
-											 nextAvailability?: [number, RoomPosition]):  { [resourceType: string]: number } {
+											 nextAvailability?: [number, RoomPosition]): StoreDefinition | undefined {
 		if (transporter.task && transporter.task.target) {
 			const requestID = this.targetToRequest[transporter.task.target.ref];
 			if (requestID) {
 				const request = this.requests[requestID];
 				if (request) {
-					const carry = transporter.carry as { [resourceType: string]: number };
-					const remainingCapacity = transporter.carryCapacity - _.sum(carry);
+					const carry = transporter.carry;
+					const remainingCapacity = transporter.carryCapacity - _.sum(_.values(carry));
 					const resourceAmount = -1 * this.predictedRequestAmount(transporter, request, nextAvailability);
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
 					if (request.resourceType == 'all') {
-						if (!isStoreStructure(request.target) && !isTombstone(request.target)) {
+						if (!isStoreStructure(request.target) && !isTombstone(request.target) && !isRuin(request.target)) {
 							log.error(ALL_RESOURCE_TYPE_ERROR);
-							return {energy: 0};
+							return;
 						}
 						for (const resourceType in request.target.store) {
-							const resourceFraction = (request.target.store[<ResourceConstant>resourceType] || 0)
-												   / _.sum(request.target.store);
-							if (carry[resourceType]) {
-								carry[resourceType]! += resourceAmount * resourceFraction;
-								carry[resourceType] = minMax(carry[resourceType]!, 0, remainingCapacity);
+							const resourceTypeConstant = <ResourceConstant>resourceType;
+							const resourceFraction = (request.target.store[resourceTypeConstant] || 0)
+												   / _.sum(_.values(request.target.store));
+							if (carry[resourceTypeConstant]) {
+								carry[resourceTypeConstant]! += resourceAmount * resourceFraction;
+								carry[resourceTypeConstant] = minMax(carry[resourceTypeConstant]!, 0, remainingCapacity);
 							} else {
-								carry[resourceType] = minMax(resourceAmount, 0, remainingCapacity);
+								carry[resourceTypeConstant] = minMax(resourceAmount, 0, remainingCapacity);
 							}
 						}
 					} else {
@@ -385,19 +386,26 @@ export class LogisticsNetwork {
 							carry[request.resourceType] = minMax(resourceAmount, 0, remainingCapacity);
 						}
 					}
-					return carry as StoreDefinition;
+					return carry ;
 				}
 			}
 		}
-		return transporter.carry;
+		return <any>transporter.carry;
 	}
 
 	/**
 	 * Returns the predicted state of the transporter's carry after completing its task
 	 */
-	private predictedTransporterCarry(transporter: Zerg): { [resourceType: string]: number } {
+	private predictedTransporterCarry(transporter: Zerg): StoreDefinition | undefined {
 		if (!this.cache.predictedTransporterCarry[transporter.name]) {
-			this.cache.predictedTransporterCarry[transporter.name] = this.computePredictedTransporterCarry(transporter);
+			const result = this.computePredictedTransporterCarry(transporter);
+			// Not caching invalid results
+			if(!result) {
+				log.warning('Failed to compute predicted transporter carry');
+				return;
+			} else {
+				this.cache.predictedTransporterCarry[transporter.name] = result;
+			}
 		}
 		return this.cache.predictedTransporterCarry[transporter.name];
 	}
@@ -442,7 +450,7 @@ export class LogisticsNetwork {
 				predictedAmount = Math.min(predictedAmount, -1 * request.target.energyCapacity);
 			}
 			const resourceOutflux = _.sum(_.map(otherTargetingTransporters,
-											  other => other.carryCapacity - _.sum(other.carry)));
+											  other => other.carryCapacity - _.sum(_.values(other.carry))));
 			predictedAmount = Math.min(predictedAmount + resourceOutflux, 0);
 			return predictedAmount;
 		}
@@ -461,14 +469,20 @@ export class LogisticsNetwork {
 		const [ticksUntilFree, newPos] = this.nextAvailability(transporter);
 		const choices: { dQ: number, dt: number, targetRef: string }[] = [];
 		const amount = this.predictedRequestAmount(transporter, request, [ticksUntilFree, newPos]);
-		let carry: { [resourceType: string]: number };
+		let carry: StoreDefinition;
 		if (!transporter.task || transporter.task.target != request.target) {
 			// If you are not targeting the requestor, use predicted carry after completing current task
-			carry = this.predictedTransporterCarry(transporter);
+			const result = this.predictedTransporterCarry(transporter);
+			if(!result) {
+				log.warning('Failed to predict transporter carry');
+				return [];
+			} 
+			carry = result;
 		} else {
 			// If you are targeting the requestor, use current carry for computations
 			carry = transporter.carry;
 		}
+		const freeCapacity = carry.getFreeCapacity();
 		if (amount > 0) { // requestInput instance, needs refilling
 			if (request.resourceType == 'all') {
 				log.warning(`Improper resourceType in bufferChoices! Type 'all' is only allowable for outputs!`);
@@ -484,8 +498,11 @@ export class LogisticsNetwork {
 							 dt       : dt_direct,
 							 targetRef: request.target.ref
 						 });
-			if ((carry[request.resourceType] || 0) > amount || _.sum(carry) == transporter.carryCapacity) {
+			if (carry[request.resourceType] >= amount || freeCapacity <= 0) {
 				return choices; // Return early if you already have enough resources to go direct or are already full
+			}
+			if (freeCapacity == transporter.carryCapacity) {
+				choices.pop(); // It's meaningless to go direct to the target if you are empty
 			}
 			// Change in resources if transporter picks up resources from a buffer first
 			for (const buffer of this.buffers) {
@@ -500,8 +517,7 @@ export class LogisticsNetwork {
 			}
 		} else if (amount < 0) { // requestOutput instance, needs pickup
 			// Change in resources if transporter goes straight to the output
-			const remainingCarryCapacity = transporter.carryCapacity - _.sum(carry);
-			const dQ_direct = Math.min(Math.abs(amount), remainingCarryCapacity);
+			const dQ_direct = Math.min(Math.abs(amount), freeCapacity);
 			const dt_direct = newPos.getMultiRoomRangeTo(request.target.pos)
 							* LogisticsNetwork.settings.rangeToPathHeuristic + ticksUntilFree;
 			choices.push({
@@ -509,13 +525,16 @@ export class LogisticsNetwork {
 							 dt       : dt_direct,
 							 targetRef: request.target.ref
 						 });
-			if (remainingCarryCapacity >= Math.abs(amount) || remainingCarryCapacity == transporter.carryCapacity) {
+			if (freeCapacity >= Math.abs(amount) || freeCapacity == transporter.carryCapacity) {
 				return choices; // Return early you have sufficient free space or are empty
+			}
+			if (freeCapacity <= 0) {
+				choices.pop();  // It's meaningless to go direct to the target if you have no free space
 			}
 			// Change in resources if transporter drops off resources at a buffer first
 			for (const buffer of this.buffers) {
 				const dQ_buffer = Math.min(Math.abs(amount), transporter.carryCapacity,
-										 buffer.storeCapacity - _.sum(buffer.store));
+										 buffer.store.getCapacity() - _.sum(_.values(buffer.store)));
 				const dt_buffer = newPos.getMultiRoomRangeTo(buffer.pos) * LogisticsNetwork.settings.rangeToPathHeuristic
 								  + Pathing.distance(buffer.pos, request.target.pos) + ticksUntilFree;
 				choices.push({
@@ -554,6 +573,10 @@ export class LogisticsNetwork {
 		if (!this.cache.resourceChangeRate[request.id][transporter.name]) {
 			const choices = this.bufferChoices(transporter, request);
 			const dQ_dt = _.map(choices, choice => request.multiplier * choice.dQ / Math.max(choice.dt, 0.1));
+			if (dQ_dt.length <= 0) {
+				// log.debug('Failed to compute best logistic target: No target');
+				return 0;
+			}
 			this.cache.resourceChangeRate[request.id][transporter.name] = _.max(dQ_dt);
 		}
 		return this.cache.resourceChangeRate[request.id][transporter.name];
@@ -634,7 +657,7 @@ export class LogisticsNetwork {
 			} else {
 				if (request.resourceType == 'all') {
 					if (isTombstone(request.target) || isStoreStructure(request.target)) {
-						amount = _.sum(request.target.store);
+						amount = _.sum(_.values(request.target.store));
 					} else if (isEnergyStructure(request.target)) {
 						amount = -0.001;
 					}

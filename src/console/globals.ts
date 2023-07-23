@@ -3,7 +3,7 @@ global.__VERSION__ = '0.5.2';
 
 declare function deref(ref: string): RoomObject | null;
 
-global.deref = function(ref: string): RoomObject | null { // dereference any object from identifier
+global.deref = function(ref: string): _HasId | Flag | null { // dereference any object from identifier
 	return Game.getObjectById(ref) || Game.flags[ref] || Game.creeps[ref] || Game.spawns[ref] || null;
 };
 

@@ -172,8 +172,8 @@ export class Colony {
 	static settings = {
 		remoteSourcesByLevel: {
 			1: 1,
-			2: 1,
-			3: 1,
+			2: 4,
+			3: 5,
 			4: 1,
 			5: 1,
 			6: 1,
@@ -477,7 +477,7 @@ export class Colony {
 		}
 		// Instantiate evolution chamber once there are three labs all in range 2 of each other
 		if (this.terminal && _.filter(this.labs, lab =>
-			_.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
+			_.every(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
 			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
 		// Instantiate the upgradeSite
@@ -537,10 +537,9 @@ export class Colony {
 		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures, lab contents, and manager carry
 		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
-		const creepCarriesToInclude = _.map(this.creeps, creep => creep.carry) as { [resourceType: string]: number }[];
-		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab =>
-			({[<string>lab.mineralType]: lab.mineralAmount})) as { [resourceType: string]: number }[];
-		const allAssets: { [resourceType: string]: number } = mergeSum([
+		const creepCarriesToInclude = <any>_.map(this.creeps, creep => creep.store);
+		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab => lab.store);
+		const allAssets = mergeSum([
 																		   ...stores,
 																		   ...creepCarriesToInclude,
 																		   ...labContentsToInclude

@@ -1,4 +1,3 @@
-import {assimilationLocked} from '../assimilation/decorator';
 import {$} from '../caching/GlobalCache';
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
@@ -42,8 +41,8 @@ const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
 };
 
 function colonyOf(terminal: StructureTerminal): Colony {
-	if( _.keys(Overmind.colonies).length !=2 || !terminal.room.name.startsWith('W'))
-		log.warning('colony count: '+_.keys( Overmind.colonies).length+', current room: '+terminal.room.name);
+	// if( _.keys(Overmind.colonies).length !=2 || !terminal.room.name.startsWith('W'))
+	// 	log.warning('colony count: '+_.keys( Overmind.colonies).length+', current room: '+terminal.room.name);
 	return Overmind.colonies[terminal.room.name];
 }
 
@@ -109,7 +108,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
 		this.notifications = [];
-		this.averageFullness = _.sum(this.terminals, t => _.sum(t.store) / t.storeCapacity) / this.terminals.length;
+		this.averageFullness = _.sum(this.terminals, t => _.sum(_.values(t.store)) / t.storeCapacity) / this.terminals.length;
 	}
 
 	refresh(): void {
@@ -123,7 +122,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
 		this.notifications = [];
-		this.averageFullness = _.sum(this.terminals, t => _.sum(t.store) / t.storeCapacity) / this.terminals.length;
+		this.averageFullness = _.sum(this.terminals, t => _.sum(_.values(t.store)) / t.storeCapacity) / this.terminals.length;
 	}
 
 	/* Summarizes the total of all resources currently in a colony store structure */
@@ -162,16 +161,16 @@ export class TerminalNetwork implements ITerminalNetwork {
 	/**
 	 * Amount of space available in storage and terminal
 	 */
-	private remainingRoomCapacity(room: Room): number {
-		let remainingCapacity = 0;
-		if (room.storage) {
-			remainingCapacity += room.storage.storeCapacity - _.sum(room.storage.store);
-		}
-		if (room.terminal) {
-			remainingCapacity += room.terminal.storeCapacity - _.sum(room.terminal.store);
-		}
-		return remainingCapacity;
-	}
+	// private remainingRoomCapacity(room: Room): number {
+	// 	let remainingCapacity = 0;
+	// 	if (room.storage) {
+	// 		remainingCapacity += room.storage.storeCapacity - _.sum(room.storage.store);
+	// 	}
+	// 	if (room.terminal) {
+	// 		remainingCapacity += room.terminal.storeCapacity - _.sum(room.terminal.store);
+	// 	}
+	// 	return remainingCapacity;
+	// }
 
 	/**
 	 * Amount of energy in storage and terminal
@@ -240,7 +239,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	 */
 	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
 
-		const terminalNearCapacity = _.sum(terminal.store) > 0.95 * terminal.storeCapacity;
+		const terminalNearCapacity = _.sum(_.values(terminal.store)) > 0.95 * terminal.storeCapacity;
 
 		for (const resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
@@ -339,9 +338,9 @@ export class TerminalNetwork implements ITerminalNetwork {
 		if (verbose) log.debug(`Senders:   ${_.map(senders, t => t.room.print)}`);
 
 		for (const [sender, receiver] of _.zip(senders, receivers)) {
-			if (verbose) log.debug(` > ${sender.room.print} to ${receiver.room.print}...`);
-			const senderAmount = colonyOf(sender).assets[resourceType] || 0;
-			const receiverAmount = colonyOf(receiver).assets[resourceType] || 0;
+			if (verbose) log.debug(` > ${sender!.room.print} to ${receiver!.room.print}...`);
+			const senderAmount = colonyOf(sender!).assets[resourceType] || 0;
+			const receiverAmount = colonyOf(receiver!).assets[resourceType] || 0;
 			const tolerance = TerminalNetwork.settings.equalize.tolerance[resourceType]
 							  || TerminalNetwork.settings.equalize.tolerance.default;
 			if (verbose) {
@@ -358,15 +357,15 @@ export class TerminalNetwork implements ITerminalNetwork {
 
 			let sendAmount = Math.min(senderSurplus, receiverDeficit, maxSendSize);
 			sendAmount = Math.floor(Math.max(sendAmount, 0));
-			const sendCost = Game.market.calcTransactionCost(sendAmount, sender.room.name, receiver.room.name);
-			sendAmount = Math.min(sendAmount, (sender.store[resourceType] || 0) - sendCost - 10,
-								  (receiver.storeCapacity - _.sum(receiver.store)));
+			const sendCost = Game.market.calcTransactionCost(sendAmount, sender!.room.name, receiver!.room.name);
+			sendAmount = Math.min(sendAmount, (sender!.store[resourceType] || 0) - sendCost - 10,
+								  receiver!.store.getFreeCapacity());
 
 			if (sendAmount < TERMINAL_MIN_SEND) {
 				if (verbose) log.debug(`    Size too small`);
 				continue;
 			}
-			const ret = this.transfer(sender, receiver, resourceType, sendAmount, 'equalize');
+			const ret = this.transfer(sender!, receiver!, resourceType, sendAmount, 'equalize');
 			if (verbose) log.debug(`Response: ${ret}`);
 		}
 	}
@@ -394,7 +393,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			const amounts = _.map(this.terminals, terminal => colonyOf(terminal).assets[resource] || 0);
 			const tolerance = TerminalNetwork.settings.equalize.tolerance[resource]
 							  || TerminalNetwork.settings.equalize.tolerance.default;
-			return _.max(amounts) - _.min(amounts) > tolerance;
+			return _.max(amounts)! - _.min(amounts)! > tolerance;
 		});
 		// Set next equalize resource index
 		this.memory.equalizeIndex = _.findIndex(equalizeResources, resource => resource == nextResourceType);
@@ -436,7 +435,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 			// Terminal output state - push resources away from this colony
 			if (state.type == 'out' || state.type == 'in/out') {
 				if (terminal.cooldown == 0 && amount > targetAmount + tolerance) {
-					const receiver = minBy(this.terminals, t => _.sum(t.store));
+					const receiver = minBy(this.terminals, t => t.store.getUsedCapacity());
 					if (receiver) {
 						let sendAmount: number;
 						if (resourceType == RESOURCE_ENERGY) {
@@ -445,7 +444,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 						} else {
 							sendAmount = minMax(amount - targetAmount, TERMINAL_MIN_SEND, maxSendSize);
 						}
-						if (receiver.storeCapacity - _.sum(receiver.store) > sendAmount) {
+						if (receiver.store.getUsedCapacity() > sendAmount) {
 							this.transfer(terminal, receiver, resourceType, sendAmount, 'exception state out');
 							return;
 						}

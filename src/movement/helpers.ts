@@ -31,11 +31,11 @@ export function sameCoord(pos1: Coord, pos2: Coord): boolean {
 export function getCreepWeightInfo(creep: Creep, analyzeCarry = true): { move: number, weighted: number } {
 	// Compute number of weighted and unweighted bodyparts
 	const unweightedParts = analyzeCarry ? [MOVE, CARRY] : [MOVE];
-	const bodyParts = _.countBy(creep.body, p => _.contains(unweightedParts, p.type) ? p.type : 'weighted');
+	const bodyParts = _.countBy(creep.body, (p: { type: any; }) => unweightedParts.includes(<any>p.type) ? p.type : 'weighted');
 	bodyParts.move = bodyParts.move || 0;
 	bodyParts.weighted = bodyParts.weighted || 0;
 	if (bodyParts[CARRY]) {
-		bodyParts.weighted += Math.ceil(_.sum(creep.carry) / CARRY_CAPACITY);
+		bodyParts.weighted += Math.ceil(_.sum(_.values(creep.store)) / CARRY_CAPACITY);
 	}
 	// Account for boosts
 	for (const part of creep.body) {

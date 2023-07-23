@@ -290,10 +290,10 @@ export class WorkerOverlord extends Overlord {
 
 	private fortifyActions(worker: Zerg, fortifyStructures = this.fortifyBarriers): boolean {
 		let lowBarriers: (StructureWall | StructureRampart)[];
-		const highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits));
+		const highestBarrierHits = _.max(_.map(fortifyStructures, structure => structure.hits))!;
 		if (highestBarrierHits > WorkerOverlord.settings.hitTolerance) {
 			// At high barrier HP, fortify only structures that are within a threshold of the lowest
-			const lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits));
+			const lowestBarrierHits = _.min(_.map(fortifyStructures, structure => structure.hits))!;
 			lowBarriers = _.filter(fortifyStructures, structure => structure.hits <= lowestBarrierHits +
 																   WorkerOverlord.settings.hitTolerance);
 		} else {
@@ -320,7 +320,7 @@ export class WorkerOverlord extends Overlord {
 				} else { // not found
 					return 999;
 				}
-			}));
+			}))!;
 		});
 		if (target) {
 			worker.task = Tasks.fortify(target);

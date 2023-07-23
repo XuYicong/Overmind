@@ -41,7 +41,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 				healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
-			if (this.room && _.any([...this.broodlings, ...this.hydralisks], creep => creep.room == this.room)) {
+			if (this.room && _.some([...this.broodlings, ...this.hydralisks], creep => creep.room == this.room)) {
 				this.handleCombat(healer); // go to room if there are any fighters in there
 			} else {
 				healer.autoSkirmish(healer.room.name);

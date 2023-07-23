@@ -209,7 +209,7 @@ export class Visualizer {
 		const style = this.textStyle();
 
 		// Determine column locations
-		const columns = Array(_.first(data).length).fill(0);
+		const columns = Array(_.first(data)!.length).fill(0);
 		for (const entries of data) {
 			for (let i = 0; i < entries.length - 1; i++) {
 				columns[i] = Math.max(columns[i], entries[i].length);
@@ -263,7 +263,7 @@ export class Visualizer {
 		if (notificationMessages.length == 0) {
 			notificationMessages = ['No notifications'];
 		}
-		const maxStringLength = _.max(_.map(notificationMessages, msg => msg.length));
+		const maxStringLength = _.max(_.map(notificationMessages, msg => msg.length))!;
 		const width = Math.max(11, 1.2 * CHAR_WIDTH * maxStringLength);
 		this.infoBox('Notifications', notificationMessages, {x, y}, width);
 	}
@@ -283,7 +283,7 @@ export class Visualizer {
 	}
 
 	static summary(): void {
-		this.text(`领地: ${_.keys(Overmind.colonies).length} | 爬爬: ${_.keys(Game.creeps).length}`, {
+		this.text(`占领 ${_.keys(Overmind.colonies).length} 间房 | 总共 ${_.keys(Game.creeps).length} 只爬爬`, {
 			x: 1,
 			y: 10
 		}, .93);

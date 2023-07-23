@@ -43,7 +43,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_WHITE:
 					return new DirectiveIncubate(flag);
 				case COLOR_CYAN:
-					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
+					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
 					return new DirectiveColonize(flag);
 				case COLOR_GREY:
 					// flag.memory.waypoints = ['W25S35:30:28'];
@@ -61,7 +61,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_CYAN:
 					return new DirectivePairDestroy(flag);
 				case COLOR_GREEN:
-					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
+					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
 					return new DirectiveControllerAttack(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
@@ -96,7 +96,7 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_YELLOW:
 					return new DirectiveHarvest(flag);
 				case COLOR_GREY:
-					flag.memory.waypoints = _.map(raw.path, pos => pos.roomName +':'+ pos.x +':'+  pos.y);
+					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
 					return new DirectiveHarvest(flag);
 				case COLOR_CYAN:
 					return new DirectiveExtract(flag);

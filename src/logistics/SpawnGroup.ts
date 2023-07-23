@@ -75,7 +75,7 @@ export class SpawnGroup {
 		this.memory = Mem.wrap(Memory.rooms[this.roomName], 'spawnGroup', SpawnGroupMemoryDefaults);
 		this.ref = initializer.ref + ':SG';
 		this.stats = {
-			avgDistance: (_.sum(this.memory.distances) / _.keys(this.memory.distances).length) || 100,
+			avgDistance: (_.sum(_.values(this.memory.distances)) / _.keys(this.memory.distances).length) || 100,
 		};
 		this.requests = [];
 		this.settings = _.defaults(settings, defaultSettings) as SpawnGroupSettings;
@@ -91,7 +91,7 @@ export class SpawnGroup {
 			log.warning(`No colonies meet the requirements for SwarmGroup: ${this.ref}`);
 		}
 		this.energyCapacityAvailable = _.max(_.map(this.colonyNames,
-												   roomName => Game.rooms[roomName].energyCapacityAvailable));
+												   roomName => Game.rooms[roomName].energyCapacityAvailable))!;
 		Overmind.spawnGroups[this.ref] = this;
 	}
 

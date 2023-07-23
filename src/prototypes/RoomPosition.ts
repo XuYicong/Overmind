@@ -253,7 +253,7 @@ RoomPosition.prototype.getMultiRoomRangeTo = function(pos: RoomPosition): number
 		const to = pos.roomCoords;
 		const dx = Math.abs(50 * (to.x - from.x) + pos.x - this.x);
 		const dy = Math.abs(50 * (to.y - from.y) + pos.y - this.y);
-		return _.max([dx, dy]);
+		return _.max([dx, dy])!;
 	}
 };
 
@@ -270,12 +270,12 @@ RoomPosition.prototype.findClosestByMultiRoomRange = function <T extends _HasRoo
 
 // This should only be used within a single room
 RoomPosition.prototype.findClosestByRangeThenPath = function <T extends _HasRoomPosition>(objects: T[]): T {
-	const distances = _.map(objects, obj => this.getRangeTo(obj));
+	const distances = _.map(objects, (obj: any) => this.getRangeTo(obj));
 	const minDistance = _.min(distances);
 	if (minDistance > 4) {
 		return this.findClosestByRange(objects);
 	} else {
-		const closestObjects = _.filter(objects, obj => this.getRangeTo(obj) == minDistance);
+		const closestObjects = _.filter(objects, (obj: any) => this.getRangeTo(obj) == minDistance);
 		return this.findClosestByPath(closestObjects); // don't clutter up pathing.distance cached values
 	}
 };

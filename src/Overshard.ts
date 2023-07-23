@@ -195,7 +195,7 @@ export class Overshard implements IOvershard {
         // All creeps without a colony are inter-shard creeps
         this.creeps = _.map(
 			_.filter(
-				Game.creeps, creep => creep.memory._go && !isZerg(normalizeZerg(creep))
+				Game.creeps, creep => !!(creep.memory._go && !isZerg(normalizeZerg(creep)))
 			), 
 			creep => Overmind.zerg[creep.name] || new Zerg(creep)
 		);

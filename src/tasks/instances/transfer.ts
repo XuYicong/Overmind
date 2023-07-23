@@ -16,7 +16,10 @@ export const transferTaskName = 'transfer';
 @profile
 export class TaskTransfer extends Task {
 
-	target: transferTargetType;
+	public get target(): transferTargetType {
+		return <transferTargetType>super.target;
+	}
+
 	data: {
 		resourceType: ResourceConstant
 		amount: number | undefined
@@ -40,22 +43,21 @@ export class TaskTransfer extends Task {
 	isValidTarget() {
 		const amount = this.data.amount || 1;
 		const target = this.target;
-		if (target instanceof Creep) {
-			return _.sum(target.carry) <= target.carryCapacity - amount;
-		} else if (isStoreStructure(target)) {
-			return _.sum(target.store) <= target.storeCapacity - amount;
+		if (target instanceof Creep || isStoreStructure(target)) {
+			return _.sum(_.values(target.store)) <= target.store.getCapacity() - amount;
 		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
 			return target.energy <= target.energyCapacity - amount;
 		} else {
 			if (target instanceof StructureLab) {
-				return (target.mineralType == this.data.resourceType || !target.mineralType) &&
-					   target.mineralAmount <= target.mineralCapacity - amount;
+				const type = target.mineralType;
+				return (type == this.data.resourceType || !type) &&
+					   target.store[type || RESOURCE_GHODIUM] <= target.store.getCapacity(type || RESOURCE_GHODIUM) - amount;
 			} else if (target instanceof StructureNuker) {
 				return this.data.resourceType == RESOURCE_GHODIUM &&
-					   target.ghodium <= target.ghodiumCapacity - amount;
+					   target.store[RESOURCE_GHODIUM] <= target.store.getCapacity(RESOURCE_GHODIUM) - amount;
 			} else if (target instanceof StructurePowerSpawn) {
 				return this.data.resourceType == RESOURCE_POWER &&
-					   target.power <= target.powerCapacity - amount;
+					   target.store[RESOURCE_POWER] <= target.store.getCapacity(RESOURCE_POWER) - amount;
 			}
 		}
 		return false;

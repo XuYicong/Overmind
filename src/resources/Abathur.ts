@@ -185,7 +185,7 @@ export class Abathur {
 	}
 
 	private someColonyHasExcess(mineralType: ResourceConstant, excessAmount = 0): boolean {
-		return _.any(getAllColonies(), colony => colony.abathur.hasExcess(mineralType, excessAmount));
+		return _.some(getAllColonies(), colony => colony.abathur.hasExcess(mineralType, excessAmount));
 	}
 
 	/**
@@ -207,7 +207,7 @@ export class Abathur {
 																amountNeeded - amountOwned, verbose);
 
 					const missingBaseMinerals = this.getMissingBasicMinerals(reactionQueue);
-					if (!_.any(missingBaseMinerals)
+					if (!_.some(missingBaseMinerals)
 						|| this.canReceiveBasicMineralsForReaction(missingBaseMinerals, amountNeeded + 1000)
 						|| this.canBuyBasicMineralsForReaction(missingBaseMinerals)) {
 						return reactionQueue;

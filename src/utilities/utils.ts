@@ -3,7 +3,7 @@
 import {alignedNewline, bullet} from './stringConstants';
 
 export function getAllColonyRooms(): Room[] {
-	return _.filter(_.values(Game.rooms), room => room.my);
+	return _.filter(_.values(Game.rooms), (room: { my: any; }) => room.my);
 }
 
 export function printRoomName(roomName: string): string {
@@ -25,7 +25,7 @@ export function minMax(value: number, min: number, max: number): number {
 	return Math.max(Math.min(value, max), min);
 }
 
-export function hasMinerals(store: { [resourceType: string]: number }): boolean {
+export function hasMinerals(store: StoreDefinition): boolean {
 	for (const resourceType in store) {
 		if (resourceType != RESOURCE_ENERGY && (store[<ResourceConstant>resourceType] || 0) > 0) {
 			return true;
@@ -110,7 +110,7 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as ToColumnO
 
 	for (const key in obj) {
 		if (opts.justify) {
-			ret.push(key.padRight(keyPadding, opts.padChar) + obj[key].padLeft(valPadding, opts.padChar));
+			ret.push(key.padRight(keyPadding, opts.padChar) + obj[key].padLeft(valPadding!, opts.padChar));
 		} else {
 			ret.push(key.padRight(keyPadding, opts.padChar) + obj[key]);
 		}

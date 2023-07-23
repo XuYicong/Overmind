@@ -184,7 +184,7 @@ Object.defineProperty(Room.prototype, 'hostileStructures', {
 	get() {
 		if (!this._hostileStructures) {
 			this._hostileStructures = this.find(FIND_HOSTILE_STRUCTURES, {
-				filter: (s: Structure) => (s.hitsMax) && !isAlly(_.get(s, ['owner', 'username']))
+				filter: (s: Structure) => (s.hitsMax) && !isAlly((<StructureTower>s).owner.username)
 			});
 		}
 		return this._hostileStructures;

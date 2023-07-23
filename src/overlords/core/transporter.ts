@@ -80,6 +80,10 @@ export class TransportOverlord extends Overlord {
 	private handleTransporter(transporter: Zerg, request: LogisticsRequest | undefined) {
 		if (request) {
 			const choices = this.colony.logisticsNetwork.bufferChoices(transporter, request);
+			if(choices.length <= 0) {
+				this.handleTransporter(transporter, undefined);
+				return;
+			}
 			const bestChoice = _.last(_.sortBy(choices, choice => request.multiplier * choice.dQ
 																/ Math.max(choice.dt, 0.1)));
 			let task = null;
@@ -99,7 +103,7 @@ export class TransportOverlord extends Overlord {
 					// If we need to go to a buffer first to get more stuff
 					const buffer = deref(bestChoice.targetRef) as BufferTarget;
 					const withdrawAmount = Math.min(buffer.store[request.resourceType] || 0,
-												  transporter.carryCapacity - _.sum(transporter.carry), amount);
+												  transporter.carryCapacity - _.sum(_.values(transporter.carry)), amount);
 					task = task.fork(Tasks.withdraw(buffer, request.resourceType, withdrawAmount));
 					if (transporter.hasMineralsInCarry && request.resourceType == RESOURCE_ENERGY) {
 						task = task.fork(Tasks.transferAll(buffer));
@@ -135,7 +139,7 @@ export class TransportOverlord extends Overlord {
 			this.colony.logisticsNetwork.invalidateCache(transporter, request);
 		} else {
 			// If nothing to do, put everything in a store structure
-			if (_.sum(transporter.carry) > 0) {
+			if (transporter.carry.getUsedCapacity() > 0) {
 				if (transporter.hasMineralsInCarry) {
 					const target = this.colony.terminal || this.colony.storage;
 					if (target) {
@@ -157,6 +161,7 @@ export class TransportOverlord extends Overlord {
 					const bestDropoffPoint = transporter.pos.findClosestByMultiRoomRange(dropoffPoints);
 
 					if (bestDropoffPoint) transporter.task = Tasks.transfer(bestDropoffPoint);
+					else transporter.creep.say('放哪啊', true);
 				}
 			} else {
 				let parkingSpot = transporter.pos;
@@ -196,7 +201,7 @@ export class TransportOverlord extends Overlord {
 			transporter.withdraw(tombstone, <ResourceConstant>resourceType);
 			return true;
 		}
-		const ruin = transporter.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0];
+		const ruin = transporter.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(_.values(ruin.store)) > 0)[0];
 		if (ruin) {
 			const resourceType = _.last(_.sortBy(_.keys(ruin.store),
 											   resourceType => (ruin.store[<ResourceConstant>resourceType] || 0)));

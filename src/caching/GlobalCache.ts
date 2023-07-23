@@ -81,7 +81,7 @@ export class $ { // $ = cash = cache... get it? :D
 	static set<T extends HasRef, K extends keyof T>(thing: T, key: K,
 													callback: () => (T[K] & (undefined | HasID | HasID[])),
 													timeout = CACHE_TIMEOUT): void {
-		const cacheKey = thing.ref + '$' + key;
+		const cacheKey = thing.ref + '$' + <string>key;
 		if (!_cache.things[cacheKey] || Game.time > _cache.expiration[cacheKey]) {
 			// Recache if new entry or entry is expired
 			_cache.things[cacheKey] = callback();
@@ -90,10 +90,10 @@ export class $ { // $ = cash = cache... get it? :D
 			// Refresh structure list by ID if not already done on current tick
 			if ((_cache.accessed[cacheKey] || 0) < Game.time) {
 				if (_.isArray(_cache.things[cacheKey])) {
-					_cache.things[cacheKey] = _.compact(_.map(_cache.things[cacheKey] as HasID[],
-															  s => Game.getObjectById(s.id))) as HasID[];
+					_cache.things[cacheKey] = _.compact(_.map(_cache.things[cacheKey] as _HasId[],
+															  s => Game.getObjectById(s.id))) as _HasId[];
 				} else {
-					_cache.things[cacheKey] = Game.getObjectById((<HasID>_cache.things[cacheKey]).id) as HasID;
+					_cache.things[cacheKey] = Game.getObjectById((<_HasId>_cache.things[cacheKey]).id) as _HasId;
 				}
 				_cache.accessed[cacheKey] = Game.time;
 			}
@@ -105,24 +105,24 @@ export class $ { // $ = cash = cache... get it? :D
 		_.forEach(keys, function(key) {
 			if (thing[key]) {
 				if (_.isArray(thing[key])) {
-					thing[key] = _.compact(_.map(thing[key] as HasID[], s => Game.getObjectById(s.id))) as T[K];
+					thing[key] = <unknown>_.compact(_.map(thing[key] as _HasId[], s => Game.getObjectById(s.id))) as T[K];
 				} else {
-					thing[key] = Game.getObjectById((<HasID>thing[key]).id) as T[K];
+					thing[key] = <unknown>Game.getObjectById((<_HasId>thing[key]).id) as T[K];
 				}
 			}
 		});
 	}
 
-	static refreshObject<T extends Record<K, { [prop: string]: undefined | HasID | HasID[] }>,
+	static refreshObject<T extends Record<K, { [prop: string]: undefined | _HasId | _HasId[] }>,
 		K extends string>(thing: T, ...keys: K[]): void {
 		_.forEach(keys, function(key) {
 			if (_.isObject(thing[key])) {
 				for (const prop in thing[key]) {
 					if (_.isArray(thing[key][prop])) {
-						thing[key][prop] = _.compact(_.map(thing[key][prop] as HasID[],
-														   s => Game.getObjectById(s.id))) as HasID[];
+						thing[key][prop] = <any>_.compact(_.map(thing[key][prop] as _HasId[],
+														   s => Game.getObjectById(s.id)));
 					} else {
-						thing[key][prop] = Game.getObjectById((<HasID>thing[key][prop]).id) as undefined | HasID;
+						thing[key][prop] = <any>Game.getObjectById((<_HasId>thing[key][prop]).id);
 					}
 				}
 			}

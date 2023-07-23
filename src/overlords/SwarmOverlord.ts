@@ -21,12 +21,12 @@ export abstract class SwarmOverlord extends CombatOverlord {
 		const neededQuantities: { [role: string]: number } = {};
 
 		// Handle filling out existing swarms first
-		const validSwarms = _.filter(this.swarms, swarm => !swarm.isExpired);
+		const validSwarms = _.filter(this.swarms, (swarm: { isExpired: any; }) => !swarm.isExpired);
 		for (const swarm of validSwarms) {
 			for (const creepType of config) {
 				const {setup, amount} = creepType;
 				const priority = creepType.priority || this.priority;
-				const existingCreepsOfRole = _.filter(swarm.creeps, creep => creep.roleName == setup.role);
+				const existingCreepsOfRole = _.filter(swarm.creeps, (creep: { roleName: string; }) => creep.roleName == setup.role);
 				// Log current and needed amounts for reporting
 				if (!creepQuantities[setup.role]) creepQuantities[setup.role] = 0;
 				creepQuantities[setup.role] += existingCreepsOfRole.length;

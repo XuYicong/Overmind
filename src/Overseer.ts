@@ -73,7 +73,7 @@ export class Overseer implements IOverseer {
 		if (USE_TRY_CATCH) {
 			try {
 				callback();
-			} catch (e) {
+			} catch (e: any) {
 				if (identifier) {
 					e.name = `Caught unhandled exception at ${'' + callback} (identifier: ${identifier}): \n`
 							 + e.name + '\n' + e.stack;
@@ -162,8 +162,8 @@ export class Overseer implements IOverseer {
 			}
 			// Pick up all nontrivial ruin resources
 			for (const ruin of room.ruins) {
-				if (_.sum(ruin.store) > LogisticsNetwork.settings.droppedEnergyThreshold
-					|| _.sum(ruin.store) > ruin.store.energy) {
+				if (_.sum(_.values(ruin.store)) > LogisticsNetwork.settings.droppedEnergyThreshold
+					|| _.sum(_.values(ruin.store)) > ruin.store.energy) {
 					if (colony.bunker && ruin.pos.isEqualTo(colony.bunker.anchor)) continue;
 					colony.logisticsNetwork.requestOutput(ruin, {resourceType: 'all'});
 				}
@@ -171,8 +171,8 @@ export class Overseer implements IOverseer {
 		}
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (const tombstone of colony.tombstones) {
-			if (_.sum(tombstone.store) > LogisticsNetwork.settings.droppedEnergyThreshold
-				|| _.sum(tombstone.store) > tombstone.store.energy) {
+			if (_.sum(_.values(tombstone.store)) > LogisticsNetwork.settings.droppedEnergyThreshold
+				|| _.sum(_.values(tombstone.store)) > tombstone.store.energy) {
 				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)) continue;
 				colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
@@ -251,7 +251,7 @@ export class Overseer implements IOverseer {
 			if (Cartographer.roomType(roomName) != ROOMTYPE_CONTROLLER) {
 				return false;
 			}
-			const alreadyAnOutpost = _.any(Overmind.cache.outpostFlags,
+			const alreadyAnOutpost = _.some(Overmind.cache.outpostFlags,
 										 flag => (flag.memory.setPosition || flag.pos).roomName == roomName);
 			const alreadyAColony = !!Overmind.colonies[roomName];
 			if (alreadyAColony || alreadyAnOutpost) {
@@ -268,11 +268,11 @@ export class Overseer implements IOverseer {
 				return false;
 			}
 			const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
-			const isReachableFromColony = _.any(neighboringRooms, r => colony.roomNames.includes(r));
+			const isReachableFromColony = _.some(neighboringRooms, r => colony.roomNames.includes(r));
 			if(!isReachableFromColony || !isRoomAvailable(roomName)){
 				return false;
 			}
-			const shouldBackOff = _.any(neighboringRooms,
+			const shouldBackOff = _.some(neighboringRooms,
 						r => false// RoomIntel.roomOwnedBy(r) || RoomIntel.roomReservedBy(r)
 						);
 			return !shouldBackOff;
@@ -296,7 +296,7 @@ export class Overseer implements IOverseer {
 				if (!sourceCoords) return false;
 				const sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
 				const sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
-				if (_.any(sourceDistances, dist => dist == undefined || dist > Colony.settings.maxSourceDistance)) {
+				if (_.some(sourceDistances, dist => dist == undefined || dist > Colony.settings.maxSourceDistance)) {
 					return false;
 				}
 				return _.sum(sourceDistances) / sourceDistances.length;
@@ -434,10 +434,10 @@ export class Overseer implements IOverseer {
 					}
 					roleOccupancy[role][0] += report[0];
 					roleOccupancy[role][1] += report[1];
-					if (spoopyBugFix) { // bizzarely, if you comment these lines out, the creep report is incorrect
-						log.debug(`report: ${JSON.stringify(report)}`);
-						log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
-					}
+					// if (spoopyBugFix) { // bizzarely, if you comment these lines out, the creep report is incorrect
+					// 	log.debug(`report: ${JSON.stringify(report)}`);
+					// 	log.debug(`occupancy: ${JSON.stringify(roleOccupancy)}`);
+					// }
 				}
 			}
 		}

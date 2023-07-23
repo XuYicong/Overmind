@@ -875,8 +875,8 @@ export class Pathing {
 			length: path.length,
 			tick  : Game.time
 		};
-		const originName = _.first(path).name;
-		const destinationName = _.last(path).name;
+		const originName = _.first(path)!.name;
+		const destinationName = _.last(path)!.name;
 		if (!Memory.pathing.paths[originName]) {
 			Memory.pathing.paths[originName] = {};
 		}

@@ -42,7 +42,7 @@ export class Tasks {
 			}
 		}
 		// Make the accumulator task from the end and iteratively fork it
-		let task = _.last(tasks); // start with last task
+		let task = _.last(tasks)!; // start with last task
 		tasks = _.dropRight(tasks); // remove it from the list
 		for (let i = (tasks.length - 1); i >= 0; i--) { // iterate over the remaining tasks
 			task = task.fork(tasks[i]);

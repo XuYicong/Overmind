@@ -5,7 +5,6 @@ interface RawMemory {
 }
 
 interface Memory {
-	assimilator?: any;
 	Overmind: {};
 	overseer: any;
 	segmenter: any;

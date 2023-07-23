@@ -1,3 +1,4 @@
+import { Zerg } from 'zerg/Zerg';
 import {$} from '../../caching/GlobalCache';
 import {log} from '../../console/log';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
@@ -81,7 +82,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		// let zergBySwarm = _.merge(meleeZergBySwarm, rangedZergBySwarm);
 		for (const ref in meleeZergBySwarm) {
 			if (ref != undefined) {
-				if (DEBUG) log.debug(`Making swarm for ${_.map(meleeZergBySwarm[ref], z => z.name)}`);
+				if (DEBUG) log.debug(`Making swarm for ${_.map(meleeZergBySwarm[ref], (z: { name: any; }) => z.name)}`);
 				this.swarms[ref] = new Swarm(this, ref, meleeZergBySwarm[ref]);
 			}
 		}

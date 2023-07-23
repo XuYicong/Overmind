@@ -86,7 +86,7 @@ export class CombatIntel {
 			const matrix = new PathFinder.CostMatrix();
 			const barriers = this.room.barriers;
 			if (barriers.length > 0) {
-				const highestHits = _.last(_.sortBy(barriers, barrier => barrier.hits)).hits;
+				const highestHits = _.last(_.sortBy(barriers, (barrier: { hits: any; }) => barrier.hits))!.hits;
 				for (const barrier of barriers) {
 					matrix.set(barrier.pos.x, barrier.pos.y, Math.ceil(barrier.hits * 10 / highestHits) * 10);
 				}
@@ -245,7 +245,7 @@ export class CombatIntel {
 	static getFallbackFrom(pos: RoomPosition, fallbackDistance = 2): RoomPosition {
 		let {x, y, roomName} = pos;
 		const rangesToExit = [[x, 'left'], [49 - x, 'right'], [y, 'top'], [49 - y, 'bottom']];
-		const [range, direction] = _.first(_.sortBy(rangesToExit, pair => pair[0]));
+		const [range, direction] = _.first(_.sortBy(rangesToExit, (pair: any[]) => pair[0]))!;
 		switch (direction) {
 			case 'left':
 				x = 49 - fallbackDistance;
@@ -322,9 +322,9 @@ export class CombatIntel {
 	 */
 	static isHealer(zerg: Creep | Zerg): boolean {
 		const creep = toCreep(zerg);
-		const healParts = _.filter(zerg.body, part => part.type == HEAL).length;
-		const attackParts = _.filter(zerg.body, part => part.type == ATTACK).length;
-		const rangedAttackParts = _.filter(zerg.body, part => part.type == RANGED_ATTACK).length;
+		const healParts = _.filter(zerg.body, (part: { type: string; }) => part.type == HEAL).length;
+		const attackParts = _.filter(zerg.body, (part: { type: string; }) => part.type == ATTACK).length;
+		const rangedAttackParts = _.filter(zerg.body, (part: { type: string; }) => part.type == RANGED_ATTACK).length;
 		return healParts > attackParts + rangedAttackParts;
 	}
 
@@ -427,12 +427,12 @@ export class CombatIntel {
 					}
 				}
 				return 1;
-			}))
+			}))!
 		);
 	}
 
 	static minimumDamageMultiplierForGroup(creeps: Creep[]): number {
-		return _.min(_.map(creeps, creep => this.minimumDamageTakenMultiplier(creep)));
+		return _.min(_.map(creeps, (creep: Creep) => this.minimumDamageTakenMultiplier(creep)))!;
 	}
 
 	static getMassAttackDamageTo(attacker: Creep | Zerg, target: Creep | Structure): number {
@@ -456,7 +456,7 @@ export class CombatIntel {
 	 */
 	static getMassAttackDamage(attacker: Creep | Zerg, targets = attacker.room.hostiles, checkRampart = true): number {
 		const hostiles = attacker.pos.findInRange(targets, 3);
-		return _.sum(hostiles, function(hostile) {
+		return _.sum(hostiles, function(hostile: Creep | Structure<StructureConstant>) {
 			if (checkRampart && hostile.pos.lookForStructure(STRUCTURE_RAMPART)) {
 				return 0; // Creep inside rampart
 			} else {
@@ -484,7 +484,7 @@ export class CombatIntel {
 	 * Maximum damage that a group of creeps can dish out (doesn't count for simultaneity restrictions)
 	 */
 	static maxDamageByCreeps(creeps: Creep[]): number {
-		return _.sum(creeps, creep => ATTACK_POWER * this.getAttackPotential(creep) +
+		return _.sum(creeps, (creep: Creep) => ATTACK_POWER * this.getAttackPotential(creep) +
 									  RANGED_ATTACK_POWER * this.getRangedAttackPotential(creep));
 	}
 
@@ -492,16 +492,16 @@ export class CombatIntel {
 	 * Maximum healing that a group of creeps can provide (doesn't count for simultaneity restrictions)
 	 */
 	static maxHealingByCreeps(creeps: Creep[]): number {
-		return _.sum(creeps, creep => this.getHealAmount(creep));
+		return _.sum(creeps, (creep: Zerg | Creep) => this.getHealAmount(creep));
 	}
 
 	/**
 	 * Total attack/rangedAttack/heal potentials for a group of creeps
 	 */
 	static getCombatPotentials(creeps: Creep[]): CombatPotentials {
-		const attack = _.sum(creeps, creep => this.getAttackPotential(creep));
-		const rangedAttack = _.sum(creeps, creep => this.getRangedAttackPotential(creep));
-		const heal = _.sum(creeps, creep => this.getHealPotential(creep));
+		const attack = _.sum(creeps, (creep: Creep) => this.getAttackPotential(creep));
+		const rangedAttack = _.sum(creeps, (creep: Creep) => this.getRangedAttackPotential(creep));
+		const heal = _.sum(creeps, (creep: Creep) => this.getHealPotential(creep));
 		return {attack, rangedAttack, heal};
 	}
 
@@ -542,7 +542,7 @@ export class CombatIntel {
 	 * Heal potential of self and possible healer neighbors
 	 */
 	static avgHostileHealingTo(creeps: Creep[]): number {
-		return _.max(_.map(creeps, creep => CombatIntel.maxHostileHealingTo(creep))) / creeps.length;
+		return _.max(_.map(creeps, (creep: Creep) => CombatIntel.maxHostileHealingTo(creep)))! / creeps.length;
 	}
 
 	/**
@@ -580,7 +580,7 @@ export class CombatIntel {
 		let toughHits: number;
 		if (useHitsPredicted) {
 			if (target.hitsPredicted == undefined) target.hitsPredicted = target.hits;
-			const nonToughHits = _.sum(target.body, part => part.type == TOUGH ? 0 : part.hits);
+			const nonToughHits = _.sum(target.body, (part: { type: string; hits: any; }) => part.type == TOUGH ? 0 : part.hits);
 			toughHits = Math.min(target.hitsPredicted - nonToughHits, 0); // predicted amount of TOUGH
 		} else {
 			toughHits = 100 * target.getActiveBodyparts(TOUGH);
@@ -647,7 +647,7 @@ export class CombatIntel {
 	}
 
 	static getPositionsNearEnemies(hostiles: Creep[], range = 0): RoomPosition[] {
-		return _.unique(_.flatten(_.map(hostiles, hostile =>
+		return _.uniq(_.flatten(_.map(hostiles, (hostile: { pos: { getPositionsInRange: (arg0: number, arg1: boolean, arg2: boolean) => any; }; }) =>
 			hostile.pos.getPositionsInRange(range, false, true))));
 	}
 

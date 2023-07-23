@@ -58,11 +58,11 @@ export class Matcher {
 				console.log('Stable matching timed out!');
 				return this.couples;
 			}
-			const woman = _.first(this.menPrefs[man]); 		// Get first woman on man's list
+			const woman = _.first(this.menPrefs[man])!; 		// Get first woman on man's list
 			if (this.womenFree[woman]) {					// If woman is free, get engaged
 				this.engage(man, woman);
 			} else {										// Else if woman prefers this man to her current, swap men
-				const currentMan = _.findKey(this.couples, w => w == woman);
+				const currentMan = _.findKey(this.couples, w => w == woman)!;
 				if (this.prefers(woman, man, currentMan)) {
 					this.breakup(currentMan, woman);
 					this.engage(man, woman);

@@ -20,7 +20,7 @@ export class DirectiveHaul extends Directive {
 	static secondaryColor = COLOR_BLUE;
 
 	private _store: StoreDefinition;
-	private _drops: { [resourceType: string]: Resource[] };
+	private _drops: StoreDefinition;
 
 	memory: DirectiveHaulMemory;
 
@@ -42,9 +42,9 @@ export class DirectiveHaul extends Directive {
 		}
 		if (!this._drops) {
 			const drops = (this.pos.lookFor(LOOK_RESOURCES) || []) as Resource[];
-			this._drops = _.groupBy(drops, drop => drop.resourceType);
+			this._drops = <any>_.groupBy(drops, drop => drop.resourceType);
 		}
-		return this._drops;
+		return <any>this._drops;
 	}
 
 	get hasDrops(): boolean {
@@ -54,8 +54,8 @@ export class DirectiveHaul extends Directive {
 	get storeStructure(): StructureStorage | StructureTerminal | StructureNuker | StructureContainer 
 									| Ruin | Tombstone |StructureExtension | undefined {
 		if (this.pos.isVisible) {
-			return <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(ruin.store) > 0)[0] ||
-					<Tombstone>this.pos.lookFor(LOOK_TOMBSTONES).filter(tomb => _.sum(tomb.store) > 0)[0] ||
+			return <Ruin>this.pos.lookFor(LOOK_RUINS).filter(ruin => _.sum(_.values(ruin.store)) > 0)[0] ||
+					<Tombstone>this.pos.lookFor(LOOK_TOMBSTONES).filter(tomb => _.sum(_.values(tomb.store)) > 0)[0] ||
 					<StructureStorage>this.pos.lookForStructure(STRUCTURE_STORAGE) ||
 				   <StructureTerminal>this.pos.lookForStructure(STRUCTURE_TERMINAL) ||
 				   <StructureNuker>this.pos.lookForStructure(STRUCTURE_NUKER) ||
@@ -70,7 +70,7 @@ export class DirectiveHaul extends Directive {
 			// Merge the "storage" of drops with the store of structure
 			let store: { [resourceType: string]: number } = {};
 			if (this.storeStructure) {
-				store = this.storeStructure.store;
+				store = <any>this.storeStructure.store;
 			} else {
 				store = {energy: 0};
 				log.info('store target with specific type not found');
@@ -84,7 +84,7 @@ export class DirectiveHaul extends Directive {
 					store[resourceType] = totalResourceAmount;
 				}
 			}
-			this._store = store as StoreDefinition;
+			this._store = store as unknown as StoreDefinition;
 		}
 		return this._store;
 	}
@@ -94,7 +94,7 @@ export class DirectiveHaul extends Directive {
 	 */
 	get totalResources(): number {
 		if (this.pos.isVisible) {
-			this.memory.totalResources = _.sum(this.store); // update total amount remaining
+			this.memory.totalResources = _.sum(_.values(this.store)); // update total amount remaining
 		} else {
 			if (this.memory.totalResources == undefined) {
 				return 1000; // pick some non-zero number so that haulers will spawn
@@ -113,7 +113,7 @@ export class DirectiveHaul extends Directive {
 			return;
 		}
 		for (const hauler of (this.overlords.haul as HaulingOverlord).haulers) {
-			if(_.sum(hauler.carry) > 0) return;
+			if(_.sum(_.values(hauler.carry)) > 0) return;
 		}
 		this.remove();
 	}

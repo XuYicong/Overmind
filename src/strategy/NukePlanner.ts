@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import {Colony} from '../Colony';
 import {getCacheExpiration, maxBy, minBy} from '../utilities/utils';
 
@@ -82,7 +83,7 @@ export class NukePlanner {
 			return;
 		}
 
-		const scanStructures = _.filter(room.structures, s => structureScores[s.structureType]);
+		const scanStructures = _.filter(room.structures, s => !!structureScores[s.structureType]);
 
 		const structureScore = (structure: Structure) => _.sum(structure.pos.findInRange(scanStructures, 2),
 															   s => (structureScores[s.structureType] || 0));
@@ -125,7 +126,7 @@ export class NukePlanner {
 
 		const nukesInRoom = _.filter(this.memory.nukes, nukeMem => nukeMem.pos.roomName == targetRoomName);
 
-		if (_.any(nukesInRoom, nuke => NUKE_LAND_TIME - nuke.ticksToLand < CONTROLLER_NUKE_BLOCKED_UPGRADE)) {
+		if (_.some(nukesInRoom, nuke => NUKE_LAND_TIME - nuke.ticksToLand < CONTROLLER_NUKE_BLOCKED_UPGRADE)) {
 			// Try to keep a 200-tick separation between nuke strikes
 			return;
 		}

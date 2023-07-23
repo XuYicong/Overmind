@@ -7,7 +7,6 @@ export const goToTaskName = 'goTo';
 
 @profile
 export class TaskGoTo extends Task {
-	target: null;
 
 	constructor(target: goToTargetType, options = {} as TaskOptions) {
 		if (hasPos(target)) {

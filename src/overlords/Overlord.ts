@@ -310,7 +310,7 @@ export abstract class Overlord {
 				log.warning(`Requesting squads of >3 is not advisable`);
 			}
 			const request: SpawnRequest = {
-				setup   : _.head(setups),
+				setup   : _.head(setups)!,
 				overlord: this,
 				priority: opts.priority!,
 				partners: _.tail(setups),
@@ -401,10 +401,8 @@ export abstract class Overlord {
 			}
 			const body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
 			if (body.length == 0) return false;
-			// TODO: enable boosting with my own algorithm
-			return false;
-			// return _.all(this.boosts[setup.role]!,
-			// 			 boost => this.colony.evolutionChamber!.canBoost(body, boost));
+			return _.all(this.boosts[setup.role]!,
+						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
 		}
 		return false;
 	}
@@ -434,7 +432,7 @@ export abstract class Overlord {
 			const boosts = _.filter(this.boosts[creep.roleName]!, boost =>
 				(creep.boostCounts[boost] || 0) < creep.getActiveBodyparts(boostParts[boost]));
 			if (boosts.length > 0) {
-				return _.all(boosts, boost => evolutionChamber!.canBoost(creep.body, boost));
+				return !_.find(boosts, boost => !evolutionChamber!.canBoost(creep.body, boost));
 			}
 		}
 		return false;

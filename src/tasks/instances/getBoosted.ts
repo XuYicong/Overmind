@@ -11,8 +11,9 @@ export const MIN_LIFETIME_FOR_BOOST = 0.85;
 @profile
 export class TaskGetBoosted extends Task {
 
-	target: getBoostedTargetType;
-
+	public get target(): getBoostedTargetType {
+		return <getBoostedTargetType>super.target;
+	}
 	data: {
 		resourceType: _ResourceConstantSansEnergy;
 		amount: number | undefined;
@@ -29,7 +30,7 @@ export class TaskGetBoosted extends Task {
 	}
 
 	isValidTask() {
-		const lifetime = _.any(this.creep.body, part => part.type == CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
+		const lifetime = _.some(this.creep.body, part => part.type == CLAIM) ? CREEP_CLAIM_LIFE_TIME : CREEP_LIFE_TIME;
 		if (this.creep.ticksToLive && this.creep.ticksToLive < MIN_LIFETIME_FOR_BOOST * lifetime) {
 			return false; // timeout after this amount of lifespan has passed
 		}

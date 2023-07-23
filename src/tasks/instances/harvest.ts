@@ -7,14 +7,16 @@ export const harvestTaskName = 'harvest';
 
 @profile
 export class TaskHarvest extends Task {
-	target: harvestTargetType;
+	public get target(): harvestTargetType {
+		return <harvestTargetType>super.target;
+	}
 
 	constructor(target: harvestTargetType, options = {} as TaskOptions) {
 		super(harvestTaskName, target, options);
 	}
 
 	isValidTask() {
-		return _.sum(this.creep.carry) < this.creep.carryCapacity;
+		return _.sum(_.values(this.creep.carry)) < this.creep.carryCapacity;
 	}
 
 	isValidTarget() {

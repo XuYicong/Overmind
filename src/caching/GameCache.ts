@@ -17,12 +17,12 @@ export class GameCache implements ICache {
 		this.overlords = {};
 		this.creepsByColony = {};
 		this.targets = {};
-		this.outpostFlags = _.filter(Game.flags, flag => DirectiveOutpost.filter(flag)
+		this.outpostFlags = _.filter(Game.flags, (flag: Flag) => DirectiveOutpost.filter(flag)
 														 || DirectiveSKOutpost.filter(flag));
 	}
 
 	private cacheCreepsByColony() {
-		this.creepsByColony = _.groupBy(Game.creeps, creep => creep.memory[_MEM.COLONY]) as { [colName: string]: Creep[] };
+		this.creepsByColony = _.groupBy(Game.creeps, (creep: { memory: { [x: string]: any; }; }) => creep.memory[_MEM.COLONY]) as { [colName: string]: Creep[] };
 	}
 
 	/**
@@ -31,10 +31,10 @@ export class GameCache implements ICache {
 	private cacheOverlords() {
 		this.overlords = {};
 		// keys: overlordRef, value: creepNames[]
-		const creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), name => Game.creeps[name].memory[_MEM.OVERLORD]);
+		const creepNamesByOverlord = _.groupBy(_.keys(Game.creeps), (name) => Game.creeps[name].memory[_MEM.OVERLORD]);
 		for (const ref in creepNamesByOverlord) {
 			// keys: roleName, value: creepNames[]
-			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], name => Game.creeps[name].memory.role);
+			this.overlords[ref] = _.groupBy(creepNamesByOverlord[ref], (name) => Game.creeps[name].memory.role);
 		}
 	}
 

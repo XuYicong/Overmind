@@ -52,7 +52,7 @@ export class BasePlanner {
 		// Filter intersection with miningSites
 		const sitesAndMineral: RoomPosition[] = _.map(_.compact([...room.sources, room.mineral]), obj => obj!.pos);
 		allowableLocations = _.filter(allowableLocations,
-									  anchor => !_.any(sitesAndMineral,
+									  anchor => !_.some(sitesAndMineral,
 													   pos => this.bunkerIntersectsWith(anchor, pos, 1)));
 		if (visualize) {
 			const vis = room.visual;
@@ -93,7 +93,7 @@ export class BasePlanner {
 		const bunkerCoordsAtAnchor = _.map(allBunkerCoords[8], function(coord) {
 			return {x: coord.x + dx, y: coord.y + dy};
 		});
-		return _.any(bunkerCoordsAtAnchor, coord => distanceMatrix.get(coord.x, coord.y) == 0);
+		return _.some(bunkerCoordsAtAnchor, coord => distanceMatrix.get(coord.x, coord.y) == 0);
 	}
 
 	private static bunkerIntersectsWith(anchor: Coord | RoomPosition, obstacle: Coord | RoomPosition,

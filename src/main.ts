@@ -9,7 +9,6 @@
 
 'use strict';
 // Import ALL the things! ==============================================================================================
-import './assimilation/initializer'; // This must always be imported before anything else
 import './console/globals'; // Global functions accessible from CLI
 import './prototypes/Creep'; // Creep prototypes
 import './prototypes/RoomObject'; // RoomObject and targeting prototypes
@@ -28,9 +27,9 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
-import {VersionMigration} from './versionMigration/migrator';
-import {RemoteDebugger} from './debug/remoteDebugger';
-import {ActionParser} from './reinforcementLearning/actionParser';
+// import {VersionMigration} from './versionMigration/migrator';
+// import {RemoteDebugger} from './debug/remoteDebugger';
+// import {ActionParser} from './reinforcementLearning/actionParser';
 // =====================================================================================================================
 
 // Main loop
@@ -58,7 +57,7 @@ function main(): void {
 
 	// Post-run code: handle sandbox code and error catching -----------------------------------------------------------
 	sandbox();														// Sandbox: run any testing code
-	global.remoteDebugger.run();									// Run remote debugger code if enabled
+	// global.remoteDebugger.run();									// Run remote debugger code if enabled
 	Overmind.postRun();												// Error catching is run at end of every tick
 }
 
@@ -69,7 +68,7 @@ function main_RL(): void {
 	delete global.Overmind;
 	global.Overmind = new _Overmind();
 
-	ActionParser.run();
+	// ActionParser.run();
 }
 
 // This gets run on each global reset
@@ -82,7 +81,7 @@ function onGlobalReset(): void {
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
 	// Make a remote debugger
-	global.remoteDebugger = new RemoteDebugger();
+	// global.remoteDebugger = new RemoteDebugger();
 }
 
 

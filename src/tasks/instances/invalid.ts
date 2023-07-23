@@ -14,7 +14,9 @@ const invalidTarget = {
 
 @profile
 export class TaskInvalid extends Task {
-	target: any;
+	public get target(): any {
+		return super.target;
+	}
 
 	constructor() {
 		super('INVALID', invalidTarget);

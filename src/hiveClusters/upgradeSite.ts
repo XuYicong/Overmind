@@ -29,7 +29,7 @@ export class UpgradeSite extends HiveCluster {
 	// energyPerTick: number;
 
 	static settings = {
-		energyBuffer     : 50000,	// Number of upgrader parts scales with energy - this value
+		energyBuffer     : 500000,	// Number of upgrader parts scales with energy - this value
 		energyPerBodyUnit: 10000,	// Scaling factor: this much excess energy adds one extra body repetition
 		minLinkDistance  : 10,		// Required distance to build link
 		linksRequestBelow: 200,		// Links request energy when less than this amount
@@ -148,7 +148,7 @@ export class UpgradeSite extends HiveCluster {
 			}
 		}
 		// Try to find locations where there is maximal standing room
-		const maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length));
+		const maxNeighbors = _.max(_.map(inputLocations, pos => pos.availableNeighbors(true).length))!;
 		inputLocations = _.filter(inputLocations,
 								  pos => pos.availableNeighbors(true).length >= maxNeighbors);
 		// Return location closest to storage by path

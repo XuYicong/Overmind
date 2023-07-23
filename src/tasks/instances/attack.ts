@@ -10,7 +10,9 @@ export const attackTaskName = 'attack';
 
 @profile
 export class TaskAttack extends Task {
-	target: attackTargetType;
+	public get target(): attackTargetType {
+		return <attackTargetType>super.target;
+	}
 
 	constructor(target: attackTargetType, options = {} as TaskOptions) {
 		super(attackTaskName, target, options);

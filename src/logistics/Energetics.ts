@@ -21,19 +21,19 @@ export class Energetics {
 			},
 			energy: {
 				sendSize    : 25000,	// Send energy in chunks of this size
-				inThreshold : 10000, 	// Terminals with < this amount of energy in room actively store energy
-				outThreshold: 500000,	// Terminals with more than this amount of energy in store send elsewhere
-				equilibrium : 50000, 	// Try to maintain this amount; should be energyInThreshold + 2*energySendSize
-				tolerance   : 10000,	// Don't care about deviation by less than this amount
-				tradeAmount : 10000,	// Buy/sell energy in increments of this amount
+				inThreshold : 5000, 	// Terminals with < this amount of energy in room actively store energy
+				outThreshold: 600000,	// Terminals with more than this amount of energy in store send elsewhere
+				equilibrium : 55000, 	// Try to maintain this amount; should be energyInThreshold + 2*energySendSize
+				tolerance   : 50000,	// Don't care about deviation by less than this amount
+				tradeAmount : 20000,	// Buy/sell energy in increments of this amount
 			},
 		},
 	};
 
 	static lowPowerMode(colony: Colony): boolean {
 		if (colony.stage == ColonyStage.Adult) {
-			if (_.sum(colony.storage!.store) > this.settings.storage.total.cap &&
-				colony.terminal && _.sum(colony.terminal.store) > this.settings.terminal.total.cap) {
+			if (_.sum(_.values(colony.storage!.store)) > this.settings.storage.total.cap &&
+				colony.terminal && _.sum(_.values(colony.terminal.store)) > this.settings.terminal.total.cap) {
 				return true;
 			}
 		}

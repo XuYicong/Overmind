@@ -299,8 +299,8 @@ export class CombatPlanner {
 		const towerDamageSamplePositions = _.map(_.range(20),
 											   i => new RoomPosition(_.random(1, 48), _.random(1, 48), room.name));
 		const maxTowerDamage = _.max(_.map(towerDamageSamplePositions,
-										 pos => CombatIntel.towerDamageAtPos(pos, true)));
-		const minBarrierHits = room.barriers.length > 0 ? _.min(_.map(room.barriers, b => b.hits)) : 0;
+										 pos => CombatIntel.towerDamageAtPos(pos, true)))!;
+		const minBarrierHits = room.barriers.length > 0 ? _.min(_.map(room.barriers, b => b.hits))! : 0;
 		const avgBarrierHits = room.barriers.length > 0 ? _.sum(room.barriers, b => b.hits) / room.barriers.length : 0;
 
 		const numWalls = room.walls.length;

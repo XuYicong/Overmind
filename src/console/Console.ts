@@ -82,7 +82,7 @@ export class OvermindConsole {
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
-		const maxLineLength = _.max(_.map(descrMsg, line => line.length)) + 2;
+		const maxLineLength = _.max(_.map(descrMsg, line => line.length))! + 2;
 		msg += 'Console Commands: '.padRight(maxLineLength, '=') + '\n' + descrMsg.join('\n');
 
 		msg += '\n\nRefer to the repository for more information\n';
@@ -422,7 +422,7 @@ export class OvermindConsole {
 		}
 		// Suicide any creeps which have no memory
 		for (const i in Game.creeps) {
-			if (<any>Game.creeps[i].memory == {}) {
+			if (!Game.creeps[i].memory.role) {
 				Game.creeps[i].suicide();
 			}
 		}

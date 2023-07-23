@@ -73,11 +73,11 @@ export class ExpansionPlanner implements IExpansionPlanner {
 			// 	possibleIncubators.push(colony);
 			// }
 			if (colony.level >= DirectiveColonize.requiredRCL
-				&& _.filter(colony.flags, flag => DirectiveColonize.filter(flag)).length == 0) {
+				&& _.filter(colony.flags, (flag: Flag) => DirectiveColonize.filter(flag)).length == 0) {
 				possibleColonizers.push(colony);
 			}
 		}
-		const possibleBestExpansions = _.compact(_.map(possibleColonizers, col => this.getBestExpansionRoomFor(col)));
+		const possibleBestExpansions = <{roomName:string, score:number}[]>_.compact(_.map(possibleColonizers, (col: Colony) => this.getBestExpansionRoomFor(col)));
 		log.debug(JSON.stringify(possibleBestExpansions));
 		const bestExpansion = maxBy(possibleBestExpansions, choice => choice!.score);
 		if (bestExpansion) {
@@ -90,8 +90,8 @@ export class ExpansionPlanner implements IExpansionPlanner {
 
 	private getBestExpansionRoomFor(colony: Colony): { roomName: string, score: number } | undefined {
 		const allColonyRooms = _.zipObject(_.map(getAllColonies(),
-											   col => [col.room.name, true])) as { [roomName: string]: boolean };
-		const allOwnedMinerals = _.map(getAllColonies(), col => col.room.mineral!.mineralType) as MineralConstant[];
+			(											   col: { room: { name: any; }; }) => [col.room.name, true])) as { [roomName: string]: boolean };
+		const allOwnedMinerals = _.map(getAllColonies(), (col: { room: { mineral: any; }; }) => col.room.mineral!.mineralType) as MineralConstant[];
 		let bestRoom: string = '';
 		let bestScore: number = -Infinity;
 		for (const roomName in colony.memory.expansionData.possibleExpansions) {
@@ -103,16 +103,16 @@ export class ExpansionPlanner implements IExpansionPlanner {
 				// if(roomName.startsWith('W')) continue;
 				// Is the room too close to an existing colony?
 				const range2Rooms = Cartographer.findRoomsInRange(roomName, MIN_EXPANSION_DISTANCE);
-				if (_.any(range2Rooms, roomName => allColonyRooms[roomName])) {
+				if (_.find(range2Rooms, (roomName: string | number) => allColonyRooms[roomName])) {
 					continue; // too close to another colony
 				}
 				const range3Rooms = Cartographer.findRoomsInRange(roomName, MIN_EXPANSION_DISTANCE + 1);
-				if (_.any(range3Rooms, roomName => allColonyRooms[roomName])) {
+				if (_.find(range3Rooms, (roomName: string | number) => allColonyRooms[roomName])) {
 					score -= TOO_CLOSE_PENALTY;
 				}
 				// Are there powerful hostile rooms nearby?
 				const adjacentRooms = Cartographer.findRoomsInRange(roomName, 1);
-				if (_.any(adjacentRooms, roomName => Memory.rooms[roomName] ? Memory.rooms[roomName][_RM.AVOID] : false)) {
+				if (_.find(adjacentRooms, (roomName: string | number) => Memory.rooms[roomName] ? Memory.rooms[roomName][_RM.AVOID] : false)) {
 					continue;
 				}
 				// Reward new minerals and catalyst rooms

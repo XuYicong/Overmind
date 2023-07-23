@@ -6,7 +6,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {isRoomAvailable} from '../../utilities/utils';
-const DEFAULT_NUM_SCOUTS = 0;
+const DEFAULT_NUM_SCOUTS = 1;
 
 /**
  * Sends out scouts which randomly traverse rooms to uncover possible expansion locations and gather intel
@@ -22,9 +22,10 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
+		if(this.room && this.room.name.startsWith('E')) {
+			this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
+		}
 	}
-
 	private handleScout(scout: Zerg) {
 		// Stomp on enemy construction sites
 		// const enemyConstructionSites = scout.room.find(FIND_HOSTILE_CONSTRUCTION_SITES);
@@ -39,7 +40,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 		} else {
 			// Pick a new room
 			const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
-			const roomName = _.sample(neighboringRooms);
+			const roomName = _.sample(neighboringRooms)!;
 			if (isRoomAvailable(roomName)) {
 				scout.task = Tasks.goToRoom(roomName);
 			}

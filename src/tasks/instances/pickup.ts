@@ -6,15 +6,17 @@ export const pickupTaskName = 'pickup';
 
 @profile
 export class TaskPickup extends Task {
-	target: pickupTargetType;
 
+	public get target(): pickupTargetType {
+		return <pickupTargetType>super.target;
+	}
 	constructor(target: pickupTargetType, options = {} as TaskOptions) {
 		super('pickup', target, options);
 		this.settings.oneShot = true;
 	}
 
 	isValidTask() {
-		return _.sum(this.creep.carry) < this.creep.carryCapacity;
+		return _.sum(_.values(this.creep.carry)) < this.creep.carryCapacity;
 	}
 
 	isValidTarget() {

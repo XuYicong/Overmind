@@ -66,7 +66,7 @@ function neighboringLabs(pos: RoomPosition): StructureLab[] {
 }
 
 function labsAreEmpty(labs: StructureLab[]): boolean {
-	return _.all(labs, lab => lab.mineralAmount == 0);
+	return _.every(labs, lab => lab.mineralAmount == 0);
 }
 
 /**
@@ -105,8 +105,8 @@ export class EvolutionChamber extends HiveCluster {
 							   _.filter(this.labs, lab => lab.pos.findInRange(this.colony.spawns, 1).length > 0) :
 							   _.take(_.sortBy(this.labs, lab => Pathing.distance(this.terminal.pos, lab.pos)), 1);
 		// Reagent labs are range=2 from all other labs and are not a boosting lab
-		const range2Labs = _.filter(this.labs, lab => _.all(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
-		const reagentLabCandidates = _.filter(range2Labs, lab => !_.any(restrictedLabs, l => l.id == lab.id));
+		const range2Labs = _.filter(this.labs, lab => _.every(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2)));
+		const reagentLabCandidates = _.filter(range2Labs, lab => !_.some(restrictedLabs, l => l.id == lab.id));
 		if (this.colony.bunker && this.colony.labs.length == 10) {
 			this.reagentLabs = _.take(_.sortBy(reagentLabCandidates,
 											   lab => -1 * lab.pos.findInRange(this.boostingLabs, 1).length), 2);
@@ -198,7 +198,7 @@ export class EvolutionChamber extends HiveCluster {
 
 			case LabStatus.AcquiringMinerals: // "We acquire more mineralzzz"
 				const missingIngredients = this.colony.abathur.getMissingBasicMinerals([this.memory.activeReaction!]);
-				if (_.all(missingIngredients, amount => amount == 0)) {
+				if (_.every(missingIngredients, amount => amount == 0)) {
 					// Loading labs if all minerals are present but labs not at desired capacity yet
 					this.memory.status = LabStatus.LoadingLabs;
 					this.memory.statusTick = Game.time;
@@ -206,7 +206,7 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			case LabStatus.LoadingLabs:
-				if (_.all(this.reagentLabs, lab => lab.mineralAmount >= this.memory.activeReaction!.amount &&
+				if (_.every(this.reagentLabs, lab => lab.mineralAmount >= this.memory.activeReaction!.amount &&
 												   REAGENTS[this.memory.activeReaction!.mineralType]
 													   .includes(<ResourceConstant>lab.mineralType))) {
 					this.memory.status = LabStatus.Synthesizing;
@@ -215,14 +215,14 @@ export class EvolutionChamber extends HiveCluster {
 				break;
 
 			case LabStatus.Synthesizing:
-				if (_.any(this.reagentLabs, lab => lab.mineralAmount < LAB_REACTION_AMOUNT)) {
+				if (_.some(this.reagentLabs, lab => lab.mineralAmount < LAB_REACTION_AMOUNT)) {
 					this.memory.status = LabStatus.UnloadingLabs;
 					this.memory.statusTick = Game.time;
 				}
 				break;
 
 			case LabStatus.UnloadingLabs:
-				if (_.all([...this.reagentLabs, ...this.productLabs], lab => lab.mineralAmount == 0)) {
+				if (_.every([...this.reagentLabs, ...this.productLabs], lab => lab.mineralAmount == 0)) {
 					this.memory.status = LabStatus.Idle;
 					this.memory.statusTick = Game.time;
 				}
@@ -309,7 +309,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	private registerRequests(): void {
 		// Separate product labs into actively boosting or ready for reaction
-		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
+		const boostingProductLabs = _.filter(this.productLabs, lab => !!this.labReservations[lab.id]);
 		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);
 
 		// Handle energy requests for labs with different priorities

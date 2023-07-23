@@ -48,18 +48,18 @@ const TraderStatsDefaults: TraderStats = {
 	sold: {},
 };
 
-// Maximum prices I'm willing to pay to buy various resources - based on shard2 market data in June 2018
+// Maximum prices I'm willing to pay to buy various resources - based on shard3 market data in July 2023
 // (might not always be up to date)
 export const maxMarketPrices: { [resourceType: string]: number } = {
 	default: 5.0,
-	[RESOURCE_HYDROGEN]: 0.3,
-	[RESOURCE_OXYGEN]: 0.25,
-	[RESOURCE_UTRIUM]: 0.3,
-	[RESOURCE_LEMERGIUM]: 0.25,
-	[RESOURCE_KEANIUM]: 0.25,
-	[RESOURCE_ZYNTHIUM]: 0.25,
-	[RESOURCE_CATALYST]: 0.5,
-	[RESOURCE_ENERGY]: 0.05,
+	[RESOURCE_HYDROGEN]: 10,
+	[RESOURCE_OXYGEN]: 30,
+	[RESOURCE_UTRIUM]: 20,
+	[RESOURCE_LEMERGIUM]: 15,
+	[RESOURCE_KEANIUM]: 8,
+	[RESOURCE_ZYNTHIUM]: 30,
+	[RESOURCE_CATALYST]: 30,
+	[RESOURCE_ENERGY]: 7,
 };
 
 export const MAX_ENERGY_SELL_ORDERS = 5;
@@ -70,7 +70,6 @@ export const MAX_ENERGY_BUY_ORDERS = 5;
  * The trade network controls resource acquisition and disposal on the player market.
  */
 @profile
-@assimilationLocked
 export class TraderJoe implements ITradeNetwork {
 
 	static settings = {
@@ -78,9 +77,9 @@ export class TraderJoe implements ITradeNetwork {
 			timeout: 25,
 		},
 		market: {
-			reserveCredits: 10000,	// Always try to stay above this amount
-			boostCredits: 25000,	// You can buy boosts directly off market while above this amount
-			energyCredits: 50000, 	// Can buy energy off market if above this amount
+			reserveCredits: 114514,	// Always try to stay above this amount
+			boostCredits: 1919810,	// You can buy boosts directly off market while above this amount
+			energyCredits: 233333, 	// Can buy energy off market if above this amount
 			orders: {
 				timeout: 100000,	// Remove orders after this many ticks if remaining amount < cleanupAmount
 				cleanupAmount: 10,		// RemainingAmount threshold to remove expiring orders
@@ -119,7 +118,7 @@ export class TraderJoe implements ITradeNetwork {
 		this.invalidateMarketCache();
 		// Do not cache this lot in memory if cpu is limited
 		if(Game.cpu.limit < 5) return;
-		const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => order.active), order => order.id);
+		const myActiveOrderIDs = _.map(_.filter(Game.market.orders, order => !!order.active), order => order.id);
 		const allOrders = Game.market.getAllOrders(order => !myActiveOrderIDs.includes(order.id) &&
 			order.amount >= orderThreshold); // don't include tiny orders
 		const groupedBuyOrders = _.groupBy(_.filter(allOrders, o => o.type == ORDER_BUY), o => o.resourceType);
@@ -127,8 +126,8 @@ export class TraderJoe implements ITradeNetwork {
 		for (const resourceType in groupedBuyOrders) {
 			// Store buy order with maximum price in cache
 			const prices = _.map(groupedBuyOrders[resourceType], o => o.price);
-			const high = _.max(prices);
-			const low = _.min(prices);
+			const high = _.max(prices)!;
+			const low = _.min(prices)!;
 			if (verbose) console.log(`${resourceType} BUY: high: ${high}  low: ${low}`);
 			// this.memory.cache.buy[resourceType] = minBy(groupedBuyOrders[resourceType], (o:Order) => -1 * o.price);
 			this.memory.cache.buy[resourceType] = { high: high, low: low };
@@ -136,8 +135,8 @@ export class TraderJoe implements ITradeNetwork {
 		for (const resourceType in groupedSellOrders) {
 			// Store sell order with minimum price in cache
 			const prices = _.map(groupedSellOrders[resourceType], o => o.price);
-			const high = _.max(prices);
-			const low = _.min(prices);
+			const high = _.max(prices)!;
+			const low = _.min(prices)!;
 			if (verbose) console.log(`${resourceType} SELL: high: ${high}  low: ${low}`);
 			// this.memory.cache.sell[resourceType] = minBy(groupedSellOrders[resourceType], (o:Order) => o.price);
 			this.memory.cache.sell[resourceType] = { high: high, low: low };
@@ -192,11 +191,11 @@ export class TraderJoe implements ITradeNetwork {
 
 	private cleanUpInactiveOrders() {
 		// Clean up sell orders that have expired or orders belonging to rooms no longer owned
-		const ordersToClean = _.filter(Game.market.orders, o =>
+		const ordersToClean = _.filter(Game.market.orders, o =>!!(
 			(o.type == ORDER_SELL && o.active == false && o.remainingAmount == 0)		// if order is expired, or
 			|| (Game.time - o.created > TraderJoe.settings.market.orders.timeout		// order is old and almost done
 				&& o.remainingAmount < TraderJoe.settings.market.orders.cleanupAmount)
-			|| (o.roomName && !Overmind.colonies[o.roomName]));							// order placed from dead colony
+			|| (o.roomName && !Overmind.colonies[o.roomName])));							// order placed from dead colony
 		for (const order of ordersToClean) {
 			Game.market.cancelOrder(order.id);
 		}
@@ -241,7 +240,7 @@ export class TraderJoe implements ITradeNetwork {
 			return;
 		}
 		amount = Math.max(amount, TERMINAL_MIN_SEND);
-		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.storeCapacity - _.sum(terminal.store) < amount) {
+		if (terminal.store[RESOURCE_ENERGY] < 10000 || terminal.store.getUsedCapacity() < amount) {
 			return;
 		}
 		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_SELL });

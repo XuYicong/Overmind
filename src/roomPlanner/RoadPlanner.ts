@@ -115,9 +115,9 @@ export class RoadPlanner {
 								destination: RoomPosition): { roadCount: number, length: number } | undefined {
 		const ret = Pathing.findPath(storagePos, destination, {terrainCosts: {plainCost: 2, swampCost: 10}});
 		const path = ret.path;
-		const roomNames = _.unique(_.map(path, pos => pos.roomName));
+		const roomNames = _.uniq(_.map(path, pos => pos.roomName));
 		// If you have vision or cached vision of the room
-		if (_.all(roomNames, roomName => Game.rooms[roomName] || $.costMatrixRecall(roomName, MatrixTypes.default))) {
+		if (_.every(roomNames, roomName => Game.rooms[roomName] || $.costMatrixRecall(roomName, MatrixTypes.default))) {
 			let roadCount = 0;
 			for (const pos of path) {
 				if (Game.rooms[pos.roomName]) {
@@ -255,7 +255,7 @@ export class RoadPlanner {
 	/* Ensure that the roads doesn't overlap with roads from this.map and that the positions are unique */
 	private formatRoadPositions(): void {
 		// Make road position list unique
-		this.roadPositions = _.unique(this.roadPositions);
+		this.roadPositions = _.uniq(this.roadPositions);
 		// Remove roads located on exit tiles
 		_.remove(this.roadPositions, pos => pos.isEdge);
 		// Remove any roads duplicated in this.map

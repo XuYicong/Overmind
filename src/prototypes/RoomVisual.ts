@@ -440,7 +440,7 @@ RoomVisual.prototype.connectRoads = function(opts = {}): RoomVisual | void {
 		for (let i = 1; i <= 4; i++) {
 			const d = dirs[i];
 			const c = [r[0] + d[0], r[1] + d[1]];
-			const rd = _.some(<number[][]>this.roads, r => r[0] == c[0] && r[1] == c[1]);
+			const rd = _.some(<number[][]>this.roads, (r: number[]) => r[0] == c[0] && r[1] == c[1]);
 			// this.text(`${c[0]},${c[1]}`,c[0],c[1],{ size: 0.2, color: rd?'green':'red' })
 			if (rd) {
 				this.line(r[0], r[1], c[0], c[1], {

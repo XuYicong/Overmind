@@ -12,7 +12,7 @@ export interface BodySetup {
 
 /* Return the cost of an entire array of body parts */
 export function bodyCost(bodyparts: BodyPartConstant[]): number {
-	return _.sum(bodyparts, part => BODYPART_COST[part]);
+	return _.sum(_.map(bodyparts, part => BODYPART_COST[part]));
 }
 
 export function patternCost(setup: CreepSetup): number {
@@ -103,7 +103,7 @@ export class CreepSetup {
 		if (colony.spawnGroup) {
 			const colonies = _.compact(_.map(colony.spawnGroup.memory.colonies,
 										   name => Overmind.colonies[name])) as Colony[];
-			energyCapacity = _.max(_.map(colonies, colony => colony.room.energyCapacityAvailable));
+			energyCapacity = _.max(_.map(colonies, colony => colony.room.energyCapacityAvailable))!;
 		}
 		const body = this.generateBody(energyCapacity);
 		return _.filter(body, (part: BodyPartConstant) => part == partType).length;

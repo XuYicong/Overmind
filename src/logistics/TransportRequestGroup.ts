@@ -142,27 +142,24 @@ export class TransportRequestGroup {
 
 	private getInputAmount(target: TransportRequestTarget, resourceType: ResourceConstant): number {
 		if (isStoreStructure(target)) {
-			return target.storeCapacity - _.sum(target.store);
+			return target.storeCapacity - _.sum(_.values(target.store));
 		} else if (isEnergyStructure(target) && resourceType == RESOURCE_ENERGY) {
 			return target.energyCapacity - target.energy;
 		} else {
 			if (target instanceof StructureLab) {
 				if (resourceType == target.mineralType) {
-					return target.mineralCapacity - target.mineralAmount;
+					const type = target.mineralType;
+					return target.store.getCapacity(type) - target.store[type];
 				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
+					return target.store.getCapacity(resourceType) - target.store[resourceType];
 				}
 			} else if (target instanceof StructureNuker) {
-				if (resourceType == RESOURCE_GHODIUM) {
-					return target.ghodiumCapacity - target.ghodium;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
+				if (resourceType == RESOURCE_GHODIUM || resourceType == RESOURCE_ENERGY) {
+					return target.store.getCapacity(resourceType) - target.store[resourceType];
 				}
 			} else if (target instanceof StructurePowerSpawn) {
-				if (resourceType == RESOURCE_POWER) {
-					return target.powerCapacity - target.power;
-				} else if (resourceType == RESOURCE_ENERGY) {
-					return target.energyCapacity - target.energy;
+				if (resourceType == RESOURCE_POWER || resourceType == RESOURCE_ENERGY) {
+					return target.store.getCapacity(resourceType) - target.store[resourceType];
 				}
 			}
 		}

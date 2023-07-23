@@ -381,7 +381,7 @@ export class Hatchery extends HiveCluster {
 				} else {
 					directions = _.map(spawn.pos.availableNeighbors(true), pos => spawn.pos.getDirectionTo(pos));
 				}
-				const exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)) as RoomPosition;
+				const exitPos = Pathing.positionAtDirection(spawn.pos, _.first(directions)!) as RoomPosition;
 				Movement.vacatePos(exitPos);
 			}
 		}

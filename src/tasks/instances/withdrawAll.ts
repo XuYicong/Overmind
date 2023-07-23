@@ -11,18 +11,20 @@ export const withdrawAllTaskName = 'withdrawAll';
 @profile
 export class TaskWithdrawAll extends Task {
 
-	target: withdrawAllTargetType;
+	public get target(): withdrawAllTargetType {
+		return <withdrawAllTargetType>super.target;
+	}
 
 	constructor(target: withdrawAllTargetType, options = {} as TaskOptions) {
 		super(withdrawAllTaskName, target, options);
 	}
 
 	isValidTask() {
-		return (_.sum(this.creep.carry) < this.creep.carryCapacity);
+		return (_.sum(_.values(this.creep.carry)) < this.creep.carryCapacity);
 	}
 
 	isValidTarget() {
-		return _.sum(this.target.store) > 0;
+		return _.sum(_.values(this.target.store)) > 0;
 	}
 
 	work() {

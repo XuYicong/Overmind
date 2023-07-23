@@ -79,6 +79,16 @@ export class Mem {
 				delete Memory.haltTick;
 			}
 		}
+		if(Game.cpu.bucket >= 10000) {
+			log.info('CPU bucket sufficient, generating pixel');
+			// Costs 10000 bucket, results in 1 tick pause
+			const ret = Game.cpu.generatePixel();
+			if(ret) {
+				log.alert('Bucket does not have enough CPU to generate pixels');
+			} else {
+				shouldRun = false;
+			}
+		}
 		return shouldRun;
 	}
 
@@ -134,13 +144,13 @@ export class Mem {
 		const key = _.first(keys);
 		keys = _.drop(keys);
 		if (keys.length == 0) { // at the end of the recursion
-			object[key] = value;
+			object[key!] = value;
 			return;
 		} else {
-			if (!object[key]) {
-				object[key] = {};
+			if (!object[key!]) {
+				object[key!] = {};
 			}
-			return Mem._setDeep(object[key], keys, value);
+			return Mem._setDeep(object[key!], keys, value);
 		}
 	}
 

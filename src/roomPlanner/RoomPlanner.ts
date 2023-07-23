@@ -321,7 +321,7 @@ export class RoomPlanner {
 	private mapFromPlan(plan: RoomPlan): StructureMap {
 		const map: StructureMap = {};
 		const componentMaps: StructureMap[] = _.map(plan, componentPlan => componentPlan.map);
-		const structureNames: string[] = _.unique(_.flatten(_.map(componentMaps, map => _.keys(map))));
+		const structureNames: string[] = _.uniq(_.flatten(_.map(componentMaps, map => _.keys(map))));
 		for (const name of structureNames) {
 			map[name] = _.compact(_.flatten(_.map(componentMaps, map => map[name])));
 		}
@@ -420,7 +420,7 @@ export class RoomPlanner {
 				}
 			}
 		}
-		return _.unique(obstacles);
+		return _.uniq(obstacles);
 	}
 
 	/**
@@ -594,7 +594,7 @@ export class RoomPlanner {
 
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to demolish errant structures.');
 		}
 
@@ -650,7 +650,7 @@ export class RoomPlanner {
 							log.info(`${this.colony.name}: waiting until storage is built to remove terminal`);
 							return;
 						} else if (this.colony.terminal &&
-								   _.sum(this.colony.terminal.store) - this.colony.terminal.energy > 1000) {
+								   _.sum(_.values(this.colony.terminal.store)) - this.colony.terminal.energy > 1000) {
 							log.info(`${this.colony.name}: waiting on resources to evacuate before removing terminal`);
 							return;
 						} else if (this.colony.storage &&
@@ -676,8 +676,8 @@ export class RoomPlanner {
 								}
 							}
 							const workTicksNeeded = 15000 / BUILD_POWER;
-							const workTicksAvailable = _.sum(this.colony.overlords.work.workers, worker =>
-								worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0));
+							const workTicksAvailable = _.sum(_.map(this.colony.overlords.work.workers, worker =>
+								worker.getActiveBodyparts(WORK) * (worker.ticksToLive || 0)));
 							if (workTicksAvailable < workTicksNeeded) {
 								log.warning(`${this.colony.print}: Unsafe to destroy misplaced spawn: ` +
 											`${workTicksAvailable}/${workTicksNeeded} [WORK * ticks] available`);
@@ -714,7 +714,7 @@ export class RoomPlanner {
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		// Recall the appropriate map
 		this.recallMap();
-		if (!this.map || this.map == {}) { // in case a map hasn't been generated yet
+		if (!this.map || !this.map[STRUCTURE_SPAWN]) { // in case a map hasn't been generated yet
 			log.info(this.colony.name + ' does not have a room plan yet! Unable to build missing structures.');
 		}
 		// Build missing structures from room plan

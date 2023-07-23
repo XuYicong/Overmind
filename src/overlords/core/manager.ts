@@ -30,7 +30,7 @@ export class CommandCenterOverlord extends Overlord {
 		this.commandCenter = commandCenter;
 		this.mode = this.colony.layout;
 		this.managers = this.zerg(Roles.manager);
-		if (this.commandCenter.terminal && _.sum(this.commandCenter.terminal.store) < TERMINAL_CAPACITY - 1000) {
+		if (this.commandCenter.terminal && this.commandCenter.terminal.store.getUsedCapacity() < TERMINAL_CAPACITY - 1000) {
 			this.depositTarget = this.commandCenter.terminal;
 		} else {
 			this.depositTarget = this.commandCenter.storage;
@@ -73,7 +73,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Move anything you are currently holding to deposit location
 	 */
 	private unloadCarry(manager: Zerg): boolean {
-		if (_.sum(manager.carry) > 0) {
+		if (manager.carry.getUsedCapacity() > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget);
 			return true;
 		} else {
@@ -92,12 +92,12 @@ export class CommandCenterOverlord extends Overlord {
 										  {nextPos: this.commandCenter.idlePos});
 			if ((manager.carry[request.resourceType] || 0) < amount) {
 				// If you are currently carrying other crap, overwrite current task and put junk in terminal/storage
-				if (_.sum(manager.carry) > (manager.carry[request.resourceType] || 0)) {
+				if (manager.carry.getUsedCapacity() > (manager.carry[request.resourceType] || 0)) {
 					manager.task = Tasks.transferAll(this.depositTarget);
 				}
 				// Otherwise withdraw as much as you can hold
 				else {
-					const withdrawAmount = amount - _.sum(manager.carry);
+					const withdrawAmount = amount - manager.carry.getUsedCapacity();
 					let withdrawFrom: StoreStructure = this.commandCenter.storage;
 					if (this.commandCenter.terminal
 						&& (request.resourceType != RESOURCE_ENERGY
@@ -118,10 +118,10 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle any withdrawal requests from your transport request group
 	 */
 	private withdrawActions(manager: Zerg): boolean {
-		if (_.sum(manager.carry) < manager.carryCapacity) {
+		if (manager.carry.getUsedCapacity() < manager.carryCapacity) {
 			const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
 			if (request) {
-				const amount = Math.min(request.amount, manager.carryCapacity - _.sum(manager.carry));
+				const amount = Math.min(request.amount, manager.carryCapacity - manager.carry.getUsedCapacity());
 				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
 				return true;
 			}
@@ -232,7 +232,7 @@ export class CommandCenterOverlord extends Overlord {
 	private deathActions(manager: Zerg): boolean {
 		const nearbyManagers = _.filter(this.managers, manager => manager.pos.inRangeTo(this.commandCenter.pos, 3));
 		if (nearbyManagers.length > 1) {
-			if (_.sum(manager.carry) == 0) {
+			if (manager.carry.getUsedCapacity() == 0) {
 				const nearbySpawn = _.first(manager.pos.findInRange(manager.room.spawns, 1));
 				if (nearbySpawn) {
 					nearbySpawn.recycleCreep(manager.creep);

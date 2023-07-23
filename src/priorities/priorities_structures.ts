@@ -17,6 +17,7 @@ export const BuildPriorities: BuildableStructureConstant[] = [
 	STRUCTURE_WALL,
 	STRUCTURE_RAMPART,
 	STRUCTURE_ROAD,
+	STRUCTURE_FACTORY,
 ];
 
 /**

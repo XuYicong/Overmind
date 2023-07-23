@@ -75,8 +75,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 		if (!this.room) return;
 		// If any lairs have an active keeper, target that
 		const activeLairs = _.filter(this.room.keeperLairs,
-								lair => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
-		let activeLair = _.find(activeLairs, lair => lair.pos.findInRange(lair.room.sources, 5).length > 0);
+			(								lair: { pos: { findInRange: (arg0: any, arg1: number) => { (): any; new(): any; length: number; }; }; room: { sourceKeepers: any; }; }) => lair.pos.findInRange(lair.room.sourceKeepers, 5).length > 0);
+		let activeLair = _.find(activeLairs, (lair: { pos: { findInRange: (arg0: any, arg1: number) => { (): any; new(): any; length: number; }; }; room: { sources: any; }; }) => lair.pos.findInRange(lair.room.sources, 5).length > 0);
 		if (activeLair) return activeLair;
 		else
 		if(activeLairs[0]) return activeLairs[0];
@@ -107,8 +107,8 @@ export class SourceReaperOverlord extends CombatOverlord {
 				reaper.healSelfIfPossible();
 			}
 			// Kite around ranged invaders until a defender arrives
-			if (this.room.invaders.length > 2 && _.filter(this.defenders, def => def.room == this.room).length == 0) {
-				reaper.kite(_.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0));
+			if (this.room.invaders.length > 2 && _.filter(this.defenders, (def: { room: Room | undefined; }) => def.room == this.room).length == 0) {
+				reaper.kite(_.filter(this.room.hostiles, (hostile: { getActiveBodyparts: (arg0: string) => number; }) => hostile.getActiveBodyparts(RANGED_ATTACK) > 0));
 				reaper.healSelfIfPossible();
 			}
 			// If defender is already here or a small invasion
@@ -176,7 +176,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 				} else {
 					const keeper = this.targetLair.pos.findClosestByLimitedRange(this.room.sourceKeepers, 7);
 					if (keeper) { // attack the source keeper
-						const partner = defender.findPartner(_.filter(this.defenders, other => other.name != defender.name));
+						const partner = defender.findPartner(_.filter(this.defenders, (other) => other.name != defender.name));
 						const range = defender.pos.getRangeTo(keeper);
 						const partnerRange = partner ? partner.pos.getRangeTo(keeper) : range;
 						const hits = partner ? defender.hits + partner.hits : defender.hits;

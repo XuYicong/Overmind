@@ -102,13 +102,13 @@ export class CommandCenter extends HiveCluster {
 															...this.towers]);
 		const numNearbyStructures = (pos: RoomPosition) =>
 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;
-		return _.last(_.sortBy(this.storage.pos.neighbors, pos => numNearbyStructures(pos)));
+		return _.last(_.sortBy(this.storage.pos.neighbors, pos => numNearbyStructures(pos)))!;
 	}
 
 	/* Register a link transfer store if the link is sufficiently full */
 	private registerLinkTransferRequests(): void {
 		if (this.link) {
-			if (this.link.energy > CommandCenter.settings.linksTransmitAt) {
+			if (this.link.store[RESOURCE_ENERGY] > CommandCenter.settings.linksTransmitAt) {
 				this.colony.linkNetwork.requestTransmit(this.link);
 			}
 		}
@@ -119,28 +119,28 @@ export class CommandCenter extends HiveCluster {
 		// Supply requests:
 
 		// If the link is empty and can send energy and something needs energy, fill it up
-		if (this.link && this.link.energy < 0.9 * this.link.energyCapacity && this.link.cooldown <= 1) {
+		if (this.link && this.link.store[RESOURCE_ENERGY] < 0.9 * this.link.store.getCapacity(RESOURCE_ENERGY) && this.link.cooldown <= 1) {
 			if (this.colony.linkNetwork.receive.length > 0) { 	// If something wants energy
 				this.transportRequests.requestInput(this.link, Priority.Critical);
 			}
 		}
 		// Refill towers as needed with variable priority
-		const refillTowers = _.filter(this.towers, tower => tower.energy < CommandCenter.settings.refillTowersBelow);
+		const refillTowers = _.filter(this.towers, tower => tower.store[RESOURCE_ENERGY] < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
 
 		// Refill core spawn (only applicable to bunker layouts)
 		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
-			if (this.colony.bunker.coreSpawn.energy < this.colony.bunker.coreSpawn.energyCapacity) {
+			if (this.colony.bunker.coreSpawn.store[RESOURCE_ENERGY] < this.colony.bunker.coreSpawn.store.getCapacity(RESOURCE_ENERGY)) {
 				this.transportRequests.requestInput(this.colony.bunker.coreSpawn, Priority.Normal);
 			}
 		}
 		// Refill power spawn
-		if (this.powerSpawn && this.powerSpawn.energy < this.powerSpawn.energyCapacity) {
+		if (this.powerSpawn && this.powerSpawn.store[RESOURCE_ENERGY] < this.powerSpawn.store.getCapacity(RESOURCE_ENERGY)) {
 			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
-			if (this.nuker.energy < this.nuker.energyCapacity && this.storage.energy > 200000) {
+			if (this.nuker.store[RESOURCE_ENERGY] < this.nuker.store.getCapacity(RESOURCE_ENERGY) && this.storage.store[RESOURCE_ENERGY] > 200000) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
@@ -152,7 +152,7 @@ export class CommandCenter extends HiveCluster {
 		// Withdraw requests:
 
 		// If the link has energy and nothing needs it, empty it
-		if (this.link && this.link.energy > 0) {
+		if (this.link && this.link.store[RESOURCE_ENERGY] > 0) {
 			if (this.colony.linkNetwork.receive.length == 0 || this.link.cooldown > 3) {
 				this.transportRequests.requestOutput(this.link, Priority.High);
 			}
@@ -196,13 +196,13 @@ export class CommandCenter extends HiveCluster {
 		y = titleCoords.y + 0.25;
 		if (this.storage) {
 			Visualizer.text('Storage', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.storage.store) / this.storage.storeCapacity,
+			Visualizer.barGraph(this.storage.store.getUsedCapacity() / this.storage.store.getCapacity(),
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;
 		}
 		if (this.terminal) {
 			Visualizer.text('Terminal', {x: boxX, y: y, roomName: this.room.name});
-			Visualizer.barGraph(_.sum(this.terminal.store) / this.terminal.storeCapacity,
+			Visualizer.barGraph(this.terminal.store.getUsedCapacity() / this.terminal.store.getCapacity(),
 								{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 			y += 1;
 		}

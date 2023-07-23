@@ -18,7 +18,7 @@ Object.defineProperty(Creep.prototype, 'boosts', {
 Object.defineProperty(Creep.prototype, 'boostCounts', {
 	get() {
 		if (!this._boostCounts) {
-			this._boostCounts = _.countBy(this.body as BodyPartDefinition[], bodyPart => bodyPart.boost);
+			this._boostCounts = _.countBy(this.body as BodyPartDefinition[], (bodyPart: { boost: any; }) => bodyPart.boost);
 		}
 		return this._boostCounts;
 	},

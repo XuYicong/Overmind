@@ -44,7 +44,7 @@ export class PairDestroyerOverlord extends Overlord {
 			// Prioritize specifically targeted structures first
 			const targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];
 			const targetedStructures = _.compact(_.map(targetingDirectives,
-													 directive => directive.getTarget())) as Structure[];
+				(													 directive: { getTarget: () => any; }) => directive.getTarget())) as Structure[];
 			if (targetedStructures.length > 0) {
 				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
 			} else {

@@ -7,7 +7,9 @@ export const dismantleTaskName = 'dismantle';
 
 @profile
 export class TaskDismantle extends Task {
-	target: dismantleTargetType;
+	public get target(): dismantleTargetType {
+		return <dismantleTargetType>super.target;
+	}
 
 	constructor(target: dismantleTargetType, options = {} as TaskOptions) {
 		super(dismantleTaskName, target, options);

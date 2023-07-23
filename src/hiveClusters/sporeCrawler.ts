@@ -37,9 +37,7 @@ export class SporeCrawler extends HiveCluster {
 
 	}
 
-	get memory(): undefined {
-		return undefined;
-	}
+	memory: undefined;
 
 	private registerEnergyRequests() {
 		// Request energy from transporters if below request threshold
@@ -132,7 +130,7 @@ export class SporeCrawler extends HiveCluster {
 				return damageTaken * damageMultiplier > avgHealing;
 			});
 			// Only attack dancing targets (drain attack) which are far enough in rooms to be killed off by towers
-			possibleTargets = _.filter(possibleTargets, hostile => {
+			possibleTargets = <any>_.filter(possibleTargets, hostile => {
 				if (CombatIntel.isEdgeDancing(hostile)) {
 					const netDPS = CombatIntel.towerDamageAtPos(hostile.pos)! + myCreepDamage
 								   - (HEAL_FUDGE_FACTOR * CombatIntel.maxHostileHealingTo(hostile));

@@ -73,7 +73,7 @@ export class Graph {
 			_.remove(neighbor.neighbors, vertex);
 		}
 		// Remove all edges that touch the vertex
-		_.remove(this.edges, edge => _.includes(edge.vertices, vertex));
+		_.remove(this.edges, (edge: { vertices: any; }) => _.includes(edge.vertices, vertex));
 		// Remove the vertex from the list
 		_.remove(this.vertices, vertex);
 	}

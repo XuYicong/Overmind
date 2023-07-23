@@ -6,7 +6,9 @@ export const buildTaskName = 'build';
 
 @profile
 export class TaskBuild extends Task {
-	target: buildTargetType;
+	public get target(): buildTargetType {
+		return <buildTargetType>super.target;
+	}
 
 	constructor(target: buildTargetType, options = {} as TaskOptions) {
 		super(buildTaskName, target, options);

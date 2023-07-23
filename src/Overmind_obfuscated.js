@@ -38,13 +38,12 @@ import { RoomIntel } from './intel/RoomIntel';
 import { TerminalNetwork } from './logistics/TerminalNetwork';
 import { TraderJoe } from './logistics/TradeNetwork';
 import { Mem } from './memory/Memory';
-import { Segmenter } from './memory/Segmenter';
+// import { Segmenter } from './memory/Segmenter';
 import { Overseer } from './Overseer';
 import { profile } from './profiler/decorator';
 import { Stats } from './stats/stats';
 import { ExpansionPlanner } from './strategy/ExpansionPlanner';
 import { alignedNewline } from './utilities/stringConstants';
-import { bulleted } from './utilities/utils';
 import { asciiLogoSmall } from './visuals/logos';
 import { Visualizer } from './visuals/Visualizer';
 import { MUON, MY_USERNAME, NEW_OVERMIND_INTERVAL, PROFILER_COLONY_LIMIT, PROFILER_INCLUDE_COLONIES, USE_PROFILER, USE_TRY_CATCH } from './~settings';
@@ -287,7 +286,7 @@ let _Overmind = class _Overmind {
     }
     [_0x9e16('0x52')]() {
         this["try"](() => VersionUpdater["run"]());
-        this["try"](() => Segmenter["run"]());
+        // this["try"](() => Segmenter["run"]());
         this[_0x9e16('0x29')]();
     }
     [_0x9e16('0x53')]() {
@@ -340,14 +339,14 @@ class IntelManagement {
         _[_0x9e16('0x1')](Overmind.colonies)
     }
     static [_0x9e16('0x6c')]() {
-        if (!Assimilator[_0x9e16('0x6d')](MY_USERNAME)) {
-            const _0x5a2622 = [[COLOR_RED, COLOR_RED]];
-            for (const _0x2c0dbd in Game[_0x9e16('0x3e')]) {
-                const _0x3a00ca = Game[_0x9e16('0x3e')][_0x2c0dbd];
-                const _0x1c0b76 = [_0x3a00ca[_0x9e16('0x6e')], _0x3a00ca[_0x9e16('0x6f')]];
-                if (_0x5a2622[_0x9e16('0x63')](_0x1c0b76)) { }
-            }
-        }
+        // if (!Assimilator[_0x9e16('0x6d')](MY_USERNAME)) {
+        //     const _0x5a2622 = [[COLOR_RED, COLOR_RED]];
+        //     for (const _0x2c0dbd in Game[_0x9e16('0x3e')]) {
+        //         const _0x3a00ca = Game[_0x9e16('0x3e')][_0x2c0dbd];
+        //         const _0x1c0b76 = [_0x3a00ca[_0x9e16('0x6e')], _0x3a00ca[_0x9e16('0x6f')]];
+        //         if (_0x5a2622[_0x9e16('0x63')](_0x1c0b76)) { }
+        //     }
+        // }
     }
     static ["run"]() {
         this[_0x9e16('0x5c')]();
@@ -365,15 +364,15 @@ class VersionUpdater {
         );
     }
     static [_0x9e16('0x72')]() {
-        if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
-            Segmenter[_0x9e16('0x75')](MUON, this[_0x9e16('0x76')]);
-        }
-        else if (Game.time % this.CheckFrequency == this.CheckOnTick) {
-            const _0x25ce0d = Segmenter[_0x9e16('0x77')]();
-            if (_0x25ce0d) {
-                return _0x25ce0d[_0x9e16('0x78')];
-            }
-        }
+        // if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
+        //     Segmenter[_0x9e16('0x75')](MUON, this[_0x9e16('0x76')]);
+        // }
+        // else if (Game.time % this.CheckFrequency == this.CheckOnTick) {
+        //     const _0x25ce0d = Segmenter[_0x9e16('0x77')]();
+        //     if (_0x25ce0d) {
+        //         return _0x25ce0d[_0x9e16('0x78')];
+        //     }
+        // }
     }
     static [_0x9e16('0x56')](_0xaa5430) {
         const [_0x2ae244, _0x5391fd, _0x24c5a1] = _[_0x9e16('0x32')](__VERSION__[_0x9e16('0x79')]('.'), _0x2ae98a => parseInt(_0x2ae98a, 0xa));
@@ -381,13 +380,13 @@ class VersionUpdater {
         return _0x34116f > _0x2ae244 || _0x2e335f > _0x5391fd || _0xc5c749 > _0x24c5a1;
     }
     static [_0x9e16('0x7a')]() {
-        if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x2) {
-            Segmenter[_0x9e16('0x7b')](this[_0x9e16('0x76')]);
-        }
-        else if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
-            Segmenter[_0x9e16('0x7c')](this[_0x9e16('0x76')]);
-            Segmenter[_0x9e16('0x7d')](this[_0x9e16('0x76')], _0x9e16('0x78'), __VERSION__);
-        }
+        // if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x2) {
+        //     Segmenter[_0x9e16('0x7b')](this[_0x9e16('0x76')]);
+        // }
+        // else if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
+        //     Segmenter[_0x9e16('0x7c')](this[_0x9e16('0x76')]);
+        //     Segmenter[_0x9e16('0x7d')](this[_0x9e16('0x76')], _0x9e16('0x78'), __VERSION__);
+        // }
     }
     static [_0x9e16('0x7e')](_0x504723, _0x19a7e9) {
         let _0x5d0856 = '\x0a';

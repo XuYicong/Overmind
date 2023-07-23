@@ -188,7 +188,7 @@ export abstract class Task {
 			targetRefs.push(parent._target.ref);
 			parent = parent._parent;
 		}
-		return _.map(targetRefs, ref => deref(ref));
+		return _.map(targetRefs, (ref: string) => deref(ref));
 	}
 
 	/**
@@ -201,7 +201,7 @@ export abstract class Task {
 			targetPositions.push(parent._target._pos);
 			parent = parent._parent;
 		}
-		return _.map(targetPositions, protoPos => derefRoomPosition(protoPos));
+		return _.map(targetPositions, (protoPos: ProtoPos) => derefRoomPosition(protoPos));
 	}
 
 	/**

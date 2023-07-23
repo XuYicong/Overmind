@@ -117,7 +117,7 @@ export class BunkerQueenOverlord extends Overlord {
 		let tasks: Task[] = [];
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
 		let queenPos = queen.pos;
-		if (_.sum(queen.carry) > 0) {
+		if (_.sum(_.values(queen.carry)) > 0) {
 			const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
@@ -129,7 +129,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 		// Step 2: figure out what you need to supply for and calculate the needed resources
 		const queenCarry = {} as { [resourceType: string]: number };
-		const allStore = mergeSum(_.map(this.storeStructures, s => s.store));
+		const allStore = mergeSum(_.map(this.storeStructures, s => <any>s.store));
 
 		const supplyRequests: TransportRequest[] = [];
 		for (const priority in this.colony.transportRequests.supply) {
@@ -142,7 +142,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const supplyTasks: Task[] = [];
 		for (const request of supplyRequests) {
 			// stop when carry will be full
-			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.carryCapacity - _.sum(_.values( queenCarry));
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
 			let amount = Math.min(request.amount, remainingAmount);
@@ -161,7 +161,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
 		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
 		const targets: StoreStructure[] = _.filter(this.storeStructures, s =>
-			_.all(neededResources, resource => (s.store[resource] || 0) >= (queenCarry[resource] || 0)));
+			!_.find(neededResources, resource => (s.store[resource] || 0) < (queenCarry[resource] || 0)));
 		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (!withdrawTarget) {
 			log.warning(`Could not find adequate withdraw structure for ${queen.print}! ` +
@@ -181,7 +181,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const tasks: Task[] = [];
 		const transferTarget = this.colony.terminal || this.colony.storage || this.batteries[0];
 		// Step 1: empty all contents (this shouldn't be necessary since queen is normally empty at this point)
-		if (_.sum(queen.carry) > 0) {
+		if (queen.carry.getUsedCapacity() > 0) {
 			if (transferTarget) {
 				tasks.push(Tasks.transferAll(transferTarget));
 			} else {
@@ -203,7 +203,7 @@ export class BunkerQueenOverlord extends Overlord {
 		}
 		for (const request of withdrawRequests) {
 			// stop when carry will be full
-			const remainingAmount = queen.carryCapacity - _.sum(queenCarry);
+			const remainingAmount = queen.carryCapacity - _.sum(_.values(queenCarry));
 			if (remainingAmount == 0) break;
 			// figure out how much you can withdraw
 			const amount = Math.min(request.amount, remainingAmount);
@@ -268,12 +268,12 @@ export class BunkerQueenOverlord extends Overlord {
 	private handleQueen(queen: Zerg): void {
 		// Does something need withdrawing?
 		if (this.colony.transportRequests.needsWithdrawing &&
-			_.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.withdrawByID[id])) {
+			_.find(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.withdrawByID[id])) {
 			queen.task = this.buildWithdrawTaskManifest(queen);
 		}
 		// Does something need supplying?
 		else if (this.colony.transportRequests.needsSupplying &&
-				 _.any(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.supplyByID[id])) {
+				 _.find(_.keys(this.assignments[queen.name]), id => this.colony.transportRequests.supplyByID[id])) {
 			queen.task = this.buildSupplyTaskManifest(queen);
 		}
 		// Otherwise do idle actions

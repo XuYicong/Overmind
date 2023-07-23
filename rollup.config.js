@@ -29,12 +29,10 @@ export default {
         progress({clearLine: true}),
         resolve(),
         commonjs({
-                     namedExports: {
-                         'src/Overmind_obfuscated': ['_Overmind'],
-                         'screeps-profiler': ['profiler'],
-                         'columnify': ['columnify']
-                     }
-                 }),
+            'src/Overmind_obfuscated': ['_Overmind'],
+            'screeps-profiler': ['profiler'],
+            'columnify': ['columnify']
+        }),
         typescript({tsconfig: "./tsconfig.json"}),
         screeps({config: cfg, dryRun: cfg == null})
     ],

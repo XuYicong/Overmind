@@ -6,8 +6,10 @@ export const meleeAttackTaskName = 'meleeAttack';
 
 @profile
 export class TaskMeleeAttack extends Task {
-	target: meleeAttackTargetType;
 
+	public get target(): meleeAttackTargetType {
+		return <meleeAttackTargetType>super.target;
+	}
 	constructor(target: meleeAttackTargetType, options = {} as TaskOptions) {
 		super(meleeAttackTaskName, target, options);
 		// Settings

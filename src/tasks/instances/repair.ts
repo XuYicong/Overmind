@@ -6,7 +6,10 @@ export const repairTaskName = 'repair';
 
 @profile
 export class TaskRepair extends Task {
-	target: repairTargetType;
+
+	public get target(): repairTargetType {
+		return <repairTargetType>super.target;
+	}
 
 	constructor(target: repairTargetType, options = {} as TaskOptions) {
 		super(repairTaskName, target, options);

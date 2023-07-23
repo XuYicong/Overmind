@@ -9,7 +9,9 @@ export const transferAllTaskName = 'transferAll';
 @profile
 export class TaskTransferAll extends Task {
 
-	target: transferAllTargetType;
+	public get target(): transferAllTargetType {
+		return <transferAllTargetType>super.target;
+	}
 	data: {
 		skipEnergy?: boolean;
 	};
@@ -33,7 +35,7 @@ export class TaskTransferAll extends Task {
 	}
 
 	isValidTarget() {
-		return _.sum(this.target.store) < this.target.storeCapacity;
+		return _.sum(_.values(this.target.store)) < this.target.storeCapacity;
 	}
 
 	work() {
