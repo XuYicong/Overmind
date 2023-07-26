@@ -1,3 +1,4 @@
+import { log } from 'console/log';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';

@@ -276,7 +276,9 @@ export class TraderJoe implements ITradeNetwork {
 		// If flexibleAmount is allowed, consider selling to orders which don't need the full amount
 		const minAmount = flexibleAmount ? TERMINAL_MIN_SEND : amount;
 		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY });
-		ordersForMineral = _.filter(ordersForMineral, order => order.amount >= minAmount);
+		ordersForMineral = _.filter(ordersForMineral, order => 
+			order.amount >= minAmount && (!order.roomName || order.roomName)
+		);
 		const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
 		if (order) {
 			const sellAmount = Math.min(order.amount, amount);

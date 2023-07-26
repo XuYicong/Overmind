@@ -16,7 +16,7 @@ export const NO_ACTION = -20;
 export const CROSSING_PORTAL = -21;
 export const ERR_CANNOT_PUSH_CREEP = -30;
 
-const REPORT_CPU_THRESHOLD = 800; 	// Report when creep uses more than this amount of CPU over lifetime
+const REPORT_CPU_THRESHOLD = 3; 	// Report when creep uses more than this amount of CPU over lifetime
 const REPORT_SWARM_CPU_THRESHOLD = 1500;
 
 const DEFAULT_STUCK_VALUE = 2;		// Marked as stuck after this many ticks
@@ -64,6 +64,7 @@ export interface MoveOptions {
 	restrictDistance?: number;					// restrict the distance of route to this number of rooms
 	useFindRoute?: boolean;						// whether to use the route finder; determined automatically otherwise
 	maxOps?: number;							// pathfinding times out after this many operations
+	maxCost?: number;							// pathfinding halts if cost is larger than this
 	movingTarget?: boolean;						// appends a direction to path in case creep moves
 	stuckValue?: number;						// creep is marked stuck after this many idle ticks
 	maxRooms?: number;							// maximum number of rooms to path through
@@ -123,6 +124,7 @@ export class Movement {
 	static goTo(creep: Zerg, destination: HasPos | RoomPosition, options: MoveOptions = {}): number {
 
 		if (creep.blockMovement && !options.force) {
+			creep.say('塞');
 			return ERR_BUSY;
 		}
 		if (creep.spawning) {
@@ -135,9 +137,10 @@ export class Movement {
 
 		// Set default options
 		_.defaults(options, {
-			ignoreCreeps     : true,
-			avoidSK     : true,
+			ignoreCreeps    : true,
+			avoidSK     	: true,
 			repathOnceVisible: !!options.waypoints || !!options.avoidSK,
+			maxRooms		: 9,
 		});
 
 		// initialize data object
@@ -202,6 +205,7 @@ export class Movement {
 					return creep.move(direction, !!options.force);
 				}
 			} else { // at destination
+				creep.memory._go.path = "";
 				if (!moveData.fleeWait) {
 					delete creep.memory._go;
 				}
@@ -1182,34 +1186,39 @@ export class Movement {
 	static flee(creep: Zerg, avoidGoals: (RoomPosition | HasPos)[],
 				dropEnergy = false, options: MoveOptions = {}): number | undefined {
 
-		if (avoidGoals.length == 0) {
-			return; // nothing to flee from
-		}
 		_.defaults(options, {
 			terrainCosts: getTerrainCosts(creep.creep),
 		});
 		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
 
-		const closest = creep.pos.findClosestByRange(avoidGoals);
-		const rangeToClosest = closest ? creep.pos.getRangeTo(closest) : 50;
+		const rangeToClosest = avoidGoals.length > 0 ? 
+			creep.pos.getRangeTo(creep.pos.findClosestByRange(avoidGoals)!) : 50;
+		const fleeStartRange = options.fleeRange - 2;
+		let moveData = creep.memory._go;
+		if (rangeToClosest > options.fleeRange) { // Out of range of baddies
 
-		if (rangeToClosest >= options.fleeRange) { // Out of range of baddies
+			// if (avoidGoals.length == 0) {
+			// 	return; // nothing to flee from
+			// }
 
-			if (creep.pos.isEdge) {
-				return creep.moveOffExit();
-			}
+			// if (creep.pos.isEdge) {
+			// 	return creep.moveOffExit();
+			// }
 
-			if (!creep.memory._go) {
+			if (!moveData) {
 				return;
 			}
 
 			// wait until safe
-			const moveData = creep.memory._go as MoveData;
 			if (moveData.fleeWait != undefined) {
 				if (moveData.fleeWait <= 0) {
 					// you're safe now
 					delete creep.memory._go;
 					return;
+				} else if (moveData.path && moveData.destination) {
+					creep.say('继续逃');
+					// We may have path unconsumed at this point
+					return Movement.goTo(creep, derefRoomPosition(moveData.destination), options);
 				} else {
 					moveData.fleeWait--;
 					return NO_ACTION;
@@ -1218,16 +1227,21 @@ export class Movement {
 				// you're safe
 				return;
 			}
+	
+		} else if(rangeToClosest > fleeStartRange) { // Still not safe, but it's fine just stay here
+			creep.say('敌', true);
+			if(!moveData || !moveData.destination || moveData.path.length <1)
+				return NO_ACTION;
+			// Go one step further to avoid stuck or dancing
+			moveData.path = moveData.path[0];
 
-		// } else if (rangeToClosest == options.fleeRange) { // Flee target range and not moving forward anymore	
 		} else { // Still need to run away
 
 			// initialize data object
-			if (!creep.memory._go) {
-				creep.memory._go = {} as MoveData;
+			if (!moveData) {
+				moveData = {} as MoveData;
 			}
-			const moveData = creep.memory._go as MoveData;
-
+			creep.say('逃', true);
 			moveData.fleeWait = 2;
 
 			// Invalidate path if needed
@@ -1241,8 +1255,6 @@ export class Movement {
 							moveData.path = "";
 						}
 					}
-				} else {
-					moveData.path = "";
 				}
 			}
 
@@ -1253,12 +1265,14 @@ export class Movement {
 					return NO_ACTION;
 				}
 				moveData.destination = _.last(ret.path);
+				options.range = 0;
 				moveData.path = Pathing.serializePath(creep.pos, ret.path, 'purple');
 			}
-
-			// Call goTo to the final position in path
-			return Movement.goTo(creep, derefRoomPosition(moveData.destination!), options);
 		}
+		creep.memory._go = moveData;
+		// log.debug(creep.print+': Flee path length before: '+moveData.path.length);
+		// Call goTo to the final position in path
+		return Movement.goTo(creep, derefRoomPosition(moveData.destination), options);
 	}
 
 

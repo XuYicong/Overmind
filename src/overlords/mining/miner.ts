@@ -137,7 +137,9 @@ export class MiningOverlord extends Overlord {
 			originPos = this.colony.roomPlanner.storagePos;
 		}
 		if (originPos) {
-			const path = Pathing.findShortestPath(this.pos, originPos).path;
+			// Revert the path because energy source is not walkable
+			const path = Pathing.findShortestPath(originPos, this.pos, {avoidSK : false}).path;
+			Pathing.serializePath(originPos, path, 'cyan');
 			const pos = _.find(path, pos => pos.getRangeTo(this) == 1);
 			if (pos) return pos;
 		}
@@ -358,7 +360,7 @@ export class MiningOverlord extends Overlord {
 		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
 			return;
 		}
-		let moveOptions: MoveOptions = {waypoints : this.directive.waypoints};
+		let moveOptions: MoveOptions = {waypoints : this.directive.waypoints, maxCost: 233};
 		// Move onto harvesting position or near to source (depending on early/standard mode)
 		if (this.mode == 'early' || !this.harvestPos) {
 			if (!miner.pos.inRangeToPos(this.pos, 1)) {

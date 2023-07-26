@@ -1,6 +1,6 @@
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {isStoreStructure} from '../../declarations/typeGuards';
+import {hasGeneralPurposeStore} from '../../declarations/typeGuards';
 import {DirectiveHaul} from '../../directives/resource/haul';
 import {Energetics} from '../../logistics/Energetics';
 import {Pathing} from '../../movement/Pathing';
@@ -18,13 +18,20 @@ export class HaulingOverlord extends Overlord {
 
 	haulers: Zerg[];
 	directive: DirectiveHaul;
-
+	waypointsTo?: RoomPosition[];
+	waypointsBack?: RoomPosition[];
 	requiredRCL: 4;
 
 	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
 													 OverlordPriority.collection.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
+		if(this.directive.waypoints) {
+			// Supposing that the two routes are of same length
+			const mid = this.directive.waypoints.length /2;
+			this.waypointsTo = this.directive.waypoints.slice(0, mid);
+			this.waypointsBack = this.directive.waypoints.slice(mid);
+		}
 		this.haulers = this.zerg(Roles.transport);
 	}
 
@@ -37,8 +44,7 @@ export class HaulingOverlord extends Overlord {
 		// Calculate total needed amount of hauling power as (resource amount * trip distance)
 		const tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
 		const haulingPowerNeeded = Math.min(this.directive.totalResources,
-										  this.colony.storage.store.getCapacity()
-										  - _.sum(_.values(this.colony.storage.store))) * tripDistance;
+										  this.colony.storage.store.getFreeCapacity()) * tripDistance;
 		// Calculate amount of hauling each hauler provides in a lifetime
 		const haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
 		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
@@ -53,7 +59,7 @@ export class HaulingOverlord extends Overlord {
 	}
 
 	private handleHauler(hauler: Zerg) {
-		if (_.sum(_.values(hauler.carry)) == 0) {
+		if (hauler.carry.getUsedCapacity() == 0) {
 			// Travel to directive and collect resources
 			if (hauler.inSameRoomAs(this.directive)) {
 				// Pick up drops first
@@ -80,7 +86,8 @@ export class HaulingOverlord extends Overlord {
 				log.warning(`${hauler.name} in ${hauler.room.print}: nothing to collect!`);
 			} else {
 				// hauler.task = Tasks.goTo(this.directive);
-				hauler.goTo(this.directive);
+				// Apply first turn waypoints
+				hauler.goTo(this.directive, {waypoints : this.waypointsTo});
 			}
 		} else {
 			// Travel to colony room and deposit resources
@@ -109,7 +116,9 @@ export class HaulingOverlord extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 			} else {
-				hauler.task = Tasks.goToRoom(this.colony.room.name);
+				// Apply second turn waypoints
+				// hauler.task = Tasks.goToRoom(this.colony.room.name);
+				hauler.goToRoom(this.colony.room.name, {waypoints: this.waypointsBack});
 			}
 		}
 	}

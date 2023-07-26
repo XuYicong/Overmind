@@ -1,3 +1,4 @@
+import { log } from 'console/log';
 import {Colony} from '../Colony';
 import {Overlord} from '../overlords/Overlord';
 import {profile} from '../profiler/decorator';

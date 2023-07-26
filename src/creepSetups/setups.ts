@@ -240,6 +240,7 @@ export const CombatSetups = {
 			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
 						MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
+			ordered	 : true,
 		}),
 
 		siege: new CreepSetup(Roles.ranged, {
@@ -251,6 +252,7 @@ export const CombatSetups = {
 			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
 						MOVE, MOVE, HEAL, HEAL],
 			sizeLimit: Infinity,
+			ordered	 : true,
 		}),
 
 		sourceKeeper: new CreepSetup(Roles.ranged, {

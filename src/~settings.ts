@@ -65,7 +65,7 @@ export const SHARD3_MAX_OWNED_ROOMS = 1;
 /**
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.
  */
-export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 400 : 5;
+export const NEW_OVERMIND_INTERVAL = onPublicServer() ? 200 : 5;
 
 /**
  * Master scale for the RoomVisuals GUI // todo: not plugged in yet

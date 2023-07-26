@@ -99,10 +99,6 @@ export class UpgradeSite extends HiveCluster {
 				} else if (amountOver > 500000) {
 					upgradePower *= 2;
 				}
-				// We want to upgrade quicker to catch up with the central portal
-				if (Memory.stats.gcl.level == 2 && Memory.stats.gcl.progress > 3786620) {
-					upgradePower *= 8;
-				}
 				if (this.controller.level == 8) {
 					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
 				}

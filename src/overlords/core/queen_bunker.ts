@@ -3,7 +3,6 @@ import {Colony} from '../../Colony';
 import {log} from '../../console/log';
 import {CreepSetup} from '../../creepSetups/CreepSetup';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {StoreStructure} from '../../declarations/typeGuards';
 import {Hatchery} from '../../hiveClusters/hatchery';
 import {TransportRequest} from '../../logistics/TransportRequestGroup';
 import {Pathing} from '../../movement/Pathing';
@@ -47,7 +46,7 @@ export class BunkerQueenOverlord extends Overlord {
 	room: Room;
 	queens: Zerg[];
 	queenSetup: CreepSetup;
-	storeStructures: StoreStructure[];
+	storeStructures: AnyStoreStructure[];
 	batteries: StructureContainer[];
 	quadrants: { [quadrant: string]: SupplyStructure[] };
 	private numActiveQueens: number;
@@ -160,7 +159,7 @@ export class BunkerQueenOverlord extends Overlord {
 		const withdrawTasks: Task[] = [];
 		const neededResources = _.keys(queenCarry) as ResourceConstant[];
 		// TODO: a single structure doesn't need to have all resources; causes jam if labs need supply but no minerals
-		const targets: StoreStructure[] = _.filter(this.storeStructures, s =>
+		const targets: AnyStoreStructure[] = _.filter(this.storeStructures, s =>
 			!_.find(neededResources, resource => (s.store[resource] || 0) < (queenCarry[resource] || 0)));
 		const withdrawTarget = minBy(targets, target => Pathing.distance(queenPos, target.pos));
 		if (!withdrawTarget) {

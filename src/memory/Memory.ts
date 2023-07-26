@@ -52,7 +52,7 @@ export class Mem {
 		if (USE_PROFILER && Game.time % 10 == 0) {
 			log.warning(`Profiling is currently enabled; only ${PROFILER_COLONY_LIMIT} colonies will be run!`);
 		}
-		if (Game.cpu.bucket < 15) {
+		if (Game.cpu.bucket < 415) {
 			if (_.keys(Game.spawns).length > 3 && !Memory.resetBucket && !Memory.haltTick) {
 				// don't run CPU reset routine at very beginning or if it's already triggered
 				log.warning(`CPU bucket is critically low (${Game.cpu.bucket})! Starting CPU reset routine.`);
@@ -80,14 +80,14 @@ export class Mem {
 			}
 		}
 		if(Game.cpu.bucket >= 10000) {
-			log.info('CPU bucket sufficient, generating pixel');
-			// Costs 10000 bucket, results in 1 tick pause
-			const ret = Game.cpu.generatePixel();
-			if(ret) {
-				log.alert('Bucket does not have enough CPU to generate pixels');
-			} else {
-				shouldRun = false;
-			}
+			// log.info('CPU bucket sufficient, generating pixel');
+			// // Costs 10000 bucket, results in 1 tick pause
+			// const ret = Game.cpu.generatePixel();
+			// if(ret) {
+			// 	log.alert('Bucket does not have enough CPU to generate pixels');
+			// } else {
+			// 	shouldRun = false;
+			// }
 		}
 		return shouldRun;
 	}

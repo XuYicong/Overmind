@@ -59,15 +59,15 @@ export class SourceReaperOverlord extends CombatOverlord {
 	init() {
 		const defenderAmount = this.room && (this.room.invaders.length > 0
 											 || RoomIntel.isInvasionLikely(this.room)) ? 1 : 0;
-		if(this.room 
+		// if(this.room 
 			// && this.room.sourceKeepers.length >0
-			) {
+			// ) {
 			if(this.directive.colony.level < 7) {
 				this.wishlist(2, CombatSetups.armedHealer.default);
 			} else {
 				this.wishlist(1, CombatSetups.zerglings.sourceKeeper);
 			}
-		}
+		// }
 		this.wishlist(defenderAmount, CombatSetups.hydralisks.sourceKeeper);
 	}
 

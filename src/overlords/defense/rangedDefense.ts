@@ -44,10 +44,10 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		const healAmount = CombatIntel.maxHealingByCreeps(this.room.hostiles);
 		const hydraliskDamage = RANGED_ATTACK_POWER * boostMultiplier
 							  * setup.getBodyPotential(RANGED_ATTACK, this.colony);
-		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 0 : 0;
+		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 1 : 1;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)))!;
-		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage + 1)));
+		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
 	}
 
 	init() {

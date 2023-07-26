@@ -28,16 +28,17 @@ export class BootstrappingOverlord extends Overlord {
 	constructor(directive: DirectiveBootstrap, priority = OverlordPriority.emergency.bootstrap) {
 		super(directive, 'bootstrap', priority);
 		this.fillers = this.zerg(Roles.filler);
+		const cmp = (hasPos: HasPos) => directive.pos.getRangeTo(hasPos.pos);
 		// Calculate structures fillers can supply / withdraw from
-		this.supplyStructures = _.filter([...this.colony.spawns, ...this.colony.extensions],
-										 structure => structure.energy < structure.energyCapacity);
-		this.withdrawStructures = _.filter(_.compact([this.colony.storage!,
+		this.supplyStructures = _.sortBy(_.filter([...this.colony.spawns, ...this.colony.extensions],
+										 structure => structure.energy < structure.energyCapacity), cmp);
+		this.withdrawStructures = _.sortBy(_.filter(_.compact([this.colony.storage!,
 													  this.colony.terminal!,
 													  this.colony.powerSpawn!,
 													  ...this.room.containers,
 													  ...this.room.links,
 													  ...this.room.towers,
-													  ...this.room.labs]), structure => structure.energy > 0);
+													  ...this.room.labs]), structure => structure.energy > 0), cmp);
 	}
 
 	private spawnBootstrapMiners() {
@@ -96,18 +97,20 @@ export class BootstrappingOverlord extends Overlord {
 	}
 
 	private supplyActions(filler: Zerg) {
-		const target = filler.pos.findClosestByRange(this.supplyStructures);
+		const target = this.supplyStructures.shift();
 		if (target) {
 			filler.task = Tasks.transfer(target);
+			if(target.store.getFreeCapacity()) this.supplyStructures.unshift(target);
 		} else {
 			this.rechargeActions(filler);
 		}
 	}
 
 	private rechargeActions(filler: Zerg) {
-		const target = filler.pos.findClosestByRange(this.withdrawStructures);
+		const target = this.withdrawStructures.shift();
 		if (target) {
 			filler.task = Tasks.withdraw(target);
+			if(target.store.getUsedCapacity()) this.withdrawStructures.unshift(target);
 		} else {
 			filler.task = Tasks.recharge();
 		}

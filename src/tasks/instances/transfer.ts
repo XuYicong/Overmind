@@ -1,15 +1,9 @@
-import {EnergyStructure, isEnergyStructure, isStoreStructure, StoreStructure} from '../../declarations/typeGuards';
+import {hasStore, isRuin, hasGeneralPurposeStore, isTombstone} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
 
-export type transferTargetType =
-	EnergyStructure
-	| StoreStructure
-	| StructureLab
-	| StructureNuker
-	| StructurePowerSpawn
-	| Creep;
+export type transferTargetType = AnyCreep | AnyStoreStructure;
 
 export const transferTaskName = 'transfer';
 
@@ -43,10 +37,10 @@ export class TaskTransfer extends Task {
 	isValidTarget() {
 		const amount = this.data.amount || 1;
 		const target = this.target;
-		if (target instanceof Creep || isStoreStructure(target)) {
-			return _.sum(_.values(target.store)) <= target.store.getCapacity() - amount;
-		} else if (isEnergyStructure(target) && this.data.resourceType == RESOURCE_ENERGY) {
-			return target.energy <= target.energyCapacity - amount;
+		if (target instanceof Creep || hasGeneralPurposeStore(target)) {
+			return amount <= target.store.getFreeCapacity(this.data.resourceType)!;
+		} else if (hasStore(target) && this.data.resourceType == RESOURCE_ENERGY) {
+			return target.store.getFreeCapacity(RESOURCE_ENERGY) >= amount;
 		} else {
 			if (target instanceof StructureLab) {
 				const type = target.mineralType;

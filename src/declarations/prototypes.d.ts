@@ -122,6 +122,7 @@ interface RoomPosition {
 	rangeToEdge: number;
 	roomCoords: Coord;
 	neighbors: RoomPosition[];
+	shard?: string;
 
 	inRangeToPos(pos: RoomPosition, range: number): boolean;
 

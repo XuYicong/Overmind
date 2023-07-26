@@ -1,7 +1,7 @@
 import {assimilationLocked} from './assimilation/decorator';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
-import {StoreStructure} from './declarations/typeGuards';
+import {HasGeneralPurposeStore} from './declarations/typeGuards';
 import {DirectiveExtract} from './directives/resource/extract';
 import {_HARVEST_MEM_DOWNTIME, _HARVEST_MEM_USAGE, DirectiveHarvest} from './directives/resource/harvest';
 import {HiveCluster} from './hiveClusters/_HiveCluster';
@@ -86,7 +86,6 @@ const defaultColonyMemory: ColonyMemory = {
  * creeps, utilities, etc. which are run from a single owned room.
  */
 @profile
-@assimilationLocked
 export class Colony {
 	// Colony memory
 	memory: ColonyMemory;								// Memory.colonies[name]
@@ -536,7 +535,7 @@ export class Colony {
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
 		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures, lab contents, and manager carry
-		const stores = _.map(<StoreStructure[]>_.compact([this.storage, this.terminal]), s => s.store);
+		const stores = _.map(<HasGeneralPurposeStore[]>_.compact([this.storage, this.terminal]), s => s.store);
 		const creepCarriesToInclude = <any>_.map(this.creeps, creep => creep.store);
 		const labContentsToInclude = _.map(_.filter(this.labs, lab => !!lab.mineralType), lab => lab.store);
 		const allAssets = mergeSum([

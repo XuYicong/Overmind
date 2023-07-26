@@ -112,7 +112,7 @@ export class Zerg {
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
 
-	constructor(creep: Creep, notifyWhenAttacked = true) {
+	constructor(creep: Creep, notifyWhenAttacked = false) {
 		// Copy over creep references
 		this.creep = creep;
 		this.body = creep.body;
@@ -296,6 +296,7 @@ export class Zerg {
 			}
 			return result;
 		} else {
+			this.say('闯');
 			return ERR_BUSY;
 		}
 	}
@@ -388,6 +389,10 @@ export class Zerg {
 			return this.rangedHeal(target);
 		}
 		const creep = toCreep(target);
+		if((creep.hitsPredicted != undefined && creep.hitsPredicted >= creep.hitsMax )|| 
+			creep.hits >= creep.hitsMax) {
+			return ERR_INVALID_TARGET;
+		}
 		const result = this.creep.heal(creep);
 		if (result == OK) {
 			this.actionLog.heal = true;
@@ -410,7 +415,7 @@ export class Zerg {
 		return result;
 	}
 
-	transfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	transfer(target: AnyCreep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		let result: ScreepsReturnCode;
 		if (target instanceof Zerg) {
 			result = this.creep.transfer(target.creep, resourceType, amount);
@@ -421,7 +426,7 @@ export class Zerg {
 		return result;
 	}
 
-	goTransfer(target: Creep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
+	goTransfer(target: AnyCreep | Zerg | Structure, resourceType: ResourceConstant = RESOURCE_ENERGY, amount?: number) {
 		if (this.pos.inRangeToPos(target.pos, RANGES.TRANSFER)) {
 			return this.transfer(target, resourceType, amount);
 		} else {
@@ -671,27 +676,11 @@ export class Zerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-		if (avoidGoals.length == 0) {
+		if (avoidGoals.length == 0 && (!this.memory._go || !this.memory._go.path)) {
 			return false;
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;
 		} else {
-			if(!moveOptions.fleeRange) {
-				const mayChase = _.find(avoidGoals, (goal: RoomPosition | HasPos) => {
-					if(hasPos(goal)) {
-						goal = goal.pos;
-					}
-					if(goal.lookForStructure(STRUCTURE_KEEPER_LAIR)) return false;
-					const creeps = goal.lookFor(LOOK_CREEPS);
-					for(const creep of creeps) {
-						if(creep.owner.username != "Source Keeper") return true;
-					}
-					return false;
-				});
-				if(!mayChase) {
-					moveOptions.fleeRange = 4;
-				}
-			}
 			const fleeing = Movement.flee(this, avoidGoals, fleeOptions.dropEnergy, moveOptions) != undefined;
 			if (fleeing) {
 				// Drop energy if needed

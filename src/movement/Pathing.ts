@@ -509,11 +509,14 @@ export class Pathing {
 		}
 		return $.costMatrix(room.name, MatrixTypes.sk, () => {
 			const matrix = this.getDefaultMatrix(room).clone();
-			const avoidRange = 6;
-			_.forEach(room.keeperLairs, lair => {
+			const avoidRange = 5;
+			const maxCost = (avoidRange +1)*(avoidRange +1);
+			_.forEach(room.sourceKeepers, lair => {
 				for (let dx = -avoidRange; dx <= avoidRange; dx++) {
 					for (let dy = -avoidRange; dy <= avoidRange; dy++) {
-						matrix.set(lair.pos.x + dx, lair.pos.y + dy, 0xfe);
+						const cost = maxCost - Math.max(dx*dx, dy*dy);
+						if(matrix.get(lair.pos.x + dx, lair.pos.y + dy) < cost)
+							matrix.set(lair.pos.x + dx, lair.pos.y + dy, cost);
 					}
 				}
 			});
@@ -896,9 +899,11 @@ export class Pathing {
 		}
 		if (!Memory.pathing.distances[name1][name2]) {
 			const ret = this.findShortestPath(arg1, arg2);
-			if (!ret.incomplete) {
-				Memory.pathing.distances[name1][name2] = ret.path.length;
+			// Even if incomplete, return something pls
+			if (ret.incomplete) {
+				log.debug('No complete path between '+name1+' and '+name2+' found');
 			}
+			Memory.pathing.distances[name1][name2] = ret.path.length;
 		}
 		return Memory.pathing.distances[name1][name2];
 	}

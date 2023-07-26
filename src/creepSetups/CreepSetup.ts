@@ -37,7 +37,7 @@ export class CreepSetup {
 			prefix                  : [],
 			suffix                  : [],
 			proportionalPrefixSuffix: false,
-			ordered                 : true,
+			ordered                 : false,
 		});
 		this.bodySetup = bodySetup as BodySetup;
 	}
@@ -72,8 +72,7 @@ export class CreepSetup {
 		} else {
 			body = body.concat(prefix);
 		}
-
-		if (this.bodySetup.ordered) { // repeated body pattern
+		if (this.bodySetup.pattern[0] == TOUGH) { // repeated body pattern
 			for (const part of this.bodySetup.pattern) {
 				for (let i = 0; i < numRepeats; i++) {
 					body.push(part);

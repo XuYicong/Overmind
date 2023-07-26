@@ -4,22 +4,27 @@
 import {CombatZerg} from '../zerg/CombatZerg';
 import {Zerg} from '../zerg/Zerg';
 
-export interface EnergyStructure extends Structure {
-	energy: number;
-	energyCapacity: number;
+export interface HasStore extends RoomObject {
+	store: StoreDefinition;
 }
 
-export interface StoreStructure extends Structure {
-	store: StoreDefinition;
+export interface HasGeneralPurposeStore extends HasStore {
 	storeCapacity: number;
 }
 
-export function isEnergyStructure(obj: RoomObject): obj is EnergyStructure {
-	return (<EnergyStructure>obj).energy != undefined && (<EnergyStructure>obj).energyCapacity != undefined;
+export interface GeneralPurposeStore extends StoreDefinition {
 }
 
-export function isStoreStructure(obj: RoomObject): obj is StoreStructure {
-	return (<StoreStructure>obj).store != undefined && (<StoreStructure>obj).storeCapacity != undefined;
+export function hasGeneralPurposeStore(obj: any): obj is HasGeneralPurposeStore {
+	return hasStore(obj) && isGeneralPurposeStore(obj.store);
+}
+
+export function hasStore(obj: any): obj is HasStore {
+	return (<HasStore>obj).store != undefined;
+}
+
+export function isGeneralPurposeStore(obj: StoreDefinition): obj is GeneralPurposeStore {
+	return obj.getCapacity() != null;
 }
 
 export function isStructure(obj: RoomObject): obj is Structure {

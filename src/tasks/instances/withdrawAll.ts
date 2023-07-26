@@ -1,10 +1,9 @@
 /* Withdraw a resource from a target */
 
-import {StoreStructure} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
 
-export type withdrawAllTargetType = StoreStructure | Tombstone | Ruin;
+export type withdrawAllTargetType = AnyStoreStructure | Tombstone | Ruin;
 
 export const withdrawAllTaskName = 'withdrawAll';
 
@@ -20,7 +19,7 @@ export class TaskWithdrawAll extends Task {
 	}
 
 	isValidTask() {
-		return (_.sum(_.values(this.creep.carry)) < this.creep.carryCapacity);
+		return this.creep.carry.getFreeCapacity() > 0;
 	}
 
 	isValidTarget() {

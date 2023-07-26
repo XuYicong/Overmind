@@ -162,7 +162,7 @@ export class Overseer implements IOverseer {
 			}
 			// Pick up all nontrivial ruin resources
 			for (const ruin of room.ruins) {
-				if (_.sum(_.values(ruin.store)) > LogisticsNetwork.settings.droppedEnergyThreshold
+				if (ruin.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
 					|| _.sum(_.values(ruin.store)) > ruin.store.energy) {
 					if (colony.bunker && ruin.pos.isEqualTo(colony.bunker.anchor)) continue;
 					colony.logisticsNetwork.requestOutput(ruin, {resourceType: 'all'});
@@ -171,8 +171,8 @@ export class Overseer implements IOverseer {
 		}
 		// Place a logistics request directive for every tombstone with non-empty store that isn't on a container
 		for (const tombstone of colony.tombstones) {
-			if (_.sum(_.values(tombstone.store)) > LogisticsNetwork.settings.droppedEnergyThreshold
-				|| _.sum(_.values(tombstone.store)) > tombstone.store.energy) {
+			if (tombstone.store.getUsedCapacity() > LogisticsNetwork.settings.droppedEnergyThreshold
+				|| tombstone.store.getUsedCapacity() > tombstone.store.energy) {
 				if (colony.bunker && tombstone.pos.isEqualTo(colony.bunker.anchor)) continue;
 				colony.logisticsNetwork.requestOutput(tombstone, {resourceType: 'all'});
 			}
@@ -224,11 +224,13 @@ export class Overseer implements IOverseer {
 			// See if invasion is big enough to warrant creep defenses
 			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
 													invader => invader.boosts.length > 0 ? 2 : 1));
-			const needsDefending = effectiveInvaderCount >= 3 || colony.room.dangerousPlayerHostiles.length > 0;
+			const safetyData = RoomIntel.getSafetyData(colony.room.name);
+			const needsDefending = effectiveInvaderCount >= 1;
+			// || colony.room.dangerousPlayerHostiles.length > 0 || 
+			// 	safetyData.unsafeFor > 200;
 
 			if (needsDefending) {
 				// Place defensive directive after hostiles have been present for a long enough time
-				const safetyData = RoomIntel.getSafetyData(colony.room.name);
 				const invasionIsPersistent = safetyData.unsafeFor > 20;
 				if (invasionIsPersistent) {
 					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');

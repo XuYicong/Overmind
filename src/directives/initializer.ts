@@ -29,8 +29,18 @@ import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebui
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
  */
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
-	const raw = {"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":41,"y":11},{"shard":"shard0","roomName":"W30S51","x":35,"y":1},{"shard":"shard0","roomName":"W21S50","x":48,"y":16},{"shard":"shard0","roomName":"W20S40","x":5,"y":32},{"shard":"shard1","roomName":"W10S20","x":37,"y":32},{"shard":"shard2","roomName":"W10S20","x":33,"y":38}],"distance":491,"totalRooms":18};
-
+	const turn_to: {[roomName:string]: {"path": ProtoPos[], [thing:string]:any}} = {
+		'E9S23':{"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":30,"y":27},{"shard":"shard0","roomName":"W40S61","x":13,"y":1},{"shard":"shard0","roomName":"W69S60","x":1,"y":42},{"shard":"shard0","roomName":"W70S69","x":32,"y":48},{"shard":"shard0","roomName":"W40S70","x":30,"y":24},{"shard":"shard1","roomName":"W20S40","x":34,"y":39},{"shard":"shard0","roomName":"W30S79","x":38,"y":48},{"shard":"shard0","roomName":"W20S80","x":27,"y":4},{"shard":"shard1","roomName":"W10S40","x":7,"y":34},{"shard":"shard0","roomName":"W10S71","x":44,"y":1},{"shard":"shard0","roomName":"E39S70","x":48,"y":6},{"shard":"shard0","roomName":"E40S40","x":4,"y":13},{"shard":"shard1","roomName":"E20S20","x":39,"y":9},{"shard":"shard0","roomName":"E40S29","x":6,"y":48},{"shard":"shard0","roomName":"E10S30","x":30,"y":9},{"shard":"shard1","roomName":"E10S20","x":33,"y":14},{"shard":"shard2","roomName":"E10S20","x":29,"y":21}],"distance":682,"totalRooms":42},
+	
+	};
+	const turn_back: {[roomName:string]: {"path": ProtoPos[], [thing:string]:any}} = {
+		'E9S23':{"path":[{"shard":"shard3","roomName":"E10S20","x":29,"y":33},{"shard":"shard2","roomName":"E10S20","x":45,"y":27},{"shard":"shard1","roomName":"E10S20","x":39,"y":29},{"shard":"shard0","roomName":"E10S29","x":33,"y":48},{"shard":"shard0","roomName":"E40S30","x":25,"y":41},{"shard":"shard1","roomName":"E20S20","x":25,"y":7},{"shard":"shard0","roomName":"E39S40","x":48,"y":34},{"shard":"shard0","roomName":"E40S71","x":7,"y":1},{"shard":"shard0","roomName":"W10S70","x":6,"y":23},{"shard":"shard1","roomName":"W10S40","x":21,"y":41},{"shard":"shard0","roomName":"W20S79","x":19,"y":48},{"shard":"shard0","roomName":"W30S80","x":42,"y":18},{"shard":"shard1","roomName":"W20S40","x":35,"y":35},{"shard":"shard0","roomName":"W40S69","x":7,"y":48},{"shard":"shard0","roomName":"W69S70","x":1,"y":4},{"shard":"shard0","roomName":"W70S61","x":36,"y":1},{"shard":"shard0","roomName":"W40S60","x":24,"y":39},{"shard":"shard1","roomName":"W20S30","x":26,"y":10},{"shard":"shard2","roomName":"W20S30","x":39,"y":8}],"distance":682,"totalRooms":42},
+	
+	}
+	const roomName = flag.pos.roomName;
+	if(turn_to[roomName]) {
+		flag.memory.waypoints = _.map(turn_to[roomName].path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
+	}
 	switch (flag.color) {
 
 		// Colony directives ===========================================================================================
@@ -42,9 +52,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:
 					return new DirectiveIncubate(flag);
-				case COLOR_CYAN:
-					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
-					return new DirectiveColonize(flag);
 				case COLOR_GREY:
 					// flag.memory.waypoints = ['W25S35:30:28'];
 					return new DirectiveColonize(flag);
@@ -60,9 +67,6 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSwarmDestroy(flag);
 				case COLOR_CYAN:
 					return new DirectivePairDestroy(flag);
-				case COLOR_GREEN:
-					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
-					return new DirectiveControllerAttack(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 			}
@@ -95,12 +99,14 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 			switch (flag.secondaryColor) {
 				case COLOR_YELLOW:
 					return new DirectiveHarvest(flag);
-				case COLOR_GREY:
-					flag.memory.waypoints = _.map(raw.path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y);
-					return new DirectiveHarvest(flag);
 				case COLOR_CYAN:
 					return new DirectiveExtract(flag);
 				case COLOR_BLUE:
+					if(flag.memory.waypoints) {
+						// If has one trun waypoint, assume has turn back waypoints
+						flag.memory.waypoints = flag.memory.waypoints.concat(
+							_.map(turn_back[roomName].path, (pos) => pos.roomName +':'+ pos.x +':'+  pos.y));
+					}
 					return new DirectiveHaul(flag);
 			}
 			break;

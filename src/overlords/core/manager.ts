@@ -1,6 +1,7 @@
+import { withdrawTargetType } from 'tasks/instances/withdraw';
 import {$} from '../../caching/GlobalCache';
 import {Roles, Setups} from '../../creepSetups/setups';
-import {StoreStructure} from '../../declarations/typeGuards';
+import {HasGeneralPurposeStore, isCreep, isPowerCreep, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
 import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
@@ -86,7 +87,7 @@ export class CommandCenterOverlord extends Overlord {
 	 */
 	private supplyActions(manager: Zerg): boolean {
 		const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
-		if (request) {
+		if (request && !isTombstone(request.target) && !isRuin(request.target) && !isResource(request.target)) {
 			const amount = Math.min(request.amount, manager.carryCapacity);
 			manager.task = Tasks.transfer(request.target, request.resourceType, amount,
 										  {nextPos: this.commandCenter.idlePos});
@@ -98,7 +99,7 @@ export class CommandCenterOverlord extends Overlord {
 				// Otherwise withdraw as much as you can hold
 				else {
 					const withdrawAmount = amount - manager.carry.getUsedCapacity();
-					let withdrawFrom: StoreStructure = this.commandCenter.storage;
+					let withdrawFrom: withdrawTargetType = this.commandCenter.storage;
 					if (this.commandCenter.terminal
 						&& (request.resourceType != RESOURCE_ENERGY
 							|| (withdrawFrom.store[request.resourceType] || 0) < withdrawAmount
@@ -118,9 +119,9 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle any withdrawal requests from your transport request group
 	 */
 	private withdrawActions(manager: Zerg): boolean {
-		if (manager.carry.getUsedCapacity() < manager.carryCapacity) {
+		if (manager.carry.getFreeCapacity() > 0) {
 			const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
-			if (request) {
+			if (request && !isCreep(request.target) && !isPowerCreep(request.target) && !isResource(request.target)) {
 				const amount = Math.min(request.amount, manager.carryCapacity - manager.carry.getUsedCapacity());
 				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
 				return true;

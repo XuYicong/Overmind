@@ -256,6 +256,7 @@ interface ProtoPos {
 	x: number;
 	y: number;
 	roomName: string;
+	shard?: string;
 }
 
 interface HasPos {

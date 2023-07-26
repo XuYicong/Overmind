@@ -126,8 +126,11 @@ export class Overshard implements IOvershard {
 					if(creep.memory && creep.memory[_MEM.SHARD]) {
 						log.warning("Receiving inter shard creep: "+creep.name+
 						    " should have empty memory, but got memory with move data "+JSON.stringify(creep.memory._go)+". Proceeding anyway");
+                        this.creeps = this.creeps.filter(creep => creep.name != creepName);
 					}
 					creep.memory = peer[Game.shard.name].packets[peerTick][creepName];
+
+                    // Place new creep into this.creeps
                     const zerg = new Zerg(creep);
                     log.debug('Received inter shard creep '+zerg.print+' of colony '+
                         zerg.memory[_MEM.SHARD]+' / '+zerg.memory[_MEM.COLONY]+' with TTL: '+zerg.ticksToLive);
