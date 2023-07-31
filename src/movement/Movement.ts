@@ -206,6 +206,7 @@ export class Movement {
 				}
 			} else { // at destination
 				creep.memory._go.path = "";
+				delete creep.memory._go.destination;
 				if (!moveData.fleeWait) {
 					delete creep.memory._go;
 				}
@@ -1219,8 +1220,9 @@ export class Movement {
 					creep.say('继续逃');
 					// We may have path unconsumed at this point
 					return Movement.goTo(creep, derefRoomPosition(moveData.destination), options);
-				} else {
-					moveData.fleeWait--;
+				} else { 
+					// Some more space to stand fleeing creeps
+					if (rangeToClosest > options.fleeRange + 2) moveData.fleeWait--;
 					return NO_ACTION;
 				}
 			} else {
@@ -1230,10 +1232,17 @@ export class Movement {
 	
 		} else if(rangeToClosest > fleeStartRange) { // Still not safe, but it's fine just stay here
 			creep.say('敌', true);
-			if(!moveData || !moveData.destination || moveData.path.length <1)
+			if(!moveData || moveData.path.length <1) {
+				if(moveData) {
+					delete moveData.destination;
+				}
 				return NO_ACTION;
+			}
+			moveData.fleeWait = 2;
 			// Go one step further to avoid stuck or dancing
-			moveData.path = moveData.path[0];
+			const ret = creep.move(<DirectionConstant>parseInt(moveData.path[0]));
+			moveData.path = '';
+			return ret;
 
 		} else { // Still need to run away
 

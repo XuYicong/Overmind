@@ -266,11 +266,6 @@ interface RoomMemory {
 }
 
 interface InterShardMemory {
-	// connection: {
-	// 	[peer: string]: {
-	// 		[id: string]: InterShardPacket;
-	// 	};
-	// }
 	[peer: string]: {
 		packets: {
 			[tick: number]: {

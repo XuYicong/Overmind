@@ -153,6 +153,7 @@ export class BunkerQueenOverlord extends Overlord {
 			}
 			queenCarry[request.resourceType] += amount;
 			// add a task to supply the target
+			// log.debug('Adding transfer task ' + amount);
 			supplyTasks.push(Tasks.transfer(request.target, request.resourceType, amount));
 		}
 		// Step 3: make withdraw tasks to get the needed resources

@@ -200,7 +200,11 @@ export class Cartographer {
 	static getRoomCoordinates(roomName: string): RoomCoord {
 		const coordinateRegex = /(E|W)(\d+)(N|S)(\d+)/g;
 		const match = coordinateRegex.exec(roomName)!;
-
+		if (match == null) {
+			return {
+				x:0, y:0, xDir: 'W', yDir:'S'
+			};
+		}
 		const xDir = match[1];
 		const x = match[2];
 		const yDir = match[3];

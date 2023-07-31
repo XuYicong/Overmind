@@ -3,6 +3,7 @@ import {GuardSwarmOverlord} from '../../overlords/defense/guardSwarm';
 import {DefenseNPCOverlord} from '../../overlords/defense/npcDefense';
 import {profile} from '../../profiler/decorator';
 import {Directive} from '../Directive';
+import { DEFCON } from 'Colony';
 
 interface DirectiveGuardMemory extends FlagMemory {
 	safeTick?: number;

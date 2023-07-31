@@ -20,7 +20,7 @@ interface SwarmMemory {
 	creeps: string[];
 	orientation: TOP | BOTTOM | LEFT | RIGHT;
 	target?: {
-		id: string;
+		id: Id<_HasId>;
 		exp: number;
 	};
 	numRetreats: number;

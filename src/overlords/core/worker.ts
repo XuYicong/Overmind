@@ -332,10 +332,10 @@ export class WorkerOverlord extends Overlord {
 
 	private upgradeActions(worker: Zerg): boolean {
 		// Sign controller if needed
-		if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {
-			worker.task = Tasks.signController(this.colony.controller);
-			return true;
-		}
+		// if ((!this.colony.controller.signedByMe && !this.colony.controller.signedByScreeps)) {
+		// 	worker.task = Tasks.signController(this.colony.controller);
+		// 	return true;
+		// }
 		worker.task = Tasks.upgrade(this.room.controller!);
 		return true;
 	}

@@ -27,6 +27,7 @@ import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
+import { log } from 'console/log';
 // import {VersionMigration} from './versionMigration/migrator';
 // import {RemoteDebugger} from './debug/remoteDebugger';
 // import {ActionParser} from './reinforcementLearning/actionParser';
@@ -38,7 +39,8 @@ function main(): void {
 	Mem.load();														// Load previous parsed memory if present
 	if (!Mem.shouldRun()) return;									// Suspend operation if necessary
 	Mem.clean();													// Clean memory contents
-
+	// let timeRec = Game.cpu.getUsed();
+	// log.debug('used before: '+timeRec);
 	// Instantiation operations: build or refresh the game state -------------------------------------------------------
 	if (!Overmind || Overmind.shouldBuild || Game.time >= Overmind.expiration) {
 		delete global.Overmind;										// Explicitly delete the old Overmind object
@@ -48,13 +50,18 @@ function main(): void {
 	} else {
 		Overmind.refresh();											// Refresh phase: update the Overmind state
 	}
-
+	// timeRec = Game.cpu.getUsed() - timeRec;
+	// log.debug('used mid: '+timeRec);
 	// Tick loop cycle: initialize and run each component --------------------------------------------------------------
 	Overmind.init();												// Init phase: spawning and energy requests
+	// timeRec = Game.cpu.getUsed() - timeRec;
+	// log.debug('used inter: '+timeRec);
 	Overmind.run();													// Run phase: execute state-changing actions
 	Overmind.visuals(); 											// Draw visuals
 	Stats.run(); 													// Record statistics
 
+	// timeRec = Game.cpu.getUsed() - timeRec;
+	// log.debug('used last: '+(timeRec-7)); // 35 creeps
 	// Post-run code: handle sandbox code and error catching -----------------------------------------------------------
 	sandbox();														// Sandbox: run any testing code
 	// global.remoteDebugger.run();									// Run remote debugger code if enabled

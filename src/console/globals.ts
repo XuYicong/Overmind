@@ -4,7 +4,7 @@ global.__VERSION__ = '0.5.3';
 declare function deref(ref: string): RoomObject | null;
 
 global.deref = function(ref: string): _HasId | Flag | null { // dereference any object from identifier
-	return Game.getObjectById(ref) || Game.flags[ref] || Game.creeps[ref] || Game.spawns[ref] || null;
+	return Game.getObjectById(<Id<_HasId>>ref) || Game.flags[ref] || Game.creeps[ref] || Game.spawns[ref] || null;
 };
 
 declare function derefRoomPosition(protoPos: ProtoPos): RoomPosition;

@@ -28,12 +28,12 @@ Room.prototype._refreshStructureCache = function() {
 		|| !roomStructureIDs[this.name]
 		|| Game.time > roomStructuresExpiration[this.name]) {
 		roomStructuresExpiration[this.name] = getCacheExpiration(STRUCTURE_TIMEOUT);
-		roomStructureIDs[this.name] = <any>_.mapValues(
+		roomStructureIDs[this.name] = _.mapValues(
 			_.groupBy(
 				this.find(FIND_STRUCTURES),
 				(s: Structure) => s.structureType
 			),
-			(structures: Structure[]) => _.map(structures, (s: { id: any; }) => s.id)
+			(structures: Structure[]) => _.map(structures, (s: { id: Id<_HasId>; }) => s.id)
 		);
 	}
 };

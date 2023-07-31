@@ -43,7 +43,6 @@ interface Room {
 	hostiles: Creep[];
 	friendlies: Creep[];
 	sourceKeepers: Creep[];
-	hostiles: Creep[];
 	dangerousHostiles: Creep[];
 	playerHostiles: Creep[];
 	invaders: Creep[];

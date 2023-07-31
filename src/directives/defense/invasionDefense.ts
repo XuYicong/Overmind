@@ -4,7 +4,7 @@ import {MeleeDefenseOverlord} from '../../overlords/defense/meleeDefense';
 import {RangedDefenseOverlord} from '../../overlords/defense/rangedDefense';
 import {profile} from '../../profiler/decorator';
 
-import {ColonyStage} from '../../Colony';
+import {ColonyStage, DEFCON} from '../../Colony';
 import {Directive} from '../Directive';
 import {NotifierPriority} from '../Notifier';
 
@@ -31,6 +31,7 @@ export class DirectiveInvasionDefense extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 1 && colony.spawns.length > 0);
+		this.colony.defcon = DEFCON.boostedInvasionNPC;
 	}
 
 	spawnMoarOverlords() {
@@ -74,6 +75,8 @@ export class DirectiveInvasionDefense extends Directive {
 		if (this.room && this.room.hostiles.length == 0 &&
 			Game.time - this.memory.safeSince > 100 && this.room.hostileStructures.length == 0) {
 			if (_.filter(this.room.creeps, creep => creep.hits < creep.hitsMax).length == 0) {
+				// TODO: maintain defcon generally
+				this.colony.defcon = DEFCON.safe;
 				this.remove();
 			}
 		}

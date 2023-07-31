@@ -59,20 +59,31 @@ export class TransportRequestGroup {
 		return false;
 	}
 
-	getPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw',
+	popPrioritizedClosestRequest(pos: RoomPosition, type: 'supply' | 'withdraw',
 								 filter?: ((requst: TransportRequest) => boolean)): TransportRequest | undefined {
 		const requests = type == 'withdraw' ? this.withdraw : this.supply;
 		for (const priority in requests) {
-			const targets = _.map(requests[priority], request => request.target);
-			const target = pos.findClosestByRangeThenPath(targets);
+			const searchRequests = requests[priority];
+			let searchTargets;
+			if(filter) {
+				searchTargets = _.map(
+					_.filter(
+						searchRequests,
+						req => filter(req)
+					),
+					request => request.target
+				);
+			} else {
+				searchTargets = _.map(searchRequests, request => request.target);
+			}
+			const target = pos.findClosestByRangeThenPath(searchTargets);
 			if (target) {
-				let searchRequests;
-				if (filter) {
-					searchRequests = _.filter(requests[priority], req => filter(req));
-				} else {
-					searchRequests = requests[priority];
-				}
-				return _.find(searchRequests, request => request.target.ref == target!.ref);
+				const id = _.findIndex(searchRequests, request => request.target.ref == target.ref);
+				const ret = searchRequests[id];
+				// Remove the returned value
+				const last = searchRequests.pop()!;
+				if(id < searchRequests.length) searchRequests[id] = last;
+				return ret;
 			}
 		}
 	}
@@ -81,6 +92,7 @@ export class TransportRequestGroup {
 	 * Request for resources to be deposited into this target
 	 */
 	requestInput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+		if(target.targetedBy.length > 0) return; // If this target already been targeted, not enqueueing it again
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});
@@ -104,6 +116,7 @@ export class TransportRequestGroup {
 	 * Request for resources to be withdrawn from this target
 	 */
 	requestOutput(target: TransportRequestTarget, priority = Priority.Normal, opts = {} as TransportRequestOptions): void {
+		if(target.targetedBy.length > 0) return; // If this target already been targeted, not enqueueing it again
 		_.defaults(opts, {
 			resourceType: RESOURCE_ENERGY,
 		});

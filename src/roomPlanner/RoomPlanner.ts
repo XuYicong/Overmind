@@ -12,8 +12,10 @@ import {derefCoords, maxBy, onPublicServer} from '../utilities/utils';
 import {Visualizer} from '../visuals/Visualizer';
 import {MY_USERNAME} from '../~settings';
 import {BarrierPlanner} from './BarrierPlanner';
-import {getRoomSpecificBunkerLayout} from './layouts/bunker';
+import { DynamicPlanner, onRoomEdge } from './DynamicPlanner';
+import {BUNKER_RADIUS, getRoomSpecificBunkerLayout} from './layouts/bunker';
 import {commandCenterLayout} from './layouts/commandCenter';
+import { dynamicLayout } from './layouts/dynamic';
 import {hatcheryLayout} from './layouts/hatchery';
 import {RoadPlanner} from './RoadPlanner';
 
@@ -53,6 +55,7 @@ export interface PlannerMemory {
 	recheckStructuresAt?: number;
 	bunkerData?: {
 		anchor: ProtoPos,
+		evolutionChamber?: ProtoPos,
 	};
 	lastGenerated?: number;
 	mapsByLevel?: { [rcl: number]: { [structureType: string]: ProtoPos[] } };
@@ -100,6 +103,7 @@ export class RoomPlanner {
 		hatchery: RoomPosition | undefined;
 		commandCenter: RoomPosition | undefined;
 		bunker: RoomPosition | undefined;
+		evolutionChamber: RoomPosition | undefined;
 	};
 	plan: RoomPlan;							// Contains maps, positions, and rotations of each hivecluster component
 	barrierPlanner: BarrierPlanner;
@@ -127,6 +131,7 @@ export class RoomPlanner {
 			hatchery     : undefined,
 			commandCenter: undefined,
 			bunker       : undefined,
+			evolutionChamber:undefined,
 		};
 		this.plan = {};
 		this.map = {};
@@ -153,7 +158,7 @@ export class RoomPlanner {
 	 */
 	private recallMap(level = this.colony.controller.level): void {
 		if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
-			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, level);
+			this.map = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, this.memory.bunkerData.evolutionChamber, level);
 		} else if (this.memory.mapsByLevel) {
 			this.map = _.mapValues(this.memory.mapsByLevel[level], posArr =>
 				_.map(posArr, protoPos => derefRoomPosition(protoPos)));
@@ -211,6 +216,17 @@ export class RoomPlanner {
 		}
 	}
 
+	get evolutionChamberPos(): RoomPosition | undefined {
+		if (this.placements.evolutionChamber) {
+			return this.placements.evolutionChamber;
+		}
+		if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
+			return new RoomPosition(this.memory.bunkerData.evolutionChamber.x, 
+									this.memory.bunkerData.evolutionChamber.y, 
+									this.colony.name);
+		}
+	}
+
 	private reactivate(): void {
 		// Reinstantiate flags
 		for (const protoFlag of this.memory.savedFlags) {
@@ -242,10 +258,16 @@ export class RoomPlanner {
 		// Reset everything
 		this.plan = {};
 		this.map = {};
-		// Generate a plan, placing components by flags
-		this.plan = this.generatePlan(level);
-		// Flatten it into a map
-		this.map = this.mapFromPlan(this.plan);
+		if(this.placements.bunker) {log.info(this.placements.evolutionChamber);
+
+			// Not generating plan because we can generate map directly
+			this.map = this.getStructureMapForBunkerAt(this.placements.bunker, this.placements.evolutionChamber);
+		} else {
+			// Generate a plan, placing components by flags
+			this.plan = this.generatePlan(level);
+			// Flatten it into a map
+			this.map = this.mapFromPlan(this.plan);
+		}
 	}
 
 	/**
@@ -257,7 +279,8 @@ export class RoomPlanner {
 		this.map[type].push(pos);
 	}
 
-	addComponent(componentName: 'hatchery' | 'commandCenter' | 'bunker', pos: RoomPosition, rotation = 0): void {
+	addComponent(componentName: 'hatchery' | 'commandCenter' | 'bunker' | 'evolutionChamber', 
+		pos: RoomPosition, rotation = 0): void {
 		this.placements[componentName] = pos;
 	}
 
@@ -367,16 +390,26 @@ export class RoomPlanner {
 		}
 	}
 
+
+	static getStructureMapAt(roomName: string, layout: StructureLayout, anchor: { x: number, y: number }, level = 8) {
+		const dx = anchor.x - layout.data.anchor.x;
+		const dy = anchor.y - layout.data.anchor.y;
+		if(layout[level] == undefined) {
+			return {};
+		}
+		const structureLayout = _.mapValues(layout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
+		return _.mapValues(structureLayout, coordArr =>
+			_.map(coordArr, coord => new RoomPosition(Math.min(Math.max(coord.x + dx, 0), 49), Math.min(Math.max(coord.y + dy, 0), 49), roomName)));
+	}
+
 	/**
 	 * Get bunker building placements as a StructureMap
 	 */
-	getStructureMapForBunkerAt(anchor: { x: number, y: number }, level = 8): StructureMap {
-		const layout = getRoomSpecificBunkerLayout(this.colony.name);
-		const dx = anchor.x - layout.data.anchor.x;
-		const dy = anchor.y - layout.data.anchor.y;
-		const structureLayout = _.mapValues(layout[level]!.buildings, obj => obj.pos) as { [s: string]: Coord[] };
-		return _.mapValues(structureLayout, coordArr =>
-			_.map(coordArr, coord => new RoomPosition(coord.x + dx, coord.y + dy, this.colony.name)));
+	getStructureMapForBunkerAt(anchor: { x: number, y: number }, evolutionChamber?: { x: number, y: number }, level = 8): StructureMap {
+		if(evolutionChamber) {
+			return DynamicPlanner.getStructureMapForBunkerAt(this.colony.room, anchor, evolutionChamber, level);
+		}
+		return RoomPlanner.getStructureMapAt(this.colony.name, getRoomSpecificBunkerLayout(this.colony.name), anchor, level);
 	}
 
 	/**
@@ -384,7 +417,10 @@ export class RoomPlanner {
 	 */
 	getBunkerStructurePlacement(structureType: string, anchor: { x: number, y: number },
 								level = 8): RoomPosition[] {
-		const layout = getRoomSpecificBunkerLayout(this.colony.name);
+		// No calsite of this func accessed lab or observer, nuker, etc.
+		const layout = this.memory.bunkerData && this.memory.bunkerData.evolutionChamber ? 
+						dynamicLayout : 
+						getRoomSpecificBunkerLayout(this.colony.name);
 		const dx = anchor.x - layout.data.anchor.x;
 		const dy = anchor.y - layout.data.anchor.y;
 		return _.map(layout[level]!.buildings[structureType].pos,
@@ -405,7 +441,7 @@ export class RoomPlanner {
 			}
 		} else { // else, serialize from memory
 			if (this.memory.bunkerData && this.memory.bunkerData.anchor) {
-				const structureMap = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor);
+				const structureMap = this.getStructureMapForBunkerAt(this.memory.bunkerData.anchor, this.memory.bunkerData.evolutionChamber);
 				for (const structureType in structureMap) {
 					if (!passableStructureTypes.includes(structureType)) {
 						obstacles = obstacles.concat(structureMap[structureType]);
@@ -448,6 +484,7 @@ export class RoomPlanner {
 		const collision = this.findCollision(ignoreRoads);
 		if (collision) {
 			log.warning(`Invalid layout: collision detected at ${collision.print}!`);
+			log.info('Place an evolution chamber directive to switch to dynamic layout');
 			return;
 		}
 		const layoutIsValid: boolean = (!!this.placements.commandCenter && !!this.placements.hatchery)
@@ -459,6 +496,7 @@ export class RoomPlanner {
 			if (this.placements.bunker) {
 				this.memory.bunkerData = {
 					anchor: this.placements.bunker,
+					evolutionChamber: this.placements.evolutionChamber,
 				};
 			} else {
 				this.memory.mapsByLevel = {};
@@ -526,6 +564,10 @@ export class RoomPlanner {
 		} else if (structureType == STRUCTURE_EXTRACTOR) {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
 		} else {
+			if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
+				// Be tolerate in dynamic mode, because dynamic maps won't include existing structures
+				return true;
+			}
 			if (_.isEmpty(this.map)) {
 				this.recallMap(level);
 			}
@@ -561,7 +603,7 @@ export class RoomPlanner {
 	 * Remove all hostile constructionSites and ones which are misplaced
 	 */
 	private removeMisplacedConstructionSites() {
-		for (const site of this.colony.room.find(FIND_CONSTRUCTION_SITES)) {
+		for (const site of this.colony.room.constructionSites) {
 			if (site.owner.username != MY_USERNAME) {
 				site.remove();
 			} else if (!this.structureShouldBeHere(site.structureType, site.pos)) {
@@ -576,6 +618,8 @@ export class RoomPlanner {
 	private demolishMisplacedStructures(skipRamparts = true, destroyAllStructureTypes = false): void {
 
 		this.demolishHostileStructures();
+		// Do not destroy things in dynamic mode for now
+		if(this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) return;
 		this.removeMisplacedConstructionSites();
 
 		if (getAllColonies().length <= 1 && !this.colony.storage) {
@@ -617,7 +661,7 @@ export class RoomPlanner {
 
 			const maxRemoved = priority.maxRemoved || Infinity;
 			let removeCount = 0;
-			let structures: Structure[] = _.filter(this.colony.room.find(FIND_STRUCTURES),
+			let structures: Structure[] = _.filter(this.colony.room.structures,
 												   s => s.structureType == structureType);
 			if (structureType == STRUCTURE_WALL) {
 				structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
@@ -851,7 +895,7 @@ export class RoomPlanner {
 			if (this.colony.spawns.length > 0) { // in case of very first spawn
 				const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
 				const spawnPos = lowerRightSpawn.pos;
-				bunkerAnchor = new RoomPosition(spawnPos.x - 4, spawnPos.y, spawnPos.roomName);
+				bunkerAnchor = new RoomPosition(spawnPos.x - 1, spawnPos.y + 1, spawnPos.roomName);
 			} else {
 				const expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
 				if (expansionData) {
@@ -877,7 +921,7 @@ export class RoomPlanner {
 		}
 	}
 
-	run(): void {
+	run(): void {		
 		if (this.active) {
 			this.make();
 			this.visuals();

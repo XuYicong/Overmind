@@ -281,7 +281,7 @@ export const bunkerLayout: StructureLayout = {
 		'buildings': {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
-			'nuker'     : {'pos': []},
+			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
 			'tower'     : {'pos': [{'x': 25, 'y': 24}, {'x': 25, 'y': 26}, {'x': 25, 'y': 23}]},
 			'powerSpawn': {'pos': []},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},
@@ -372,7 +372,7 @@ export const bunkerLayout: StructureLayout = {
 		'buildings': {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
-			'nuker'     : {'pos': [{'x': 24, 'y': 24}]},
+			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
 			'tower'     : {
 				'pos': [{'x': 27, 'y': 25}, {'x': 23, 'y': 25}, {'x': 25, 'y': 27}, {
 					'x': 25,
@@ -472,7 +472,7 @@ export const customizedBunkerLayout: StructureLayout = {
         'shard': 'shard2',
         'rcl': '1',
         'buildings': {
-            'spawn': { 'pos': [{ 'x': 25, 'y': 14 }] }
+            'spawn': { 'pos': [{'x': 26, 'y': 24},] }
         }
     },
     2: {
@@ -486,7 +486,7 @@ export const customizedBunkerLayout: StructureLayout = {
                         'y': 28
                     }, { 'x': 29, 'y': 26 }]
             },
-            'spawn': { 'pos': [{ 'x': 25, 'y': 14 }] },
+            'spawn': { 'pos': [{'x': 26, 'y': 24},] },
             'container': { 'pos': [{ 'x': 27, 'y': 30 }] }
         }
     },
@@ -512,7 +512,7 @@ export const customizedBunkerLayout: StructureLayout = {
 				{ 'x': 28, 'y': 40 },{ 'x': 29, 'y': 39 },{ 'x': 30, 'y': 37 },
 				{ 'x': 31, 'y': 37 },{ 'x': 32, 'y': 36 },{ 'x': 33, 'y': 37 },]
             },
-			'spawn'     : {'pos': [{'x': 24, 'y': 28}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 26, 'y': 44}]}
         }
     },
@@ -544,7 +544,7 @@ export const customizedBunkerLayout: StructureLayout = {
 				{ 'x': 28, 'y': 27 },{ 'x': 28, 'y': 28 },{ 'x': 29, 'y': 28 },
 				{ 'x': 27, 'y': 27 },{ 'x': 28, 'y': 26 },{ 'x': 29, 'y': 25 },{ 'x': 30, 'y': 24 },]
             },
-			'spawn'     : {'pos': [{'x': 24, 'y': 28}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 30, 'y': 23}]}
 		}
 	},
@@ -586,7 +586,7 @@ export const customizedBunkerLayout: StructureLayout = {
 					{ 'x': 22, 'y': 32 },{ 'x': 23, 'y': 33 },{ 'x': 24, 'y': 34 },{ 'x': 22, 'y': 34 },{ 'x': 21, 'y': 33 },
 					{ 'x': 20, 'y': 34 },{ 'x': 19, 'y': 35 },{ 'x': 19, 'y': 33 },{ 'x': 20, 'y': 32 },{ 'x': 21, 'y': 31 },]
 			},
-			'spawn'     : {'pos': [{'x': 24, 'y': 28}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 24, 'y': 29}]}
 		}
 	},
@@ -631,7 +631,7 @@ export const customizedBunkerLayout: StructureLayout = {
 					{ 'x': 27, 'y': 23 },{ 'x': 28, 'y': 23 },{ 'x': 28, 'y': 24 },{ 'x': 29, 'y': 23 },{ 'x': 29, 'y': 22 }, // 10
 					]
 			},
-			'spawn'     : {'pos': [{'x': 24, 'y': 28}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 24, 'y': 29},{'x': 30, 'y': 23},]},
 		}
 	},
@@ -642,7 +642,7 @@ export const customizedBunkerLayout: StructureLayout = {
 		'buildings': {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
-			'nuker'     : {'pos': []},
+			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
 			'tower'     : {'pos': [{'x': 25, 'y': 24}, {'x': 25, 'y': 26}, {'x': 25, 'y': 23}]},
 			'powerSpawn': {'pos': []},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},
@@ -663,46 +663,26 @@ export const customizedBunkerLayout: StructureLayout = {
 			},
 			'observer'  : {'pos': []},
 			'lab'       : {
-				'pos': [{'x': 27, 'y': 23}, {'x': 28, 'y': 24}, {'x': 28, 'y': 22}, {
-					'x': 28,
-					'y': 23
-				}, {'x': 29, 'y': 23}, {'x': 29, 'y': 22}]
+				'pos': [{'x': 32, 'y': 19}, {'x': 33, 'y': 19}, {'x': 33, 'y': 20},
+					{'x': 31, 'y': 18}, {'x': 32, 'y': 18}, {'x': 31, 'y': 20},]
 			},
 			'extension' : {
-				'pos': [{'x': 24, 'y': 22}, {'x': 23, 'y': 23}, {'x': 22, 'y': 24}, {
-					'x': 22,
-					'y': 23
-				}, {'x': 23, 'y': 22}, {'x': 23, 'y': 21}, {'x': 22, 'y': 22}, {'x': 21, 'y': 23}, {
-					'x': 25,
-					'y': 20
-				}, {'x': 26, 'y': 20}, {'x': 30, 'y': 24}, {'x': 30, 'y': 25}, {'x': 30, 'y': 26}, {
-					'x': 20,
-					'y': 24
-				}, {'x': 20, 'y': 25}, {'x': 20, 'y': 26}, {'x': 22, 'y': 21}, {'x': 21, 'y': 22}, {
-					'x': 28,
-					'y': 26
-				}, {'x': 30, 'y': 25}, {'x': 28, 'y': 27}, {'x': 27, 'y': 27}, {'x': 27, 'y': 28}, {
-					'x': 28,
-					'y': 28
-				}, {'x': 29, 'y': 28}, {'x': 28, 'y': 29}, {'x': 27, 'y': 29}, {'x': 26, 'y': 28}, {
-					'x': 22,
-					'y': 26
-				}, {'x': 23, 'y': 27}, {'x': 24, 'y': 28}, {'x': 23, 'y': 28}, {'x': 22, 'y': 27}, {
-					'x': 21,
-					'y': 27
-				}, {'x': 22, 'y': 28}, {'x': 23, 'y': 29}, {'x': 22, 'y': 29}, {'x': 21, 'y': 28}, {
-					'x': 24,
-					'y': 30
-				}, {'x': 25, 'y': 30}, {'x': 26, 'y': 30}, {'x': 29, 'y': 26}, {'x': 21, 'y': 24}, {
-					'x': 26,
-					'y': 21
-				}, {'x': 24, 'y': 29}, {'x': 23, 'y': 30}, {'x': 20, 'y': 23}, {'x': 27, 'y': 20}, {
-					'x': 30,
-					'y': 27
-				}, {'x': 25, 'y': 29}]
+				'pos': [
+					{ 'x': 22, 'y': 26 },{ 'x': 22, 'y': 27 },{ 'x': 23, 'y': 27 },{ 'x': 23, 'y': 28 },{ 'x': 23, 'y': 29 },
+					{ 'x': 25, 'y': 29 },{ 'x': 25, 'y': 30 },{ 'x': 24, 'y': 30 },{ 'x': 24, 'y': 31 },
+					{ 'x': 26, 'y': 28 },{ 'x': 26, 'y': 29 },{ 'x': 27, 'y': 29 },{ 'x': 28, 'y': 30 },
+					{ 'x': 28, 'y': 27 },{ 'x': 28, 'y': 28 },{ 'x': 29, 'y': 28 },
+					{ 'x': 27, 'y': 27 },{ 'x': 28, 'y': 26 },{ 'x': 29, 'y': 25 },{ 'x': 30, 'y': 24 }, // 20
+					{ 'x': 22, 'y': 32 },{ 'x': 23, 'y': 33 },{ 'x': 24, 'y': 34 },{ 'x': 22, 'y': 34 },{ 'x': 21, 'y': 33 },
+					{ 'x': 20, 'y': 34 },{ 'x': 19, 'y': 35 },{ 'x': 19, 'y': 33 },{ 'x': 20, 'y': 32 },{ 'x': 21, 'y': 31 }, // 10
+					{ 'x': 30, 'y': 17 },{ 'x': 30, 'y': 20 },{ 'x': 30, 'y': 21 },{ 'x': 29, 'y': 21 },{ 'x': 26, 'y': 22 },
+					{ 'x': 27, 'y': 23 },{ 'x': 28, 'y': 23 },{ 'x': 28, 'y': 24 },{ 'x': 29, 'y': 23 },{ 'x': 29, 'y': 22 }, // 10
+					{ 'x': 30, 'y': 22 },{ 'x': 33, 'y': 17 },{ 'x': 33, 'y': 16 },{ 'x': 32, 'y': 16 },{ 'x': 32, 'y': 15 },
+					{ 'x': 31, 'y': 15 },{ 'x': 30, 'y': 15 },{ 'x': 29, 'y': 15 },{ 'x': 28, 'y': 15 },{ 'x': 27, 'y': 15 }, // 10
+					]
 			},
-			'spawn'     : {'pos': [{'x': 29, 'y': 25}, {'x': 26, 'y': 24}]},
-			'container' : {'pos': [{'x': 27, 'y': 30}, {'x': 23, 'y': 20}]}
+			'spawn'     : {'pos': [{'x': 24, 'y': 28}, {'x': 26, 'y': 24}]},
+			'container' : {'pos': [{'x': 24, 'y': 29},{'x': 30, 'y': 23},]},
 		}
 	},
 	8   : {
@@ -712,7 +692,7 @@ export const customizedBunkerLayout: StructureLayout = {
 		'buildings': {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
-			'nuker'     : {'pos': [{'x': 24, 'y': 24}]},
+			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
 			'tower'     : {
 				'pos': [{'x': 27, 'y': 25}, {'x': 23, 'y': 25}, {'x': 25, 'y': 27}, {
 					'x': 25,
@@ -824,7 +804,7 @@ export function getPosFromBunkerCoord(coord: Coord, colony: Colony): RoomPositio
 	if (colony.roomPlanner.memory.bunkerData && colony.roomPlanner.memory.bunkerData.anchor) {
 		let dx = colony.roomPlanner.memory.bunkerData.anchor.x - bunkerLayout.data.anchor.x;
 		let dy = colony.roomPlanner.memory.bunkerData.anchor.y - bunkerLayout.data.anchor.y;
-		return new RoomPosition(coord.x + dx, coord.y + dy, colony.room.name);
+		return new RoomPosition(Math.max(Math.min(coord.x + dx, 49), 0), Math.max(Math.min(coord.y + dy, 49), 0), colony.room.name);
 	}
 	console.log('getPosFromBunkerCoord: shouldn\'t reach here! Unprotected call from non-bunker?');
 	return new RoomPosition(-1, -1, 'invalid');
@@ -863,7 +843,11 @@ export const quadrantFillOrder = {
 	}, {'x': 22, 'y': 21}, {'x': 22, 'y': 22}, {'x': 21, 'y': 22}, {'x': 21, 'y': 23}, {'x': 20, 'y': 23}, {
 		'x': 20,
 		'y': 24
-	}, {'x': 32, 'y': 19}, {'x': 33, 'y': 19}, {'x': 33, 'y': 20}],
+	}, 
+	{ 'x': 30, 'y': 22 },
+	{'x': 33, 'y': 20}, {'x': 33, 'y': 19}, {'x': 32, 'y': 19}, {'x': 32, 'y': 18},{'x': 31, 'y': 18},
+	{ 'x': 33, 'y': 17 },{ 'x': 33, 'y': 16 },{ 'x': 32, 'y': 16 },{ 'x': 32, 'y': 15 },
+	{ 'x': 31, 'y': 15 },{ 'x': 30, 'y': 15 },{ 'x': 29, 'y': 15 },{ 'x': 28, 'y': 15 },{ 'x': 27, 'y': 15 },],
 	upperRight: [{'x': 24, 'y': 20}, {'x': 25, 'y': 20}, {'x': 25, 'y': 21}, {'x': 26, 'y': 21}, 
 	{ 'x': 30, 'y': 17 }, { 'x': 30, 'y': 20 }, { 'x': 30, 'y': 21 }, { 'x': 29, 'y': 21 }, {'x': 26, 'y': 22}, 
 	{'x': 27, 'y': 22}, {'x': 27, 'y': 23}, {'x': 25, 'y': 23}, {'x': 28, 'y': 23}, {'x': 28, 'y': 24}, {
@@ -872,7 +856,7 @@ export const quadrantFillOrder = {
 	}, {'x': 29, 'y': 22}, {'x': 28, 'y': 22}, {'x': 28, 'y': 21}, {'x': 27, 'y': 21}, {'x': 27, 'y': 20}, {
 		'x': 26,
 		'y': 20
-	}]
+	},]
 };
 
 // Used to generate energy structure ordering for spawn.spawnCreep()

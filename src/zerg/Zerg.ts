@@ -676,7 +676,7 @@ export class Zerg {
 	flee(avoidGoals: (RoomPosition | HasPos)[] = this.room.fleeDefaults,
 		 fleeOptions: FleeOptions              = {},
 		 moveOptions: MoveOptions              = {}): boolean {
-		if (avoidGoals.length == 0 && (!this.memory._go || !this.memory._go.path)) {
+		if (avoidGoals.length == 0 && (!this.memory._go || !this.memory._go.fleeWait)) {
 			return false;
 		} else if (this.room.controller && this.room.controller.my && this.room.controller.safeMode) {
 			return false;

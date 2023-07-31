@@ -129,7 +129,8 @@ export class Hatchery extends HiveCluster {
 
 	spawnMoarOverlords() {
 		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)
-			&& this.colony.assets[RESOURCE_ENERGY] > 10000) {
+		// I'm experimenting a dynamic queue loading algorithm competing bunker queue. Leave both for comparison
+			&& this.colony.assets[RESOURCE_ENERGY] > 10000 && this.colony.room.name.endsWith('9')) {
 			this.overlord = new BunkerQueenOverlord(this); // use bunker queen if has storage and enough energy
 		} else {
 			this.overlord = new QueenOverlord(this);
@@ -281,6 +282,7 @@ export class Hatchery extends HiveCluster {
 				origin: '',										// where it was spawned, filled in at spawn time
 			},
 		};
+		// log.debug(creepMemory);
 		// Create the protocreep and return it
 		const protoCreep: ProtoCreep = { 							// object to add to spawner queue
 			body  : creepBody, 										// body array

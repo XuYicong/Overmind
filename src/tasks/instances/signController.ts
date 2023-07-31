@@ -3,7 +3,7 @@ import {Task} from '../Task';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
-
+const outpostSignature = "Don't hit my workers, they're innocent!";
 @profile
 export class TaskSignController extends Task {
 
@@ -25,7 +25,8 @@ export class TaskSignController extends Task {
 	}
 
 	work() {
-		return this.creep.signController(this.target, Memory.settings.signature);
+		const signature = this.target.room.owner ? Memory.settings.signature : outpostSignature;
+		return this.creep.signController(this.target, signature);
 	}
 }
 

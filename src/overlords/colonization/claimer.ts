@@ -49,16 +49,16 @@ export class ClaimingOverlord extends Overlord {
 
 	private handleClaimer(claimer: Zerg): void {
 		if (claimer.room == this.room && !claimer.pos.isEdge) {
-			if (!this.room.controller!.signedByMe) {
-				// Takes care of an edge case where planned newbie zone signs prevents signing until room is reserved
-				if (!this.room.my && this.room.controller!.signedByScreeps) {
-					claimer.task = Tasks.claim(this.room.controller!);
-				} else {
-					claimer.task = Tasks.signController(this.room.controller!);
-				}
-			} else {
+			// if (!this.room.controller!.signedByMe) {
+			// 	// Takes care of an edge case where planned newbie zone signs prevents signing until room is reserved
+			// 	if (!this.room.my && this.room.controller!.signedByScreeps) {
+			// 		claimer.task = Tasks.claim(this.room.controller!);
+			// 	} else {
+			// 		claimer.task = Tasks.signController(this.room.controller!);
+			// 	}
+			// } else {
 				claimer.task = Tasks.claim(this.room.controller!);
-			}
+			// }
 		} else {
 			claimer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
 		}

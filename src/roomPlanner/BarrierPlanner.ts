@@ -5,6 +5,7 @@ import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {derefCoords, minMax} from '../utilities/utils';
 import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds, getRoomSpecificBunkerLayout} from './layouts/bunker';
+import { dynamicLayout, evolutionChamberLayout } from './layouts/dynamic';
 import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
 
 export interface BarrierPlannerMemory {
@@ -162,12 +163,30 @@ export class BarrierPlanner {
 	}
 
 	private buildMissingBunkerRamparts(): void {
-		if (!this.roomPlanner.bunkerPos) return;
-		const layout = getRoomSpecificBunkerLayout(this.colony.name);
+		const bunkerPos = this.roomPlanner.bunkerPos;
+		const evolutionChamberPos = this.roomPlanner.bunkerPos;
+		if (!bunkerPos) return;
+		let bunkerPositions;
+		const layout = evolutionChamberPos ? dynamicLayout : getRoomSpecificBunkerLayout(this.colony.name);
 		const bunkerCoords = getAllStructureCoordsFromLayout(layout, this.colony.level);
 		bunkerCoords.push(layout.data.anchor); // add center bunker tile
-		let bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
-		bunkerPositions = translatePositions(bunkerPositions, layout.data.anchor, this.roomPlanner.bunkerPos);
+		bunkerPositions = _.map(bunkerCoords, coord => new RoomPosition(coord.x, coord.y, this.colony.name));
+		bunkerPositions = translatePositions(bunkerPositions, layout.data.anchor, bunkerPos);
+		if (evolutionChamberPos) {
+			bunkerPositions.concat(
+				translatePositions(
+					_.map(
+						getAllStructureCoordsFromLayout(
+							evolutionChamberLayout,
+							this.colony.level,
+						),
+						coord => new RoomPosition(coord.x, coord.y, this.colony.name),
+					),
+					layout.data.anchor,
+					evolutionChamberPos,
+				)
+			);
+		}
 		let count = RoomPlanner.settings.maxSitesPerColony - this.colony.constructionSites.length;
 		for (const pos of bunkerPositions) {
 			if (count > 0 && !pos.lookForStructure(STRUCTURE_RAMPART)

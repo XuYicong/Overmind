@@ -17,6 +17,7 @@ import {DirectiveHarvest} from './resource/harvest';
 import {DirectiveHaul} from './resource/haul';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
+import { DirectiveRPEvolutionChamber } from './roomPlanner/roomPlanner_evolutionChamber';
 import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
@@ -142,6 +143,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveRPCommandCenter(flag);
 				case COLOR_RED:
 					return new DirectiveRPBunker(flag);
+				case COLOR_CYAN:
+					return new DirectiveRPEvolutionChamber(flag);
 			}
 			break;
 	}

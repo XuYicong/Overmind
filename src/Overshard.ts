@@ -2,7 +2,7 @@ import { log } from "console/log";
 import { isZerg } from "declarations/typeGuards";
 import { CROSSING_PORTAL, MoveOptions } from "movement/Movement";
 import { profile } from "profiler/decorator";
-import { getPosFromString } from "utilities/utils";
+import { getPosFromString, onPublicServer } from "utilities/utils";
 import { Zerg, normalizeZerg } from "zerg/Zerg";
 
 // The earliest packet to consider receiving, compared to latest received packet
@@ -11,6 +11,7 @@ import { Zerg, normalizeZerg } from "zerg/Zerg";
 const MAX_RECEIVE_WINDOW = 200;
 
 const getInterShardMemory = function(shard: string): InterShardMemory | null {
+    if(!InterShardMemory) return null;
     let raw: string|null;
     if(shard == Game.shard.name) {
         raw = InterShardMemory.getLocal();
@@ -22,6 +23,7 @@ const getInterShardMemory = function(shard: string): InterShardMemory | null {
 }
 
 const setInterShardMemory = function(data: InterShardMemory): void {
+    if(!InterShardMemory) return;
     InterShardMemory.setLocal(JSON.stringify(data));
 }
 /**
@@ -78,6 +80,8 @@ export class Overshard implements IOvershard {
 	
     // On the start of each tick, receive packets from other shards
 	private receiveInterShardPackets(): void {
+        // In sim environment or so, no inter shard things
+        if(!onPublicServer()) return;
 		let my = getInterShardMemory(Game.shard.name);
 		if(my == null) {
 			my = InterShardMemory;

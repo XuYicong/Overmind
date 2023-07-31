@@ -23,7 +23,7 @@ import { transferTargetType } from 'tasks/instances/transfer';
 export type LogisticsTarget = withdrawTargetType | transferTargetType | Resource;
 
 export const ALL_RESOURCE_TYPE_ERROR =
-				 `Improper logistics request: 'all' can only be used for general purpose store structure!`;
+				 `Improper logistics request: 'all' can only be used for general purpose store!`;
 
 export type BufferTarget = StructureStorage | StructureTerminal;
 
@@ -245,7 +245,7 @@ export class LogisticsNetwork {
 			if (hasGeneralPurposeStore(target)) {
 				return target.store.getUsedCapacity()!;
 			} else {
-				log.error(ALL_RESOURCE_TYPE_ERROR);
+				log.error(ALL_RESOURCE_TYPE_ERROR+'@'+target.pos);
 				return 0;
 			}
 		} else {
@@ -330,7 +330,7 @@ export class LogisticsNetwork {
 					// ^ need to multiply amount by -1 since transporter is doing complement of what request needs
 					if (request.resourceType == 'all') {
 						if (!hasGeneralPurposeStore(request.target) && !isTombstone(request.target) && !isRuin(request.target)) {
-							log.error(ALL_RESOURCE_TYPE_ERROR);
+							log.error(ALL_RESOURCE_TYPE_ERROR+'@'+request.target.pos);
 							return;
 						}
 						for (const resourceType in request.target.store) {

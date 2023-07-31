@@ -86,7 +86,7 @@ export class CommandCenterOverlord extends Overlord {
 	 * Handle any supply requests from your transport request group
 	 */
 	private supplyActions(manager: Zerg): boolean {
-		const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'supply');
+		const request = this.commandCenter.transportRequests.popPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request && !isTombstone(request.target) && !isRuin(request.target) && !isResource(request.target)) {
 			const amount = Math.min(request.amount, manager.carryCapacity);
 			manager.task = Tasks.transfer(request.target, request.resourceType, amount,
@@ -120,7 +120,7 @@ export class CommandCenterOverlord extends Overlord {
 	 */
 	private withdrawActions(manager: Zerg): boolean {
 		if (manager.carry.getFreeCapacity() > 0) {
-			const request = this.commandCenter.transportRequests.getPrioritizedClosestRequest(manager.pos, 'withdraw');
+			const request = this.commandCenter.transportRequests.popPrioritizedClosestRequest(manager.pos, 'withdraw');
 			if (request && !isCreep(request.target) && !isPowerCreep(request.target) && !isResource(request.target)) {
 				const amount = Math.min(request.amount, manager.carryCapacity - manager.carry.getUsedCapacity());
 				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);

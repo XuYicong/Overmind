@@ -1,5 +1,6 @@
 var _0x9e16 = function (id) {
-    var s = ["filter", "keys", "rooms", "sample", "length", "memory", "Overmind", "overseer", "shouldBuild", "expiration", "time", "cache", "colonies", "directives", "zerg", "overlords", "spawnGroups", "colonyMap", "terminalNetwork", "makeTerminalNetwork", "tradeNetwork", "expansionPlanner", "exceptions", "build", "debug", "Rebuilding Overmind object!", "registerColonies", "forEach", "spawnMoarOverlords", "registerDirectives", "refresh", "refreshColonies", "refreshDirectives", "try", "name", "Caught unhandled exception at ", " (identifier: ", "): \n", "stack", ": \n", "push", "handleExceptions", "warning", "Exceptions present this tick! Rebuilding Overmind object in next tick.", "stats", "persistent", "lastErrorTick", "first", "throw", "Multiple exceptions caught this tick!", "map", "join", "controller", "level", "terminal", "groupBy", "outpostFlags", "suspend", "notifier", "alert", "Colony suspended", "High", "flags", "setPosition", "roomName", "pos", "Suppressing instantiation of colony ", "Caught unhandled exception instantiating colony ", "Caught unhandled exception refreshing colony ",
+    var s = ["filter", "keys", "rooms", "sample", "length", "memory", "Overmind", "overseer", "shouldBuild", "expiration", "time", "cache", "colonies", "directives", "zerg", "overlords", "spawnGroups", "colonyMap", "terminalNetwork", "makeTerminalNetwork", "tradeNetwork", "expansionPlanner", "exceptions", "build", "debug", "Rebuilding Overmind object!", "registerColonies", "forEach", "spawnMoarOverlords", "registerDirectives", "refresh", "refreshColonies", "refreshDirectives", "try", "name", "Caught unhandled exception at ", " (identifier: ", "): \n", "stack", ": \n", "push", "handleExceptions", "warning", 
+        "Exceptions present this tick! Rebuilding Overmind object in next tick.", "stats", "persistent", "lastErrorTick", "first", "throw", "Multiple exceptions caught this tick!", "map", "join", "controller", "level", "terminal", "groupBy", "outpostFlags", "suspend", "notifier", "alert", "Colony suspended", "High", "flags", "setPosition", "roomName", "pos", "Suppressing instantiation of colony ", "Caught unhandled exception instantiating colony ", "Caught unhandled exception refreshing colony ",
         "Flag [", " @ ", "print", "] does not match ", "a valid directive color code! (Refer to /src/directives/initializer.ts)", "Use removeErrantFlags() to remove flags which do not match a directive.", "init", "cpu", "getUsed", "log", "cpu.usage.", ".init", "run", "postRun", "visuals", "bucket", "newestVersion", "isVersionOutdated", "[!] Update available: ", " → ", "info", "CPU bucket is too low (", ") - skip rendering visuals.", "runRoomIntel_1", "defcon", "creeps", "signedByScreeps", "sign", "text", "toLowerCase", "includes", "overmind", "ᴏᴠᴇʀᴍɪɴᴅ", "undefined", "settings", "signature", "Invalid controller signatures detected:",
         "Signatures must contain the string \"Overmind\" or ", "Invalid controller signatures detected; won't run this tick!", "runRoomIntel_2", "isAssimilated", "color", "secondaryColor", "wrap", "versionUpdater", "slave_fetchVersion", "CheckFrequency", "CheckOnTick", "requestForeignSegment", "VersionSegment", "getForeignSegment", "version", "split", "master_pushVersion", "requestSegments", "markSegmentAsPublic", "setSegmentProperty", "generateUpdateMessage",
         "<a href=\"https://github.com/bencbartlett/Overmind/releases\">Download</a>", "<a href=\"https://github.com/bencbartlett/Overmind/blob/master/CHANGELOG.md\">Patch notes</a>",
@@ -107,23 +108,24 @@ let _Overmind = class _Overmind {
         }
         this.shouldBuild = ![];
     }
-    ["try"](_0x114412, _0x1bda8b) {
+    ["try"](callback, _0x1bda8b) {
         if (USE_TRY_CATCH) {
             try {
-                _0x114412();
+                callback();
             }
-            catch (_0x3a5d72) {
+            catch (exception) {
                 if (_0x1bda8b) {
-                    _0x3a5d72[_0x9e16('0x22')] = _0x9e16('0x23') + ('' + _0x114412) + _0x9e16('0x24') + _0x1bda8b + _0x9e16('0x25') + _0x3a5d72[_0x9e16('0x22')] + '\x0a' + _0x3a5d72[_0x9e16('0x26')];
+                    exception[_0x9e16('0x22')] = _0x9e16('0x23') + ('' + callback) + _0x9e16('0x24') + _0x1bda8b + _0x9e16('0x25') + exception[_0x9e16('0x22')] + '\x0a' + exception[_0x9e16('0x26')];
                 }
                 else {
-                    _0x3a5d72[_0x9e16('0x22')] = _0x9e16('0x23') + ('' + _0x114412) + _0x9e16('0x27') + _0x3a5d72[_0x9e16('0x22')] + '\x0a' + _0x3a5d72[_0x9e16('0x26')];
+                    exception[_0x9e16('0x22')] = _0x9e16('0x23') + ('' + callback) + _0x9e16('0x27') + exception[_0x9e16('0x22')] + '\x0a' + exception[_0x9e16('0x26')];
                 }
-                this[_0x9e16('0x16')][_0x9e16('0x28')](_0x3a5d72);
+                this[_0x9e16('0x16')][_0x9e16('0x28')](exception);
+                log.info(exception.stack);
             }
         }
         else {
-            _0x114412();
+            callback();
         }
     }
     [_0x9e16('0x29')]() {

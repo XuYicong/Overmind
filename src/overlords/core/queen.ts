@@ -8,6 +8,9 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {DEFAULT_PRESPAWN, Overlord} from '../Overlord';
+import { TransportRequest } from 'logistics/TransportRequestGroup';
+import { Task } from 'tasks/Task';
+import { TaskTransfer } from 'tasks/instances/transfer';
 
 type rechargeObjectType = StructureStorage
 	| StructureTerminal
@@ -24,7 +27,7 @@ export class QueenOverlord extends Overlord {
 
 	hatchery: Hatchery;
 	queenSetup: CreepSetup;
-	queens: Zerg[];
+	loaders: Zerg[];
 	settings: any;
 
 	constructor(hatchery: Hatchery, priority = OverlordPriority.core.queen) {
@@ -34,73 +37,138 @@ export class QueenOverlord extends Overlord {
 		if (this.colony.terminalState == TERMINAL_STATE_REBUILD) {
 			this.queenSetup = Setups.queens.early;
 		}
-		this.queens = this.zerg(Roles.loader);
+		this.loaders = this.zerg(Roles.loader);
 		this.settings = {
 			refillTowersBelow: 500,
 		};
 	}
 
 	init() {
-		const amount = 1;
+		const amount = this.colony.defcon + 1;
 		const prespawn = this.hatchery.spawns.length <= 1 ? 100 : DEFAULT_PRESPAWN;
 		this.wishlist(amount, this.queenSetup, {prespawn: prespawn});
 	}
 
-	private supplyActions(queen: Zerg) {
+	private supplyActions(loader: Zerg) {
+		// Chain two tasks only for now
+		if(loader.task && loader.task._parent) return;
 		// Select the closest supply target out of the highest priority and refill it
-		const request = this.hatchery.transportRequests.getPrioritizedClosestRequest(queen.pos, 'supply');
+		const request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'supply', 
+						(req)=>req.resourceType == RESOURCE_ENERGY);
 		if (request) {
-			queen.task = Tasks.transfer(request.target);
-		} else {
-			this.rechargeActions(queen); // if there are no targets, refill yourself
+			const task = Tasks.transfer(request.target);
+			if(loader.task) {
+				task.fork(loader.task);
+				loader.task.options.nextPos = task.targetPos;
+			} else {
+				loader.task = task;
+			}
+		} else if(loader.isIdle) {
+			this.rechargeActions(loader); // if there are no targets, refill yourself
 		}
 	}
 
-	private rechargeActions(queen: Zerg): void {
+	private mineralActions(loader: Zerg): void {
+		// Assuming store has no energy here, and guarantee store has nothing after
+		if (loader.carry.getUsedCapacity(RESOURCE_ENERGY) > 0 || loader.hasValidTask) return;
+		const commandCenter = this.colony.commandCenter;
+		if (!commandCenter) return;
+
+		// Handle withdraw requests
+		let request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'withdraw', 
+							req => req.resourceType != RESOURCE_ENERGY);
+		const evacuate = function(resourceType: ResourceConstant): Task {
+			if (commandCenter.terminal && commandCenter.terminal.store.getFreeCapacity(resourceType) > 0) {
+				return Tasks.transfer(commandCenter.terminal, resourceType);
+			} else if (commandCenter.storage.store.getFreeCapacity(resourceType) > 0) {
+				return Tasks.transfer(commandCenter.storage, resourceType);
+			} else {
+				return Tasks.drop(loader.pos, resourceType);
+			}
+		}
+		if (request) {
+			const task = Tasks.withdraw(request.target, request.resourceType);
+			loader.task = evacuate(request.resourceType).fork(task);
+			return;
+		}
+
+		// Handle supply tasks
+		// TODO: add multiple tasks at the same time
+		const store = commandCenter.terminal || commandCenter.storage;
+		let supplyTask: TaskTransfer | undefined;
+		for (const priority in this.hatchery.transportRequests.supply) {
+			for (const request of this.hatchery.transportRequests.supply[priority]) {
+				if (request.resourceType == RESOURCE_ENERGY) continue;
+				// figure out how much you can withdraw
+				const amount = Math.min(
+					Math.min(
+						request.amount, 
+						store.store.getUsedCapacity(request.resourceType)
+					), 
+					loader.carry.getFreeCapacity(request.resourceType)
+				);
+				if (amount == 0) continue;
+				supplyTask = Tasks.transfer(request.target, request.resourceType, amount);
+			}
+		}
+		if (supplyTask) {
+			log.info(supplyTask.data.resourceType+', '+supplyTask.data.amount);
+			loader.task = supplyTask.fork(
+				Tasks.withdraw(store, supplyTask.data.resourceType, supplyTask.data.amount),
+			);
+		}
+	}
+
+	private rechargeActions(loader: Zerg): void {
 		if (this.hatchery.link && !this.hatchery.link.isEmpty) {
-			queen.task = Tasks.withdraw(this.hatchery.link);
+			loader.task = Tasks.withdraw(this.hatchery.link);
 		} else if (this.hatchery.battery && this.hatchery.battery.energy > 0) {
-			queen.task = Tasks.withdraw(this.hatchery.battery);
+			loader.task = Tasks.withdraw(this.hatchery.battery);
 		} else {
-			queen.task = Tasks.recharge();
+			loader.task = Tasks.recharge();
 		}
 	}
 
-	private idleActions(queen: Zerg): void {
+	private idleActions(loader: Zerg): void {
 		if (this.hatchery.link) {
 			// Can energy be moved from the link to the battery?
 			if (this.hatchery.battery && !this.hatchery.battery.isFull && !this.hatchery.link.isEmpty) {
 				// Move energy to battery as needed
-				if (queen.carry.energy < queen.carryCapacity) {
-					queen.task = Tasks.withdraw(this.hatchery.link);
+				if (loader.carry.energy < loader.carryCapacity) {
+					loader.task = Tasks.withdraw(this.hatchery.link);
 				} else {
-					queen.task = Tasks.transfer(this.hatchery.battery);
+					loader.task = Tasks.transfer(this.hatchery.battery);
 				}
 			} else {
-				if (queen.carry.energy < queen.carryCapacity) { // make sure you're recharged
+				if (loader.carry.energy < loader.carryCapacity) { // make sure you're recharged
 					if (!this.hatchery.link.isEmpty) {
-						queen.task = Tasks.withdraw(this.hatchery.link);
+						loader.task = Tasks.withdraw(this.hatchery.link);
 					} else if (this.hatchery.battery && !this.hatchery.battery.isEmpty) {
-						queen.task = Tasks.withdraw(this.hatchery.battery);
+						loader.task = Tasks.withdraw(this.hatchery.battery);
 					}
 				}
 			}
 		} else {
-			if (this.hatchery.battery && queen.carry.energy < queen.carryCapacity) {
-				queen.task = Tasks.withdraw(this.hatchery.battery);
+			if (this.hatchery.battery && loader.carry.energy < loader.carryCapacity) {
+				loader.task = Tasks.withdraw(this.hatchery.battery);
 			}
 		}
 	}
 
-	private handleQueen(queen: Zerg): void {
-		if (queen.carry.energy > 0) {
-			this.supplyActions(queen);
+	private handleLoader(loader: Zerg): void {
+		if (loader.carry.energy > 0) {
+			this.supplyActions(loader);
 		} else {
-			this.rechargeActions(queen);
+			if (loader.isIdle) {
+				this.mineralActions(loader);
+			}
+			if (loader.isIdle) {
+				this.rechargeActions(loader);
+			}
 		}
 		// If there aren't any tasks that need to be done, recharge the battery from link
-		if (queen.isIdle) {
-			this.idleActions(queen);
+		if (loader.isIdle) {
+			this.idleActions(loader);
 		}
 		// // If all of the above is done and hatchery is not in emergencyMode, move to the idle point and renew as needed
 		// if (!this.emergencyMode && queen.isIdle) {
@@ -117,18 +185,18 @@ export class QueenOverlord extends Overlord {
 	}
 
 	run() {
-		for (const queen of this.queens) {
+		for (const loader of this.loaders) {
 			// Get a task
-			this.handleQueen(queen);
+			this.handleLoader(loader);
 			// Run the task if you have one; else move back to idle pos
-			if (queen.hasValidTask) {
-				queen.run();
-			} else {
-				if (this.queens.length > 1) {
-					queen.goTo(this.hatchery.idlePos, {range: 1});
-				} else {
-					queen.goTo(this.hatchery.idlePos);
-				}
+			if (loader.hasValidTask) {
+				loader.run();
+			// } else {
+			// 	if (this.queens.length > 1) {
+			// 		queen.goTo(this.hatchery.idlePos, {range: 1});
+			// 	} else {
+			// 		queen.goTo(this.hatchery.idlePos);
+			// 	}
 			}
 		}
 	}

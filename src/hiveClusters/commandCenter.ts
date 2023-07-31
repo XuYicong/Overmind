@@ -32,6 +32,7 @@ export class CommandCenter extends HiveCluster {
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
+	factory: StructureFactory | undefined;					// Colony factory
 	observer: StructureObserver | undefined;				// Colony observer
 	transportRequests: TransportRequestGroup;				// Box for energy requests
 
@@ -52,6 +53,7 @@ export class CommandCenter extends HiveCluster {
 		this.terminal = colony.terminal;
 		this.powerSpawn = colony.powerSpawn;
 		this.nuker = colony.nuker;
+		this.factory = colony.factory;
 		this.observer = colony.observer;
 		if (this.colony.bunker) {
 			this.link = this.colony.bunker.anchor.findClosestByLimitedRange(colony.availableLinks, 1);
@@ -70,7 +72,7 @@ export class CommandCenter extends HiveCluster {
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
 		$.refreshRoom(this);
-		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers');
+		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers', 'factory');
 		this.transportRequests.refresh();
 		this.observeRoom = undefined;
 	}

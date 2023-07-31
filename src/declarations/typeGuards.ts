@@ -24,7 +24,7 @@ export function hasStore(obj: any): obj is HasStore {
 }
 
 export function isGeneralPurposeStore(obj: StoreDefinition): obj is GeneralPurposeStore {
-	return obj.getCapacity() != null;
+	return obj.getUsedCapacity() != null;
 }
 
 export function isStructure(obj: RoomObject): obj is Structure {

@@ -1,3 +1,4 @@
+import { log } from 'console/log';
 import {hasStore, isRuin, hasGeneralPurposeStore, isTombstone} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
 import {Task} from '../Task';
