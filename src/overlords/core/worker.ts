@@ -36,11 +36,11 @@ export class WorkerOverlord extends Overlord {
 			critical: 2500,
 			1       : 3e+3,
 			2       : 3e+3,
-			3       : 1e+4,
-			4       : 5e+4,
-			5       : 1e+5,
+			3       : 2e+5,
+			4       : 2.6e+5,
+			5       : 4e+5,
 			6       : 5e+5,
-			7       : 1e+6,
+			7       : 1e+5,
 			8       : 2e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
@@ -166,6 +166,8 @@ export class WorkerOverlord extends Overlord {
 				const numWorkers = Math.ceil(energyMinedPerTick / (energyPerTickPerWorker * workerUptime));
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
+		} else if (this.colony.name.startsWith('W5')) {
+			numWorkers = 2;
 		} else {
 			if (this.colony.roomPlanner.memory.relocating) {
 				// If relocating, maintain a maximum of workers
@@ -343,7 +345,7 @@ export class WorkerOverlord extends Overlord {
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
 			// Upgrade controller if close to downgrade
-			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 10000 : 2000)) {
+			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 39990 : 2000)) {
 				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures

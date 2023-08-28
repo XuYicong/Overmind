@@ -217,6 +217,7 @@ export const CombatSetups = {
 		sourceKeeper: new CreepSetup(Roles.melee, {
 			pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
 			sizeLimit: Infinity,
+			ordered	 : true,
 		}),
 
 	},

@@ -1,4 +1,5 @@
-import {CombatSetups, Roles} from '../../creepSetups/setups';
+import { DirectivePowerBank } from 'directives/resource/powerBank';
+import {CombatSetups, Roles, Setups} from '../../creepSetups/setups';
 import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {CombatIntel} from '../../intel/CombatIntel';
@@ -10,23 +11,27 @@ import {boostResources} from '../../resources/map_resources';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Overlord} from '../Overlord';
+import { Zerg } from 'zerg/Zerg';
+import { Pathing } from 'movement/Pathing';
+import { Energetics } from 'logistics/Energetics';
 
 /**
- *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
+ *  Power bank mining overlord - spawns attacker/healer pairs and transporters to mine power bank
  */
 @profile
-export class PairDestroyerOverlord extends Overlord {
+export class PowerBankOverlord extends Overlord {
 
-	directive: DirectivePairDestroy;
+	directive: DirectivePowerBank;
 	attackers: CombatZerg[];
 	healers: CombatZerg[];
+	haulers: Zerg[];
 
 	static settings = {
 		retreatHitsPercent : 0.85,
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectivePairDestroy, priority = OverlordPriority.offense.destroy) {
+	constructor(directive: DirectivePowerBank, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
@@ -85,14 +90,15 @@ export class PairDestroyerOverlord extends Overlord {
 		else {
 			// Activate retreat condition if necessary
 			// Handle recovery if low on HP
-			if (attacker.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent) ||
-				healer.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent)) {
+			if (attacker.needsToRecover(PowerBankOverlord.settings.retreatHitsPercent)) {
+				// Do nothing
+			} else if (healer.needsToRecover(PowerBankOverlord.settings.retreatHitsPercent)) {
 				// Healer leads retreat to fallback position
 				Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
 			} else {
 				// Move to room and then perform attacking actions
 				if (!attacker.inSameRoomAs(this)) {
-					Movement.pairwiseMove(attacker, healer, this.pos, {avoidSK: true});
+					Movement.pairwiseMove(attacker, healer, this.pos);
 				} else {
 					this.attackActions(attacker, healer);
 				}
@@ -102,7 +108,7 @@ export class PairDestroyerOverlord extends Overlord {
 
 	private handleHealer(healer: CombatZerg): void {
 		// If there are no hostiles in the designated room, run medic actions
-		if (this.room && this.room.hostiles.length == 0 && this.room.hostileStructures.length == 0) {
+		if (this.room && this.room.hostiles.length == 0 && this.room.powerBanks.length == 0) {
 			healer.doMedicActions(this.room.name);
 			return;
 		}
@@ -121,7 +127,7 @@ export class PairDestroyerOverlord extends Overlord {
 		}
 		// Case 2: you have an attacker partner
 		else {
-			if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
+			if (attacker.hitsMax - attacker.hits >= healer.hitsMax - healer.hits) {
 				healer.heal(attacker);
 			} else {
 				healer.heal(healer);
@@ -150,6 +156,28 @@ export class PairDestroyerOverlord extends Overlord {
 		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
 																			  : CombatSetups.healers.default;
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
+		// Spawn haulers
+		if (!this.colony.storage || _.sum(_.values(this.colony.storage.store)) > Energetics.settings.storage.total.cap) {
+			return;
+		}
+		// Spawn a number of haulers sufficient to move all resources within a lifetime, up to a max
+		const MAX_HAULERS = 5;
+		// Calculate total needed amount of hauling power as (resource amount * trip distance)
+		const tripDistance = 2 * Pathing.distance((this.colony.storage || this.colony).pos, this.directive.pos);
+		const haulingPowerNeeded = Math.min(1000,
+			//TODO: this.directive.totalResources,
+										  this.colony.storage.store.getFreeCapacity()) * tripDistance;
+		// Calculate amount of hauling each hauler provides in a lifetime
+		const haulerCarryParts = Setups.transporters.early.getBodyPotential(CARRY, this.colony);
+		const haulingPowerPerLifetime = CREEP_LIFE_TIME * haulerCarryParts * CARRY_CAPACITY;
+		// Calculate number of haulers
+		const numHaulers = Math.min(Math.ceil(haulingPowerNeeded / haulingPowerPerLifetime), MAX_HAULERS);
+		// Request the haulers
+		if (this.haulers.length == 0) {
+			this.wishlist(numHaulers, Setups.transporters.early, {priority: OverlordPriority.collectionUrgent.haul});
+		} else {
+			this.wishlist(numHaulers, Setups.transporters.early);
+		}
 	}
 
 	run() {

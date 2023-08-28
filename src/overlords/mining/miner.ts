@@ -360,7 +360,10 @@ export class MiningOverlord extends Overlord {
 		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
 			return;
 		}
-		let moveOptions: MoveOptions = {waypoints : this.directive.waypoints, maxCost: 233};
+		let moveOptions: MoveOptions = {
+			waypoints : this.room && this.room.name == miner.room.name ? undefined : this.directive.waypoints, 
+			maxCost: 233
+		};
 		// Move onto harvesting position or near to source (depending on early/standard mode)
 		if (this.mode == 'early' || !this.harvestPos) {
 			if (!miner.pos.inRangeToPos(this.pos, 1)) {

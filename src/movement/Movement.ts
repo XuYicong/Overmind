@@ -1041,7 +1041,7 @@ export class Movement {
 			requireRamparts: false,
 		});
 
-		const debug = false;
+		const debug = true;
 		const callback = (roomName: string) => {
 			if (roomName == creep.room.name) {
 				const matrix = Pathing.getDefaultMatrix(creep.room).clone();
@@ -1107,6 +1107,10 @@ export class Movement {
 														   g => rampart.pos.inRangeToXY(g.pos.x, g.pos.y, g.range))
 													 && rampart.pos.isWalkable());
 			if (openRamparts.length > 0) {
+				// if not already in rampart, can go outside
+				const oldValue = options.requireRamparts;
+				// TODO: handle cases where ramparts are not connected
+				options.requireRamparts = creep.inRampart && _.any(approach, g => creep.pos.inRangeToXY(g.pos.x, g.pos.y, g.range));
 				const ret = PathFinder.search(creep.pos, _.map(openRamparts, (r:any) => ({pos: r.pos, range: 0})), {
 					roomCallback: callback,
 					maxRooms    : 1,

@@ -8,6 +8,7 @@ import {DirectiveSKOutpost} from './colony/outpostSK';
 import {DirectiveGuard} from './defense/guard';
 import {DirectiveInvasionDefense} from './defense/invasionDefense';
 import {DirectiveOutpostDefense} from './defense/outpostDefense';
+import { DirectiveWarmupScout } from './defense/warmupScout';
 import {Directive} from './Directive';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectivePairDestroy} from './offense/pairDestroy';
@@ -32,7 +33,8 @@ import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebui
 export function DirectiveWrapper(flag: Flag): Directive | undefined {
 	const turn_to: {[roomName:string]: {"path": ProtoPos[], [thing:string]:any}} = {
 		'E9S23':{"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":30,"y":27},{"shard":"shard0","roomName":"W40S61","x":13,"y":1},{"shard":"shard0","roomName":"W69S60","x":1,"y":42},{"shard":"shard0","roomName":"W70S69","x":32,"y":48},{"shard":"shard0","roomName":"W40S70","x":30,"y":24},{"shard":"shard1","roomName":"W20S40","x":34,"y":39},{"shard":"shard0","roomName":"W30S79","x":38,"y":48},{"shard":"shard0","roomName":"W20S80","x":27,"y":4},{"shard":"shard1","roomName":"W10S40","x":7,"y":34},{"shard":"shard0","roomName":"W10S71","x":44,"y":1},{"shard":"shard0","roomName":"E39S70","x":48,"y":6},{"shard":"shard0","roomName":"E40S40","x":4,"y":13},{"shard":"shard1","roomName":"E20S20","x":39,"y":9},{"shard":"shard0","roomName":"E40S29","x":6,"y":48},{"shard":"shard0","roomName":"E10S30","x":30,"y":9},{"shard":"shard1","roomName":"E10S20","x":33,"y":14},{"shard":"shard2","roomName":"E10S20","x":29,"y":21}],"distance":682,"totalRooms":42},
-	
+		// 'W11S9':{"path":[{"shard":"shard3","roomName":"W20S30","x":31,"y":37},{"shard":"shard2","roomName":"W20S30","x":40,"y":23},{"shard":"shard1","roomName":"W20S30","x":15,"y":43},{"shard":"shard0","roomName":"W40S51","x":4,"y":1},{"shard":"shard0","roomName":"W51S50","x":48,"y":7},{"shard":"shard0","roomName":"W50S10","x":13,"y":21},{"shard":"shard1","roomName":"W30S10","x":43,"y":22},{"shard":"shard0","roomName":"W60S19","x":40,"y":48},{"shard":"shard0","roomName":"W20S20","x":35,"y":40},{"shard":"shard1","roomName":"W10S10","x":22,"y":18},{"shard":"shard2","roomName":"W10S10","x":25,"y":32}],"distance":499,"totalRooms":24},
+
 	};
 	const turn_back: {[roomName:string]: {"path": ProtoPos[], [thing:string]:any}} = {
 		'E9S23':{"path":[{"shard":"shard3","roomName":"E10S20","x":29,"y":33},{"shard":"shard2","roomName":"E10S20","x":45,"y":27},{"shard":"shard1","roomName":"E10S20","x":39,"y":29},{"shard":"shard0","roomName":"E10S29","x":33,"y":48},{"shard":"shard0","roomName":"E40S30","x":25,"y":41},{"shard":"shard1","roomName":"E20S20","x":25,"y":7},{"shard":"shard0","roomName":"E39S40","x":48,"y":34},{"shard":"shard0","roomName":"E40S71","x":7,"y":1},{"shard":"shard0","roomName":"W10S70","x":6,"y":23},{"shard":"shard1","roomName":"W10S40","x":21,"y":41},{"shard":"shard0","roomName":"W20S79","x":19,"y":48},{"shard":"shard0","roomName":"W30S80","x":42,"y":18},{"shard":"shard1","roomName":"W20S40","x":35,"y":35},{"shard":"shard0","roomName":"W40S69","x":7,"y":48},{"shard":"shard0","roomName":"W69S70","x":1,"y":4},{"shard":"shard0","roomName":"W70S61","x":36,"y":1},{"shard":"shard0","roomName":"W40S60","x":24,"y":39},{"shard":"shard1","roomName":"W20S30","x":26,"y":10},{"shard":"shard2","roomName":"W20S30","x":39,"y":8}],"distance":682,"totalRooms":42},
@@ -52,9 +54,11 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_YELLOW:
 					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:
+					flag.memory.waypoints = ['W25S35:15:19'];
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
-					// flag.memory.waypoints = ['W25S35:30:28'];
+					// Occupy a new room via a center room portal
+					flag.memory.waypoints = ['W25S35:15:19'];
 					return new DirectiveColonize(flag);
 				case COLOR_ORANGE:
 					return new DirectiveClearRoom(flag);
@@ -82,6 +86,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveOutpostDefense(flag);
 				case COLOR_PURPLE:
 					return new DirectiveInvasionDefense(flag);
+				case COLOR_WHITE:
+					return new DirectiveWarmupScout(flag);
 			}
 			break;
 

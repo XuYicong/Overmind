@@ -72,14 +72,14 @@ export class DynamicPlanner {
                     break;
                 case "extension":
                 case "spawn":
-                case "tower":
                 case "observer":
-                    if(countExistingStructures[structure.structureType]) countExistingStructures[structure.structureType]++;
-                    else countExistingStructures[structure.structureType] = 1;
-
                     if(structure.pos.x > rightest.x) {
                         rightest = structure.pos;
                     }
+                case "tower":
+                    if(countExistingStructures[structure.structureType]) countExistingStructures[structure.structureType]++;
+                    else countExistingStructures[structure.structureType] = 1;
+
                 default:
                     hasNonWalkableStructurs[posNumber(structure.pos)] = true;
                     break;

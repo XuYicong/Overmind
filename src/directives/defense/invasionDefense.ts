@@ -31,7 +31,7 @@ export class DirectiveInvasionDefense extends Directive {
 
 	constructor(flag: Flag) {
 		super(flag, colony => colony.level >= 1 && colony.spawns.length > 0);
-		this.colony.defcon = DEFCON.boostedInvasionNPC;
+		this.colony.defcon = DEFCON.invasionNPC;
 	}
 
 	spawnMoarOverlords() {
@@ -49,11 +49,10 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Larva) {
+		if (this.colony.stage > ColonyStage.Pupa) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
-		} else {
-			this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		}
+		this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
 		if (meleeHostiles.length > 0 && (expectedDamage > ATTACK_POWER * 70)) {

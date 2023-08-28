@@ -21,7 +21,13 @@ export class TaskSignController extends Task {
 
 	isValidTarget() {
 		const controller = this.target;
-		return (!controller.sign || controller.sign.text != Memory.settings.signature) && !controller.signedByScreeps;
+		const validSign = controller.signedByScreeps || 
+		(
+			controller.sign && (
+				controller.sign.text == Memory.settings.signature || controller.sign.text == outpostSignature
+			)
+		);
+		return !validSign;
 	}
 
 	work() {

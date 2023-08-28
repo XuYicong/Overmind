@@ -43,6 +43,9 @@ export class BarrierPlanner {
 	}
 
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
+		if(bunkerPos.roomName.startsWith('W5')) {
+			return this.computeEdgeBarrierPositions(bunkerPos.room);
+		}
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
@@ -64,14 +67,54 @@ export class BarrierPlanner {
 		return positions;
 	}
 
+	private computeEdgeBarrierPositions(room: Room | undefined): RoomPosition[]  {
+		if (!room) {
+			log.warning('No room in room position! (Why?)');
+			return [];
+		}
+		const exits = room.find(FIND_EXIT);
+		const terrain = room.getTerrain();
+		function isEdge(coord: number) {
+			return coord == 0 || coord == 49;
+		}
+		function deEdge(coord: number) {
+			return coord < 25 ? 2 : 47;
+		}
+		const candidates = 
+		_.filter(
+			_.unique(
+				_.flatten(
+					_.map(exits, exit => {
+						const ret = [];
+						if(isEdge(exit.x)) {
+							// TODO: seal the room strictly
+							for(let i=0; i<=2; ++i) {
+								ret.push(new RoomPosition(deEdge(exit.x), exit.y + i, exit.roomName));
+							}
+						} else {
+							for(let i=-1; i<=1; ++i) {
+								ret.push(new RoomPosition(exit.x + i, deEdge(exit.y), exit.roomName));
+							}
+						}
+						return ret;
+					})
+				)
+			), pos => terrain.get(pos.x, pos.y) != TERRAIN_MASK_WALL
+		);
+		return candidates;
+	}
+
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
 									upgradeSitePos: RoomPosition): RoomPosition[] {
+		if(hatcheryPos.roomName.startsWith('W5')) {
+			return this.computeEdgeBarrierPositions(hatcheryPos.room);
+		}
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (hatcheryPos) {
 			const {x, y} = hatcheryPos;
 			const [x1, y1] = [Math.max(x - 5 - padding, 0), Math.max(y - 4 - padding, 0)];
-			const [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 6 + padding, 49)];
+			const [x2, y2] = [Math.min(x + 5 + padding, 49), Math.min(y + 5 + padding, 49)];
 			rectArray.push({x1: x1, y1: y1, x2: x2, y2: y2});
 		}
 		if (commandCenterPos) {
@@ -151,7 +194,8 @@ export class BarrierPlanner {
 		}
 
 		for (const pos of barrierPositions) {
-			if (count > 0 && RoomPlanner.canBuild(STRUCTURE_RAMPART, pos) && this.barrierShouldBeHere(pos)) {
+			if (count > 0  && !pos.lookForStructure(STRUCTURE_WALL)
+			&& RoomPlanner.canBuild(STRUCTURE_RAMPART, pos) && this.barrierShouldBeHere(pos)) {
 				const ret = pos.createConstructionSite(STRUCTURE_RAMPART);
 				if (ret != OK) {
 					log.warning(`${this.colony.name}: couldn't create rampart site at ${pos.print}. Result: ${ret}`);

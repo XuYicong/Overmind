@@ -258,7 +258,7 @@ export class RoomPlanner {
 		// Reset everything
 		this.plan = {};
 		this.map = {};
-		if(this.placements.bunker) {log.info(this.placements.evolutionChamber);
+		if(this.placements.bunker) {// log.info(this.placements.evolutionChamber);
 
 			// Not generating plan because we can generate map directly
 			this.map = this.getStructureMapForBunkerAt(this.placements.bunker, this.placements.evolutionChamber);
@@ -559,10 +559,13 @@ export class RoomPlanner {
 						  level = this.colony.controller.level): boolean {
 		if (structureType == STRUCTURE_ROAD) {
 			return this.roadShouldBeHere(pos);
-		} else if (structureType == STRUCTURE_RAMPART) {
+		} else if (structureType == STRUCTURE_RAMPART || structureType == STRUCTURE_WALL) {
 			return this.barrierPlanner.barrierShouldBeHere(pos);
 		} else if (structureType == STRUCTURE_EXTRACTOR) {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
+		} else if (structureType == STRUCTURE_TOWER) {
+			// Manually place towers for now
+			return true;
 		} else {
 			if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
 				// Be tolerate in dynamic mode, because dynamic maps won't include existing structures
@@ -590,7 +593,11 @@ export class RoomPlanner {
 	 * Demolish all hostile structures in the room
 	 */
 	private demolishHostileStructures(destroyStorageUnits = false) {
-		_.forEach(this.colony.room.walls, wall => wall.destroy()); // overmind never uses walls
+		if (this.colony.level <= 1) {
+			// When first capturing a room, destroy hostile walls
+			// After that, I may build my own walls
+			_.forEach(this.colony.room.walls, wall => wall.destroy());
+		}
 		for (const structure of _.filter(this.colony.room.hostileStructures)) {
 			if ((structure.structureType != STRUCTURE_STORAGE && structure.structureType != STRUCTURE_TERMINAL)
 				|| destroyStorageUnits) {
@@ -663,8 +670,10 @@ export class RoomPlanner {
 			let removeCount = 0;
 			let structures: Structure[] = _.filter(this.colony.room.structures,
 												   s => s.structureType == structureType);
-			if (structureType == STRUCTURE_WALL) {
-				structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
+			const isWall = structureType == STRUCTURE_WALL;
+			if (isWall) {
+				// structures = _.filter(structures, wall => wall.hits != undefined); // can't destroy newbie walls
+				continue; // Walls are handled manually, since its usefulness is hard to tell
 			}
 
 			// Loop through all structures and conditionally remove ones which are misplaced
@@ -684,7 +693,7 @@ export class RoomPlanner {
 						&& (structureType == STRUCTURE_STORAGE || structureType == STRUCTURE_TERMINAL)) {
 						break; // don't destroy terminal or storage when under RCL4 - can use energy inside
 					}
-					if (structureType != STRUCTURE_WALL && structureType != STRUCTURE_RAMPART) {
+					if (!isWall && structureType != STRUCTURE_RAMPART) {
 						this.memory.relocating = true;
 					}
 
@@ -763,6 +772,10 @@ export class RoomPlanner {
 		}
 		// Build missing structures from room plan
 		for (const structureType of BuildPriorities) {
+			if (structureType == STRUCTURE_TOWER) {
+				// TODO: Place towers based on terrain. Currently should manully place towers
+				continue;
+			}
 			if (this.map[structureType]) {
 				for (const pos of this.map[structureType]) {
 					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {
@@ -892,10 +905,16 @@ export class RoomPlanner {
 	init(): void {
 		if (this.active && getAutonomyLevel() == Autonomy.Automatic) {
 			let bunkerAnchor: RoomPosition;
-			if (this.colony.spawns.length > 0) { // in case of very first spawn
-				const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
-				const spawnPos = lowerRightSpawn.pos;
-				bunkerAnchor = new RoomPosition(spawnPos.x - 1, spawnPos.y + 1, spawnPos.roomName);
+			if (this.colony.spawns.length > 0) { // in case of spawns placed first
+				// TODO: In case we're re-running room planner
+				if (this.colony.storage) {
+					const pos = this.colony.storage.pos;
+					bunkerAnchor = new RoomPosition(pos.x + 1, pos.y, pos.roomName);
+				} else {
+					const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
+					const spawnPos = lowerRightSpawn.pos;
+					bunkerAnchor = new RoomPosition(spawnPos.x - 1, spawnPos.y + 1, spawnPos.roomName);
+				}
 			} else {
 				const expansionData = this.colony.room.memory[_RM.EXPANSION_DATA];
 				if (expansionData) {

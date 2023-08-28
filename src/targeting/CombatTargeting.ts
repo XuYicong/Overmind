@@ -60,8 +60,8 @@ export class CombatTargeting {
 		return maxBy(targets, function(hostile) {
 			if (hostile.hitsPredicted == undefined) hostile.hitsPredicted = hostile.hits;
 			if (hostile.pos.lookForStructure(STRUCTURE_RAMPART)) return false;
-			return hostile.hitsMax - hostile.hitsPredicted
-				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0);
+			return (hostile.hitsMax - hostile.hitsPredicted
+				   + CombatIntel.getHealPotential(hostile) + (CombatIntel.towerDamageAtPos(hostile.pos) || 0) ) * Math.random();
 		});
 	}
 

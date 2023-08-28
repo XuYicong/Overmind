@@ -225,16 +225,14 @@ export class Overseer implements IOverseer {
 			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
 													invader => invader.boosts.length > 0 ? 2 : 1));
 			const safetyData = RoomIntel.getSafetyData(colony.room.name);
-			const needsDefending = effectiveInvaderCount >= 1;
-			// || colony.room.dangerousPlayerHostiles.length > 0 || 
-			// 	safetyData.unsafeFor > 200;
+			const needsDefending = effectiveInvaderCount >= 3
+			|| colony.room.dangerousPlayerHostiles.length > 0 || 
+				safetyData.unsafeFor > 200;
 
-			if (needsDefending) {
-				// Place defensive directive after hostiles have been present for a long enough time
-				const invasionIsPersistent = safetyData.unsafeFor > 20;
-				if (invasionIsPersistent) {
-					DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
-				}
+			// Place defensive directive after hostiles have been present for a long enough time
+			const invasionIsPersistent = safetyData.unsafeFor > 20;
+			if (needsDefending || invasionIsPersistent) {
+				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 			}
 		}
 	}

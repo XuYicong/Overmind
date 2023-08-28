@@ -2,6 +2,7 @@
 
 // General structure prototypes ========================================================================================
 
+import { getUsername } from 'utilities/utils';
 import {MY_USERNAME} from '../~settings';
 
 Object.defineProperty(Structure.prototype, 'isWalkable', {
@@ -47,7 +48,7 @@ Object.defineProperty(StructureController.prototype, 'reservedByMe', {
 
 Object.defineProperty(StructureController.prototype, 'signedByMe', {
 	get         : function() {
-		return this.sign && this.sign.text == Memory.settings.signature && Game.time - this.sign.time < 250000;
+		return this.sign && this.sign.username == getUsername() && Game.time - this.sign.time < 250000;
 	},
 	configurable: true,
 });

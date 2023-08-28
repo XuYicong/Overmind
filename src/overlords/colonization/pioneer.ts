@@ -1,3 +1,4 @@
+import { MoveOptions } from 'movement/Movement';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveColonize} from '../../directives/colony/colonize';
@@ -78,7 +79,11 @@ export class PioneerOverlord extends Overlord {
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);
-			pioneer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
+			let option: MoveOptions = {ensurePath: true, avoidSK: true,};
+			if (this.pos.roomName[1] != pioneer.pos.roomName[1]) {
+				option.waypoints = this.directive.waypoints;
+			}
+			pioneer.goTo(this.pos, option);
 		}
 	}
 

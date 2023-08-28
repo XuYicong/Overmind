@@ -22,7 +22,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	init() {
-		if(this.room && this.room.name.startsWith('E')) {
+		if(this.room && this.room.name.length < 6) {
 			this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
 		}
 	}

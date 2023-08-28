@@ -38,13 +38,13 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 	};
 
 	constructor(directive: DirectiveSwarmDestroy, priority = OverlordPriority.offense.destroy) {
-		super(directive, 'destroy', priority, 8);
+		super(directive, 'destroy', priority, 5);
 		this.directive = directive;
 		this.memory = Mem.wrap(this.directive.memory, this.name);
 		this.intel = new CombatIntel(this.directive);
 		this.zerglings = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[3], boostResources.tough[3], boostResources.move[3]]
+			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
 		});
 		// this.hydralisks = this.combatZerg(Roles.ranged, {
 		// 	notifyWhenAttacked: false,
@@ -52,7 +52,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		// });
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
+			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[1],]
 		});
 		// Make swarms
 		this.makeSwarms();
@@ -104,7 +104,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		}
 
 		// Swarm has now initially assembled with all members present
-		// log.debug(`Done assmbling`);
+		log.debug(`Done assmbling`);
 
 		const room = swarm.rooms[0];
 		if (!room) {

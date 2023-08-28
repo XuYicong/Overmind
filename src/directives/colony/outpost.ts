@@ -1,3 +1,4 @@
+import { ShardVisibilityScoutOverlord } from 'overlords/scouting/shardVisibility';
 import {log} from '../../console/log';
 import {RoomIntel} from '../../intel/RoomIntel';
 import {ReservingOverlord} from '../../overlords/colonization/reserver';
@@ -25,6 +26,7 @@ export class DirectiveOutpost extends Directive {
 			if (Cartographer.roomType(this.pos.roomName) == ROOMTYPE_CONTROLLER) {
 				this.overlords.reserve = new ReservingOverlord(this);
 			}
+			this.overlords.visibility = new ShardVisibilityScoutOverlord(this);
 		} else {
 			this.overlords.scout = new StationaryScoutOverlord(this);
 		}

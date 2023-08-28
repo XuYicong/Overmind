@@ -9,6 +9,7 @@ import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import { Overseer } from 'Overseer';
+import { MoveOptions } from 'movement/Movement';
 
 /**
  * Claim an unowned room
@@ -60,7 +61,11 @@ export class ClaimingOverlord extends Overlord {
 				claimer.task = Tasks.claim(this.room.controller!);
 			// }
 		} else {
-			claimer.goTo(this.pos, {ensurePath: true, avoidSK: true, waypoints: this.directive.waypoints});
+			let option: MoveOptions = {ensurePath: true, avoidSK: true,};
+			if (this.pos.roomName[1] != claimer.pos.roomName[1]) {
+				option.waypoints = this.directive.waypoints;
+			}
+			claimer.goTo(this.pos, option);
 		}
 	}
 

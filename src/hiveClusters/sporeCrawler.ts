@@ -138,9 +138,10 @@ export class SporeCrawler extends HiveCluster {
 					if (isKillable) {
 						return true;
 					} else {
+						// TODO: handle edge dancing precisely
 						// Shoot if they get close enough
 						if (this.colony.bunker && this.colony.bunker.anchor &&
-							hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 6 + 2) {
+							hostile.pos.getRangeTo(this.colony.bunker.anchor) <= 46 + 2) {
 							return true;
 						}
 					}
