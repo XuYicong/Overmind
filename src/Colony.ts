@@ -172,12 +172,12 @@ export class Colony {
 		remoteSourcesByLevel: {
 			1: 1,
 			2: 1,
-			3: 1,
+			3: 2,
 			4: 1,
-			5: 1,
-			6: 0,
+			5: 0,
+			6: 2,
 			7: 0,
-			8: 1,
+			8: 0,
 		},
 		maxSourceDistance   : 100
 	};

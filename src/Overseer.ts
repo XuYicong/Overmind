@@ -1,4 +1,5 @@
-import {Colony, ColonyStage} from './Colony';
+import { OvermindConsole } from 'console/Console';
+import {Colony, ColonyMemory, ColonyStage, DEFCON} from './Colony';
 import {log} from './console/log';
 import {bodyCost} from './creepSetups/CreepSetup';
 import {Roles} from './creepSetups/setups';
@@ -51,7 +52,9 @@ export class Overseer implements IOverseer {
 	notifier: Notifier;
 
 	static settings = {
-		outpostCheckFrequency: onPublicServer() ? 250 : 100
+		outpostCheckFrequency: onPublicServer() ? 817 : 100,
+		cpuBucketLowerBound: 8000,
+		cpuUsageLowerBound: 0.75,
 	};
 
 	constructor() {
@@ -201,7 +204,7 @@ export class Overseer implements IOverseer {
 		// Guard directive: defend your outposts and all rooms of colonies that you are incubating
 		for (const room of colony.outposts) {
 			// Handle player defense
-			if (room.dangerousPlayerHostiles.length > 0) {
+			if (room.playerHostiles.length > 0) {
 				DirectiveOutpostDefense.createIfNotPresent(Pathing.findPathablePosition(room.name), 'room');
 				return;
 			}
@@ -246,6 +249,26 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	/* Place new event-driven flags where needed to be instantiated on the next tick */
+	private placeDirectives(colony: Colony): void {
+		this.handleBootstrapping(colony);
+		this.handleOutpostDefense(colony);
+		this.handleColonyInvasions(colony);
+		this.handleNukeResponse(colony);
+		if (getAutonomyLevel() > Autonomy.Manual) {
+			// Place pioneer directives in case the colony doesn't have a spawn for some reason
+			if (Game.time % 29 == 0 && colony.spawns.length == 0 &&
+				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
+				// verify that there are no spawns (not just a caching glitch)
+				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
+				if (spawns.length == 0) {
+					const pos = Pathing.findPathablePosition(colony.room.name);
+					DirectiveColonize.createIfNotPresent(pos, 'room');
+				}
+			}
+		}
+	}
+
 	private computePossibleOutposts(colony: Colony, depth = 3): string[] {
 		return _.filter(Cartographer.findRoomsInRange(colony.room.name, depth), roomName => {
 			if (Cartographer.roomType(roomName) != ROOMTYPE_CONTROLLER) {
@@ -279,58 +302,95 @@ export class Overseer implements IOverseer {
 		});
 	}
 
-	private handleNewOutposts(colony: Colony) {
-		const numSources = _.sum(colony.roomNames,
-							   roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
-										   ? Memory.rooms[roomName][_RM.SOURCES]!.length
-										   : 0);
-		const numRemotes = numSources - colony.room.sources.length;
-		if (numRemotes < Colony.settings.remoteSourcesByLevel[colony.level]) {
+	private handleNewOutposts(colony: Colony): boolean {
+		// TODO: adjust outpost numbers based on CPU stats
 
-			const possibleOutposts = this.computePossibleOutposts(colony);
+		const possibleOutposts = this.computePossibleOutposts(colony);
 
-			const origin = colony.pos;
-			const bestOutpost = minBy(possibleOutposts, function(roomName) {
-				if (!Memory.rooms[roomName]) return false;
-				const sourceCoords = Memory.rooms[roomName][_RM.SOURCES] as SavedSource[] | undefined;
-				if (!sourceCoords) return false;
-				const sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
-				const sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
-				if (_.some(sourceDistances, dist => dist == undefined || dist > Colony.settings.maxSourceDistance)) {
-					return false;
-				}
-				return _.sum(sourceDistances) / sourceDistances.length;
-			});
-
-			if (bestOutpost) {
-				const pos = Pathing.findPathablePosition(bestOutpost);
-				log.info(`Colony ${colony.room.print} now remote mining from ${pos.print}`);
-				DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {[_MEM.COLONY]: colony.name}});
+		const origin = colony.pos;
+		const bestOutpost = minBy(possibleOutposts, function(roomName) {
+			if (!Memory.rooms[roomName]) return false;
+			const sourceCoords = Memory.rooms[roomName][_RM.SOURCES] as SavedSource[] | undefined;
+			if (!sourceCoords) return false;
+			const sourcePositions = _.map(sourceCoords, src => derefCoords(src.c, roomName));
+			const sourceDistances = _.map(sourcePositions, pos => Pathing.distance(origin, pos));
+			if (_.some(sourceDistances, dist => dist == undefined || dist > Colony.settings.maxSourceDistance)) {
+				return false;
 			}
+			return _.sum(sourceDistances) / sourceDistances.length;
+		});
+
+		if (bestOutpost) {
+			const pos = Pathing.findPathablePosition(bestOutpost);
+			log.info(`Colony ${colony.room.print} now remote mining from ${pos.print}`);
+			DirectiveOutpost.createIfNotPresent(pos, 'room', {memory: {[_MEM.COLONY]: colony.name}});
+			return true;
 		}
+		return false;
 	}
 
-	/* Place new event-driven flags where needed to be instantiated on the next tick */
-	private placeDirectives(colony: Colony): void {
-		this.handleBootstrapping(colony);
-		this.handleOutpostDefense(colony);
-		this.handleColonyInvasions(colony);
-		this.handleNukeResponse(colony);
-		if (getAutonomyLevel() > Autonomy.Manual) {
-			if (Game.time % Overseer.settings.outpostCheckFrequency == 2 * colony.id) {
-				this.handleNewOutposts(colony);
-			}
-			// Place pioneer directives in case the colony doesn't have a spawn for some reason
-			if (Game.time % 29 == 0 && colony.spawns.length == 0 &&
-				!DirectiveClearRoom.isPresent(colony.pos, 'room')) {
-				// verify that there are no spawns (not just a caching glitch)
-				const spawns = Game.rooms[colony.name]!.find(FIND_MY_SPAWNS);
-				if (spawns.length == 0) {
-					const pos = Pathing.findPathablePosition(colony.room.name);
-					DirectiveColonize.createIfNotPresent(pos, 'room');
+	private manageOutposts(): void {
+		// Remove and create outposts based on CPU stats
+		if (Game.time % Overseer.settings.outpostCheckFrequency != 0) return;
+
+		// Suspend and unsuspend colonies based on CPU usage
+		function isColonySuspended(roomName: string): boolean {
+			return !Overmind.colonies[roomName];
+			// const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+			// return !!colonyMemory && !!colonyMemory.suspend;
+		}
+
+		const ownedRooms = [];
+		// Unsuspend crucial colonies
+		for (const roomName in Game.rooms) {
+			const room = Game.rooms[roomName];
+			if (room.my) {
+				ownedRooms.push(room);
+				// TODO: unsuspend on invasion
+				if (room.controller!.ticksToDowngrade < 90000 && isColonySuspended(room.name)) {
+					OvermindConsole.unsuspendColony(room.name);
+					return;
 				}
 			}
 		}
+		const roomsByTickdown = _.sortBy(ownedRooms, room => room.controller!.ticksToDowngrade);
+
+		// Choose target colony to modify its outposts
+		const coloniesByOutpost = _.sortBy(this.colonies, colony => _.sum(colony.roomNames,
+			roomName => Memory.rooms[roomName] && Memory.rooms[roomName][_RM.SOURCES]
+						? Memory.rooms[roomName][_RM.SOURCES]!.length
+						: 0) - colony.room.sources.length);
+
+		// Suspend colony on low CPU bucket
+		if (Game.cpu.bucket < Overseer.settings.cpuBucketLowerBound) {
+			for (let i=coloniesByOutpost.length-1; i >= 0; --i) {
+				// TODO: remove outposts
+			}
+
+			for (let i = roomsByTickdown.length -1; i>=0; --i) {
+				const room = roomsByTickdown[i];
+				if (!isColonySuspended(room.name) && Overmind.colonies[room.name].defcon == DEFCON.safe) {
+					OvermindConsole.suspendColony(room.name);
+					return;
+				}
+			}
+		}
+
+		// Create outposts or unsuspend colonies on low CPU usage
+		if (Memory.stats.persistent.avgCPU / Game.cpu.limit < Overseer.settings.cpuUsageLowerBound) {
+			for (let i=0; i< coloniesByOutpost.length; ++i) {
+				if (this.handleNewOutposts(coloniesByOutpost[i])) return;
+			}
+
+			for (let i = 0; i < roomsByTickdown.length; ++i) {
+				const room = roomsByTickdown[i];
+				if (isColonySuspended(room.name)) {
+					OvermindConsole.unsuspendColony(room.name);
+					return;
+				}
+			}
+		}
+
 	}
 
 	// Safe mode condition =============================================================================================
@@ -415,6 +475,7 @@ export class Overseer implements IOverseer {
 			this.handleSafeMode(colony);
 			this.placeDirectives(colony);
 		}
+		this.manageOutposts();
 	}
 
 	getCreepReport(colony: Colony): string[][] {

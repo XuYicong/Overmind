@@ -505,16 +505,18 @@ export abstract class Overlord {
 	 */
 	autoRun(roleCreeps: Zerg[], taskHandler: (creep: Zerg) => void, fleeCallback?: (creep: Zerg) => boolean) {
 		for (const creep of roleCreeps) {
+			let fleed = false;
 			if (!!fleeCallback) {
-				if (fleeCallback(creep)) continue;
+				if (fleeCallback(creep)) fleed = true;
 			}
-			if (creep.isIdle) {
+			if (!fleed && creep.isIdle) {
 				if (this.shouldBoost(creep)) {
 					this.handleBoosting(creep);
 				} else {
 					taskHandler(creep);
 				}
 			}
+			if (creep.task) creep.task.fleed = fleed;
 			creep.run();
 		}
 	}

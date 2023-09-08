@@ -341,7 +341,7 @@ export class MiningOverlord extends Overlord {
 	 * Move onto harvesting position or near to source (depending on early/standard mode)
 	 */
 	private goToMiningSite(miner: Zerg): boolean {
-		if (this.harvestPos) {
+		if (this.harvestPos && this.miners.length <= 1) {
 			if (!miner.pos.inRangeToPos(this.harvestPos, 0)) {
 				miner.goTo(this.harvestPos);
 				return true;
@@ -357,15 +357,21 @@ export class MiningOverlord extends Overlord {
 
 	private handleMiner(miner: Zerg) {
 		// Flee hostiles
-		if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
-			return;
+		if(miner.pos.roomName == this.colony.name || !this.room || miner.pos.roomName == this.room.name) {
+			if (miner.flee(miner.room.fleeDefaults, {dropEnergy: true})) {
+				return;
+			}
+		} else { // Don't be afraid of NPCs during the route
+			if (miner.flee(miner.room.playerHostiles, {dropEnergy: true})) {
+				return;
+			}
 		}
 		let moveOptions: MoveOptions = {
 			waypoints : this.room && this.room.name == miner.room.name ? undefined : this.directive.waypoints, 
 			maxCost: 233
 		};
 		// Move onto harvesting position or near to source (depending on early/standard mode)
-		if (this.mode == 'early' || !this.harvestPos) {
+		if (this.mode == 'early' || !this.harvestPos || this.miners.length > 1) {
 			if (!miner.pos.inRangeToPos(this.pos, 1)) {
 				return miner.goTo(this, moveOptions);
 			}

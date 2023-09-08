@@ -54,11 +54,11 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 				case COLOR_YELLOW:
 					return new DirectiveSKOutpost(flag);
 				case COLOR_WHITE:
-					flag.memory.waypoints = ['W25S35:15:19'];
+					// flag.memory.waypoints = ['W25S35:15:19'];
 					return new DirectiveIncubate(flag);
 				case COLOR_GREY:
 					// Occupy a new room via a center room portal
-					flag.memory.waypoints = ['W25S35:15:19'];
+					// flag.memory.waypoints = ['W25S35:15:19'];
 					return new DirectiveColonize(flag);
 				case COLOR_ORANGE:
 					return new DirectiveClearRoom(flag);

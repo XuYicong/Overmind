@@ -40,7 +40,7 @@ export let OverlordPriority = {
 	},
 
 	outpostDefense: {
-		outpostDefense: 550,
+		outpostDefense: 504,
 		guard         : 551,
 	},
 

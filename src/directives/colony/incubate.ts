@@ -18,7 +18,7 @@ export class DirectiveIncubate extends Directive {
 	incubatee: Colony | undefined;
 
 	constructor(flag: Flag) {
-		super(flag, colony => colony.level >= 7);
+		super(flag, colony => colony.level >= 5);
 		// Register incubation status
 		this.incubatee = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
 		if (this.incubatee) {

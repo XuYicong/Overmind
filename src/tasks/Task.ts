@@ -43,6 +43,7 @@ export abstract class Task {
 	settings: TaskSettings;		// Settings for a given type of task; shouldn't be modified on an instance-basis
 	options: TaskOptions;		// Options for a specific instance of a task
 	data: TaskData; 			// Data pertaining to a given instance of a task
+	fleed: boolean;				// If the creep is in a fleeing state
 
 	private _targetPos: RoomPosition;
 
@@ -293,7 +294,7 @@ export abstract class Task {
 				this.finish();
 			}
 			return result;
-		} else {
+		} else if (!this.fleed) {
 			this.moveToTarget();
 		}
 	}

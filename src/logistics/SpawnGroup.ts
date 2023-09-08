@@ -30,8 +30,8 @@ const MAX_PATH_DISTANCE = 600;	// maximum path distance to consider for ANY spaw
 const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {
-	maxPathDistance: 800,		// override default path distance
-	requiredRCL    : 7,
+	maxPathDistance: 300,		// override default path distance
+	requiredRCL    : 5,
 	flexibleEnergy : true,
 };
 

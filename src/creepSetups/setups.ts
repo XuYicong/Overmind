@@ -220,6 +220,11 @@ export const CombatSetups = {
 			ordered	 : true,
 		}),
 
+		police: new CreepSetup(Roles.melee, {
+			pattern  : [MOVE, MOVE, ATTACK],
+			sizeLimit: 1,
+		}),
+
 	},
 
 	/**
@@ -228,7 +233,7 @@ export const CombatSetups = {
 	hydralisks: {
 
 		early: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, MOVE],
+			pattern  : [RANGED_ATTACK, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 

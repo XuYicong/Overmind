@@ -11,6 +11,7 @@ import {Swarm} from '../zerg/Swarm';
 import {normalizeZerg, Zerg} from '../zerg/Zerg';
 import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {Pathing} from './Pathing';
+import { DEFCON } from 'Colony';
 
 export const NO_ACTION = -20;
 export const CROSSING_PORTAL = -21;
@@ -905,6 +906,7 @@ export class Movement {
 		if (!options.allowExit) {
 			Pathing.blockExits(matrix);
 		}
+		const terrain = Game.map.getRoomTerrain(room.name);
 		// Add penalties for things you want to avoid
 		_.forEach(avoid, avoidThis => {
 			let x, y: number;
@@ -912,7 +914,10 @@ export class Movement {
 				for (let dy = -avoidThis.range; dy <= avoidThis.range; dy++) {
 					x = avoidThis.pos.x + dx;
 					y = avoidThis.pos.y + dy;
-					matrix.set(x, y, matrix.get(x, y) + options.avoidPenalty!);
+					if (terrain.get(x,y) == TERRAIN_MASK_WALL) continue;
+					let cost = matrix.get(x, y) + options.avoidPenalty!;
+					if (terrain.get(x,y) == TERRAIN_MASK_SWAMP) cost *= 2;
+					matrix.set(x, y, cost);
 				}
 			}
 		});
@@ -925,8 +930,10 @@ export class Movement {
 					x = approachThis.pos.x + dx;
 					y = approachThis.pos.y + dy;
 					cost = matrix.get(x, y);
-					if (cost < 0xff) { // is walkable
-						cost = Math.max(cost - options.approachBonus!, 1);
+					if (cost < 0xff && terrain.get(x,y) != TERRAIN_MASK_WALL) { // is walkable
+						cost -= options.approachBonus!;
+						if (terrain.get(x,y) == TERRAIN_MASK_SWAMP) cost += options.approachBonus!/2;
+						cost = Math.max(cost, 1);
 					}
 					matrix.set(x, y, cost);
 				}
@@ -1036,7 +1043,7 @@ export class Movement {
 		_.defaults(options, {
 			allowExit     : false,
 			avoidPenalty  : 10,
-			approachBonus : 5,
+			approachBonus : 2,
 			preferRamparts: true,
 			requireRamparts: false,
 		});
@@ -1194,7 +1201,12 @@ export class Movement {
 		_.defaults(options, {
 			terrainCosts: getTerrainCosts(creep.creep),
 		});
-		if (options.fleeRange == undefined) options.fleeRange = options.terrainCosts!.plainCost > 1 ? 8 : 16;
+		if (options.fleeRange == undefined) {
+			options.fleeRange = options.terrainCosts!.plainCost > 1 ? 7 : 14 ;
+			if (creep.colony && creep.colony.defcon > DEFCON.safe) {
+				options.fleeRange -= 2;
+			}
+		}
 
 		const rangeToClosest = avoidGoals.length > 0 ? 
 			creep.pos.getRangeTo(creep.pos.findClosestByRange(avoidGoals)!) : 50;

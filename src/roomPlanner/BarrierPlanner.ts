@@ -4,6 +4,7 @@ import {log} from '../console/log';
 import {Mem} from '../memory/Memory';
 import {profile} from '../profiler/decorator';
 import {derefCoords, minMax} from '../utilities/utils';
+import { neighbor8, onRoomEdge } from './DynamicPlanner';
 import {BUNKER_RADIUS, bunkerLayout, insideBunkerBounds, getRoomSpecificBunkerLayout} from './layouts/bunker';
 import { dynamicLayout, evolutionChamberLayout } from './layouts/dynamic';
 import {getAllStructureCoordsFromLayout, RoomPlanner, translatePositions} from './RoomPlanner';
@@ -43,9 +44,8 @@ export class BarrierPlanner {
 	}
 
 	private computeBunkerBarrierPositions(bunkerPos: RoomPosition, upgradeSitePos: RoomPosition): RoomPosition[] {
-		if(bunkerPos.roomName.startsWith('W5')) {
-			return this.computeEdgeBarrierPositions(bunkerPos.room);
-		}
+		const result = this.computeEdgeBarrierPositions(bunkerPos.room);
+		if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (bunkerPos) {
@@ -72,23 +72,30 @@ export class BarrierPlanner {
 			log.warning('No room in room position! (Why?)');
 			return [];
 		}
+		const exitsDesc = Game.map.describeExits(room.name);
+		let neighborCount = 0;
+		for (const exitKey in exitsDesc) {
+			neighborCount++
+			// Only roll in edge barriers if it's a 'cave' room
+			// TODO: or if all other exits are my owned room
+			if(neighborCount > 1) return [];
+		}
 		const exits = room.find(FIND_EXIT);
 		const terrain = room.getTerrain();
 		function isEdge(coord: number) {
 			return coord == 0 || coord == 49;
 		}
 		function deEdge(coord: number) {
-			return coord < 25 ? 2 : 47;
+			return coord < 25 ? coord +1 : coord -1;
 		}
-		const candidates = 
+		const neighbors = 
 		_.filter(
 			_.unique(
 				_.flatten(
 					_.map(exits, exit => {
 						const ret = [];
 						if(isEdge(exit.x)) {
-							// TODO: seal the room strictly
-							for(let i=0; i<=2; ++i) {
+							for(let i=-1; i<=1; ++i) {
 								ret.push(new RoomPosition(deEdge(exit.x), exit.y + i, exit.roomName));
 							}
 						} else {
@@ -101,14 +108,25 @@ export class BarrierPlanner {
 				)
 			), pos => terrain.get(pos.x, pos.y) != TERRAIN_MASK_WALL
 		);
+		const candidates = 
+		_.filter(
+			_.unique(
+				_.flatten(
+					_.map(neighbors, neighbor =>
+						_.map(neighbor8, dpos => new RoomPosition(neighbor.x + dpos.x, neighbor.y + dpos.y, neighbor.roomName)),
+					)
+				)
+			), pos => terrain.get(pos.x, pos.y) != TERRAIN_MASK_WALL && 
+				!onRoomEdge(pos) &&
+				neighbors.every(xpos => pos.x != xpos.x || pos.y != xpos.y)
+		);
 		return candidates;
 	}
 
 	private computeBarrierPositions(hatcheryPos: RoomPosition, commandCenterPos: RoomPosition,
 									upgradeSitePos: RoomPosition): RoomPosition[] {
-		if(hatcheryPos.roomName.startsWith('W5')) {
-			return this.computeEdgeBarrierPositions(hatcheryPos.room);
-		}
+		const result = this.computeEdgeBarrierPositions(hatcheryPos.room);
+		if(result.length > 0) return result;
 		const rectArray = [];
 		const padding = BarrierPlanner.settings.padding;
 		if (hatcheryPos) {

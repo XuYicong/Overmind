@@ -16,10 +16,12 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	broodlings: CombatZerg[];
 	hydralisks: CombatZerg[];
 	healers: CombatZerg[];
+	melees: CombatZerg[];
 
 	constructor(directive: DirectiveOutpostDefense, priority = OverlordPriority.outpostDefense.outpostDefense) {
 		super(directive, 'outpostDefense', priority, 1);
 		this.spawnGroup.settings.flexibleEnergy = true;
+		this.melees = this.combatZerg(Roles.melee);
 		this.broodlings = this.combatZerg(Roles.guardMelee);
 		this.hydralisks = this.combatZerg(Roles.ranged);
 		this.healers = this.combatZerg(Roles.healer);
@@ -53,19 +55,19 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		const hydraliskPotential = setup.getBodyPotential(RANGED_ATTACK, this.colony);
 		// TODO: body potential from spawnGroup energy?
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
-		return Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential);
+		return Math.min(30, Math.ceil(1.5 * enemyRangedPotential / hydraliskPotential));
 	}
 
 	// TODO: division by 0 error!
 	private computeNeededBroodlingAmount(setup: CreepSetup, enemyAttackPotential: number): number {
 		const broodlingPotential = setup.getBodyPotential(ATTACK, this.colony);
 		// let worstDamageMultiplier = CombatIntel.minimumDamageMultiplierForGroup(this.room.hostiles);
-		return Math.ceil(1.5 * enemyAttackPotential / broodlingPotential);
+		return Math.min(30, Math.ceil(1.5 * enemyAttackPotential / broodlingPotential));
 	}
 
 	private computeNeededHealerAmount(setup: CreepSetup, enemyHealPotential: number): number {
 		const healerPotential = setup.getBodyPotential(HEAL, this.colony);
-		return Math.ceil(1.5 * enemyHealPotential / healerPotential);
+		return Math.min(30, Math.ceil(1.5 * enemyHealPotential / healerPotential));
 	}
 
 	private getEnemyPotentials(): { attack: number, rangedAttack: number, heal: number } {
@@ -99,10 +101,13 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 			healerAmount = Math.max(healerAmount, 1);
 		}
 		this.wishlist(healerAmount, CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
-
+		if (hydraliskAmount + broodlingAmount + healerAmount <= 0) {
+			this.wishlist(1, CombatSetups.zerglings.police, {priority: this.priority - .3, reassignIdle: true});
+		}
 	}
 
 	run() {
+		this.autoRun(this.melees, melee => this.handleCombat(melee));
 		this.autoRun(this.broodlings, broodling => this.handleCombat(broodling));
 		this.autoRun(this.hydralisks, mutalisk => this.handleCombat(mutalisk));
 		this.autoRun(this.healers, healer => this.handleHealer(healer));

@@ -108,12 +108,12 @@ export class TerminalNetwork implements ITerminalNetwork {
 		this.exceptionTerminals = {}; 		// populated in init()
 		this.assets = {}; 					// populated in init()
 		this.notifications = [];
-		this.averageFullness = _.sum(this.terminals, t => _.sum(_.values(t.store)) / t.storeCapacity) / this.terminals.length;
+		this.averageFullness = _.sum(this.terminals, t => _.sum(_.values(t.store)) / t.store.getCapacity()) / this.terminals.length;
 	}
 
 	refresh(): void {
 		$.refresh(this, 'allTerminals');
-		this.terminals = _.clone(this.allTerminals);
+		this.terminals = _.filter(_.clone(this.allTerminals), terminal => !!colonyOf(terminal));
 		this.readyTerminals = _.filter(this.terminals, t => t.cooldown == 0);
 		this.memory = Mem.wrap(Memory.Overmind, 'terminalNetwork', TerminalNetworkMemoryDefaults);
 		this.stats = Mem.wrap(Memory.stats.persistent, 'terminalNetwork', TerminalNetworkStatsDefaults);
@@ -239,7 +239,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	 */
 	private handleExcess(terminal: StructureTerminal, threshold = 25000): void {
 
-		const terminalNearCapacity = _.sum(_.values(terminal.store)) > 0.95 * terminal.storeCapacity;
+		const terminalNearCapacity = _.sum(_.values(terminal.store)) > 0.95 * terminal.store.getCapacity();
 
 		for (const resource in terminal.store) {
 			if (resource == RESOURCE_POWER) {
@@ -456,6 +456,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 	}
 
 	init(): void {
+		this.terminals = _.filter(this.terminals, terminal => !!colonyOf(terminal));
 		this.assets = this.getAllAssets();
 	}
 

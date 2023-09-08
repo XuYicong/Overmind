@@ -31,8 +31,12 @@ export class MeleeDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleDefender(zergling: CombatZerg): void {
-		if (zergling.room.hostiles.length > 0) {
+		if(this.colony.room != zergling.room) {
+			zergling.goToRoom(this.colony.room.name);
+		} else if (zergling.room.hostiles.length > 0 && zergling.room.hostiles.length <= this.zerglings.length) {
 			zergling.autoCombat(zergling.room.name);
+		} else {
+			zergling.recover();
 		}
 	}
 

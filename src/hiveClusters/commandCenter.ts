@@ -101,6 +101,7 @@ export class CommandCenter extends HiveCluster {
 															this.terminal!,
 															this.powerSpawn!,
 															this.nuker!,
+															this.factory!,
 															...this.towers]);
 		const numNearbyStructures = (pos: RoomPosition) =>
 			_.filter(proximateStructures, s => s.pos.isNearTo(pos) && !s.pos.isEqualTo(pos)).length;

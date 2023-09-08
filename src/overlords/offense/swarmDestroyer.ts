@@ -44,7 +44,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		this.intel = new CombatIntel(this.directive);
 		this.zerglings = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
+			// boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
 		});
 		// this.hydralisks = this.combatZerg(Roles.ranged, {
 		// 	notifyWhenAttacked: false,
@@ -52,7 +52,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 		// });
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[1],]
+			// boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[1],]
 		});
 		// Make swarms
 		this.makeSwarms();
@@ -97,6 +97,7 @@ export class SwarmDestroyerOverlord extends SwarmOverlord {
 	private handleSwarm(swarm: Swarm, index: number, waypoint = this.directive.pos) {
 		// Swarm initially groups up at fallback location
 		if (!swarm.memory.initialAssembly) {
+			// TODO: calculate formation positions precisely
 			const assemblyPoint = this.assemblyPoints[index] || this.fallback;
 			log.debug(`Assmbling at ${assemblyPoint.print}`);
 			swarm.memory.initialAssembly = swarm.assemble(assemblyPoint);

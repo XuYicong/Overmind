@@ -91,16 +91,17 @@ export class CombatZerg extends Zerg {
 
 	doMedicActions(roomName: string): void {
 		// Travel to the target room
+		let moved = false;
 		if (!this.safelyInRoom(roomName)) {
 			this.goToRoom(roomName, {ensurePath: true});
-			return;
+			moved = true;
 		}
 		// Heal friendlies
 		const target = CombatTargeting.findClosestHurtFriendly(this);
 		if (target) {
 			// Approach the target
 			const range = this.pos.getRangeTo(target);
-			if (range > 1) {
+			if (range > 1 && !moved) {
 				this.goTo(target, {movingTarget: true});
 			}
 
@@ -110,7 +111,7 @@ export class CombatZerg extends Zerg {
 			} else if (range <= 3) {
 				this.rangedHeal(target);
 			}
-		} else {
+		} else if (!moved) {
 			this.park();
 		}
 	}
@@ -269,12 +270,12 @@ export class CombatZerg extends Zerg {
 				}
 
 				// Require ramparts if ranged hostile is too strong
-				// if(Game.time & 1){
+				if(Game.time % 80 > 0) {
 					const rangedDamage = _.sum(this.room.hostiles, (h: Creep | Zerg) => CombatIntel.getRangedAttackDamage(h));
-					requireRamparts = rangedDamage > this.getActiveBodyparts(HEAL);
-				// }
+					requireRamparts = rangedDamage > 64 * this.getActiveBodyparts(HEAL);
+				}
 			}
-			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], [], {requireRamparts: requireRamparts});
+			return Movement.combatMove(this, [{pos: target.pos, range: targetRange}], avoid, {requireRamparts: requireRamparts});
 		}
 
 	}
@@ -324,7 +325,7 @@ export class CombatZerg extends Zerg {
 			this.memory.lastInDanger = Game.time;
 		}
 		const goals = GoalFinder.retreatGoals(this);
-		const result = Movement.combatMove(this, goals.approach, goals.avoid, {allowExit: true});
+		const result = Movement.combatMove(this, goals.approach, goals.avoid, {allowExit: true, displayCostMatrix: false});
 
 		if (result == NO_ACTION && this.pos.isEdge) {
 			if (Game.time < this.memory.lastInDanger + 3) {

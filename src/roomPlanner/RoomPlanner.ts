@@ -907,9 +907,11 @@ export class RoomPlanner {
 			let bunkerAnchor: RoomPosition;
 			if (this.colony.spawns.length > 0) { // in case of spawns placed first
 				// TODO: In case we're re-running room planner
-				if (this.colony.storage) {
-					const pos = this.colony.storage.pos;
-					bunkerAnchor = new RoomPosition(pos.x + 1, pos.y, pos.roomName);
+				if (this.colony.level > 2) {
+					// TODO: for bunker, let it initially place the center spawn
+					const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
+					const spawnPos = lowerRightSpawn.pos;
+					bunkerAnchor = new RoomPosition(spawnPos.x - 4, spawnPos.y, spawnPos.roomName);
 				} else {
 					const lowerRightSpawn = maxBy(this.colony.spawns, s => 50 * s.pos.y + s.pos.x)!;
 					const spawnPos = lowerRightSpawn.pos;

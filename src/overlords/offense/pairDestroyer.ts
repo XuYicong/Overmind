@@ -1,3 +1,4 @@
+import { Directive } from 'directives/Directive';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
@@ -17,7 +18,7 @@ import {Overlord} from '../Overlord';
 @profile
 export class PairDestroyerOverlord extends Overlord {
 
-	directive: DirectivePairDestroy;
+	directive: Directive;
 	attackers: CombatZerg[];
 	healers: CombatZerg[];
 
@@ -26,7 +27,7 @@ export class PairDestroyerOverlord extends Overlord {
 		reengageHitsPercent: 0.95,
 	};
 
-	constructor(directive: DirectivePairDestroy, priority = OverlordPriority.offense.destroy) {
+	constructor(directive: Directive, priority = OverlordPriority.offense.destroy) {
 		super(directive, 'destroy', priority);
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {

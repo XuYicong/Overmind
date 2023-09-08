@@ -62,6 +62,12 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	[RESOURCE_ENERGY]: 7,
 };
 
+export const hostileTraders = [
+	'W54N7',	// V1king
+	'W49N6',	// V1king
+	'W54N12',	// V1king
+];
+
 export const MAX_ENERGY_SELL_ORDERS = 5;
 export const MAX_ENERGY_BUY_ORDERS = 5;
 
@@ -277,7 +283,7 @@ export class TraderJoe implements ITradeNetwork {
 		const minAmount = flexibleAmount ? TERMINAL_MIN_SEND : amount;
 		let ordersForMineral = Game.market.getAllOrders({ resourceType: resource, type: ORDER_BUY });
 		ordersForMineral = _.filter(ordersForMineral, order => 
-			order.amount >= minAmount && (!order.roomName || order.roomName)
+			order.amount >= minAmount && (!order.roomName || !hostileTraders.includes(order.roomName))
 		);
 		const order = maxBy(ordersForMineral, order => this.effectiveBuyPrice(order, terminal));
 		if (order) {

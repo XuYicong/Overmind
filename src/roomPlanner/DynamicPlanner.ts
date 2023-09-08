@@ -19,7 +19,7 @@ const nextPos: {x:number, y:number}[] = [
     }];
 
 // Must be ordered
-const neighbor8: {x:number, y:number}[] = [
+export const neighbor8: {x:number, y:number}[] = [
     {
         x: 0, y: -1
     },{

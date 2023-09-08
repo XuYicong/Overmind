@@ -45,6 +45,9 @@ export class SporeCrawler extends HiveCluster {
 			if (tower.energy < SporeCrawler.settings.requestThreshold) {
 				const multiplier = tower.energy < SporeCrawler.settings.criticalEnergyThreshold ? 2 : 1;
 				const dAmountdt = this.room.hostiles.length > 0 ? 10 : 0;
+				// if (this.colony.name == 'W53N4') {
+				// 	log.info('tower request energy: ' + tower.pos);
+				// }
 				this.colony.logisticsNetwork.requestInput(tower, {multiplier: multiplier, dAmountdt: dAmountdt});
 			}
 		}

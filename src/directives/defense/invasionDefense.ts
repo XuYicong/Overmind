@@ -49,7 +49,9 @@ export class DirectiveInvasionDefense extends Directive {
 		const meleeHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(ATTACK) > 0 ||
 																	  hostile.getActiveBodyparts(WORK) > 0);
 		const rangedHostiles = _.filter(this.room.hostiles, hostile => hostile.getActiveBodyparts(RANGED_ATTACK) > 0);
-		if (this.colony.stage > ColonyStage.Pupa) {
+		if (this.colony.room.spawns.length < 1) {
+
+		} else if (this.colony.stage > ColonyStage.Larva || this.colony.towers.length < 1) {
 			this.overlords.rangedDefense = new RangedDefenseOverlord(this, useBoosts);
 		}
 		this.overlords.meleeDefense = new MeleeDefenseOverlord(this, useBoosts);

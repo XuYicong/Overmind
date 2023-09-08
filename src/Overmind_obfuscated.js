@@ -154,9 +154,9 @@ let _Overmind = class _Overmind {
         const terminals = [];
         for (const roomName in Game.rooms) {
             if (USE_PROFILER && !profilerRooms[roomName]) continue;
-            const _0x83e0ef = Game.rooms[roomName];
-            if (_0x83e0ef['my'] && _0x83e0ef[_0x9e16('0x34')][_0x9e16('0x35')] >= 0x6 && _0x83e0ef[_0x9e16('0x36')] && _0x83e0ef[_0x9e16('0x36')]['my']) {
-                terminals[_0x9e16('0x28')](_0x83e0ef[_0x9e16('0x36')]);
+            const room = Game.rooms[roomName];
+            if (room['my'] && room[_0x9e16('0x34')][_0x9e16('0x35')] >= 0x6 && room[_0x9e16('0x36')] && room[_0x9e16('0x36')]['my']) {
+                terminals[_0x9e16('0x28')](room[_0x9e16('0x36')]);
             }
         }
         return new TerminalNetwork(terminals);

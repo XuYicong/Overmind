@@ -27,13 +27,13 @@ export class RangedDefenseOverlord extends CombatOverlord {
 				priority = OverlordPriority.defense.rangedDefense) {
 		super(directive, 'rangedDefense', priority, 1);
 		this.hydralisks = this.combatZerg(Roles.ranged, {
-			boostWishlist: boosted ? [boostResources.tough[3], boostResources.ranged_attack[3],
-					boostResources.heal[3], boostResources.move[3]] : undefined
+			boostWishlist: boosted ? [boostResources.tough[1], boostResources.ranged_attack[1],
+					boostResources.heal[1], boostResources.move[3]] : undefined
 		});
 	}
 
 	private handleDefender(hydralisk: CombatZerg): void {
-		if (this.room.hostiles.length > 0) {
+		if (this.room.playerHostiles.length > 0 || hydralisk.needsToRecover()) {
 			hydralisk.autoCombat(this.room.name);
 		} else {
 			hydralisk.doMedicActions(this.room.name);
@@ -47,7 +47,7 @@ export class RangedDefenseOverlord extends CombatOverlord {
 		const towerDamage = this.room.hostiles[0] ? CombatIntel.towerDamageAtPos(this.room.hostiles[0].pos) || 1 : 1;
 		const worstDamageMultiplier = _.min(_.map(this.room.hostiles,
 												creep => CombatIntel.minimumDamageTakenMultiplier(creep)))!;
-		return Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage)));
+		return Math.min(Math.ceil(.5 + 1.5 * healAmount / (worstDamageMultiplier * (hydraliskDamage + towerDamage))), 30);
 	}
 
 	init() {
