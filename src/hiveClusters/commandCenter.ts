@@ -19,7 +19,7 @@ interface CommandCenterMemory {
 
 /**
  * The command center groups the high-level structures at the core of the bunker together, including storage, terminal,
- * link, power spawn, observer, and nuker.
+ * link, power spawn, factory, observer, and nuker.
  */
 @profile
 export class CommandCenter extends HiveCluster {
@@ -140,6 +140,11 @@ export class CommandCenter extends HiveCluster {
 		// Refill power spawn
 		if (this.powerSpawn && this.powerSpawn.store[RESOURCE_ENERGY] < this.powerSpawn.store.getCapacity(RESOURCE_ENERGY)) {
 			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
+			// TODO: request power
+		}
+		// Refill factory
+		if (this.factory) {
+			// TODO:
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {

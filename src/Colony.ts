@@ -116,6 +116,7 @@ export class Colony {
 	nuker: StructureNuker | undefined;					// |
 	observer: StructureObserver | undefined;			// |
 	tombstones: Tombstone[]; 							// | Tombstones in all colony rooms
+	ruins: Ruin[];
 	drops: { [resourceType: string]: Resource[] }; 		// | Dropped resources in all colony rooms
 	sources: Source[];									// | Sources in all colony rooms
 	extractors: StructureExtractor[];					// | All extractors in owned and remote rooms
@@ -277,6 +278,7 @@ export class Colony {
 			.sortBy(extractor => extractor!.pos.getMultiRoomRangeTo(this.pos)).value() as StructureExtractor[];
 		this.constructionSites = _.flatten(_.map(this.rooms, room => room.constructionSites));
 		this.tombstones = _.flatten(_.map(this.rooms, room => room.tombstones));
+		this.ruins = _.flatten(_.map(this.rooms, room => room.ruins));
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		this.repairables = _.flatten(_.map(this.rooms, room => room.repairables));
 		this.rechargeables = _.flatten(_.map(this.rooms, room => room.rechargeables));
@@ -329,6 +331,7 @@ export class Colony {
 		$.set(this, 'rechargeables', () => _.flatten(_.map(this.rooms, room => room.rechargeables)));
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
+		$.set(this, 'ruins', () => _.flatten(_.map(this.rooms, room => room.ruins)), 50);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Register assets
 		this.assets = this.getAllAssets();
@@ -343,6 +346,7 @@ export class Colony {
 				  'rechargeables');
 		$.set(this, 'constructionSites', () => _.flatten(_.map(this.rooms, room => room.constructionSites)), 10);
 		$.set(this, 'tombstones', () => _.flatten(_.map(this.rooms, room => room.tombstones)), 5);
+		$.set(this, 'ruins', () => _.flatten(_.map(this.rooms, room => room.ruins)), 50);
 		this.drops = _.merge(_.map(this.rooms, room => room.drops));
 		// Re-compute assets
 		this.assets = this.getAllAssets();

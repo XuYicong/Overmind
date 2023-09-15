@@ -179,7 +179,10 @@ export class Overshard implements IOvershard {
             if(ret == CROSSING_PORTAL) {
                 log.info('Creep '+ creep.print +' crossing portal');
             }else if(ret == ERR_TIRED) {
-                log.info('Creep '+ creep.print +' is tired');
+                // log.info('Creep '+ creep.print +' is tired');
+            }else if(ret == ERR_INVALID_ARGS) {
+                // Has reached target
+                delete creep.memory._go;
             }else if(ret != OK) {
                 log.warning('Cannot move inter-shard creep '+creep.print+': error code: '+ret);
             }

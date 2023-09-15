@@ -24,6 +24,8 @@ export const Roles = {
 	healer    : 'heal',
 	bunkerGuard : 'meleeMelee',
 	dismantler: 'recycle',
+	drill           : 'drill',
+	coolant         : 'coolant',
 };
 
 /**
@@ -366,4 +368,21 @@ export const CombatSetups = {
 
 	},
 
+	drill: {
+		default: new CreepSetup(Roles.drill, {
+			pattern  : [MOVE, ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+	},
+
+	coolant: {
+		default: new CreepSetup(Roles.coolant, {
+			pattern  : [HEAL, MOVE],
+			sizeLimit: Infinity,
+		}),
+		small  : new CreepSetup(Roles.coolant, {
+			pattern  : [HEAL, MOVE],
+			sizeLimit: 16,
+		}),
+	},
 };

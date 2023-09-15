@@ -1,3 +1,4 @@
+import { boostResources } from 'resources/map_resources';
 import {CreepSetup, patternCost} from '../../creepSetups/CreepSetup';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {DirectiveOutpostDefense} from '../../directives/defense/outpostDefense';
@@ -14,7 +15,7 @@ import {CombatOverlord} from '../CombatOverlord';
 export class OutpostDefenseOverlord extends CombatOverlord {
 
 	broodlings: CombatZerg[];
-	hydralisks: CombatZerg[];
+	ranged: CombatZerg[];
 	healers: CombatZerg[];
 	melees: CombatZerg[];
 
@@ -23,7 +24,10 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		this.spawnGroup.settings.flexibleEnergy = true;
 		this.melees = this.combatZerg(Roles.melee);
 		this.broodlings = this.combatZerg(Roles.guardMelee);
-		this.hydralisks = this.combatZerg(Roles.ranged);
+		this.ranged = this.combatZerg(Roles.ranged, { 
+			boostWishlist: [boostResources.tough[1], boostResources.ranged_attack[1],
+				boostResources.heal[1]]
+		});
 		this.healers = this.combatZerg(Roles.healer);
 	}
 
@@ -43,7 +47,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 				healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
-			if (this.room && _.some([...this.broodlings, ...this.hydralisks], creep => creep.room == this.room)) {
+			if (this.room && _.some([...this.broodlings, ...this.ranged], creep => creep.room == this.room)) {
 				this.handleCombat(healer); // go to room if there are any fighters in there
 			} else {
 				healer.autoSkirmish(healer.room.name);
@@ -109,7 +113,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	run() {
 		this.autoRun(this.melees, melee => this.handleCombat(melee));
 		this.autoRun(this.broodlings, broodling => this.handleCombat(broodling));
-		this.autoRun(this.hydralisks, mutalisk => this.handleCombat(mutalisk));
+		this.autoRun(this.ranged, mutalisk => this.handleCombat(mutalisk));
 		this.autoRun(this.healers, healer => this.handleHealer(healer));
 	}
 }

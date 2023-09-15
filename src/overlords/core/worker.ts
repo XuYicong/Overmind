@@ -39,8 +39,8 @@ export class WorkerOverlord extends Overlord {
 			3       : 2e+5,
 			4       : 2.6e+5,
 			5       : 4e+5,
-			6       : 5e+5,
-			7       : 1e+5,
+			6       : 1e+6,
+			7       : 1e+4,
 			8       : 2e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
@@ -166,7 +166,7 @@ export class WorkerOverlord extends Overlord {
 				const numWorkers = Math.ceil(energyMinedPerTick / (energyPerTickPerWorker * workerUptime));
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
-		} else if (this.colony.name.startsWith('W5')) {
+		} else if (this.colony.level < 6) {
 			numWorkers = 2;
 		} else {
 			if (this.colony.roomPlanner.memory.relocating) {

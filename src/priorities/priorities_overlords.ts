@@ -54,6 +54,12 @@ export let OverlordPriority = {
 		haul: 700
 	},
 
+	powerMine: {
+		cool         : 750,
+		drill        : 751,
+		roomIncrement: 5,
+	},
+
 	remoteRoom: { 				// Operation of a remote room. Allows colonies to restart one room at a time.
 		reserve      : 800,
 		mine         : 801,
@@ -71,9 +77,10 @@ export let OverlordPriority = {
 		stationary  : 1000,
 		randomWalker: 1001
 	},
- 
-	collection: {				// Non-urgent collection of resources, like from a deserted storage
-		haul: 1100
+
+	tasks: {				// Non-urgent tasks, such as collection from a deserted storage
+		haul: 1100,
+		dismantle: 1101,
 	},
 
 	default: 99999				// Default overlord priority to ensure it gets run last

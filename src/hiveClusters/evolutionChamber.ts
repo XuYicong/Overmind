@@ -87,7 +87,7 @@ export class EvolutionChamber extends HiveCluster {
 	memory: EvolutionChamberMemory;
 
 	private labReservations: {
-		[labID: string]: { mineralType: string, amount: number }
+		[labID: string]: { mineralType: ResourceConstant, amount: number }
 	};
 	private neededBoosts: { [boostType: string]: number };
 
@@ -296,7 +296,7 @@ export class EvolutionChamber extends HiveCluster {
 		for (const lab of labs) {
 			const {mineralType, amount} = this.labReservations[lab.id];
 			// Empty out incorrect minerals
-			if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
+			if (lab.mineralType && lab.mineralType != mineralType && lab.store.getUsedCapacity(lab.mineralType) > 0) {
 				this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
 			} else {
 				this.transportRequests.requestInput(lab, Priority.NormalHigh, {

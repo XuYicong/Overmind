@@ -185,6 +185,16 @@ export abstract class Overlord {
 		}
 	}
 
+	getAllZerg(): Zerg[] {
+		const allZerg: Zerg[] = [];
+		for (const role in this._creeps) {
+			for (const zerg of this.zerg(role)) {
+				allZerg.push(zerg);
+			}
+		}
+		return allZerg;
+	}
+
 	/**
 	 * Wraps all creeps of a given role to CombatZerg objects and updates the contents in future ticks
 	 */

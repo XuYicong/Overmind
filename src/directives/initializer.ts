@@ -16,6 +16,7 @@ import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveExtract} from './resource/extract';
 import {DirectiveHarvest} from './resource/harvest';
 import {DirectiveHaul} from './resource/haul';
+import { DirectivePowerMine } from './resource/powerMine';
 import {DirectiveRPBunker} from './roomPlanner/roomPlanner_bunker';
 import {DirectiveRPCommandCenter} from './roomPlanner/roomPlanner_commandCenter';
 import { DirectiveRPEvolutionChamber } from './roomPlanner/roomPlanner_evolutionChamber';
@@ -104,6 +105,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 		// Resource directives =========================================================================================
 		case COLOR_YELLOW:
 			switch (flag.secondaryColor) {
+				case COLOR_RED:
+					return new DirectivePowerMine(flag);
 				case COLOR_YELLOW:
 					return new DirectiveHarvest(flag);
 				case COLOR_CYAN:

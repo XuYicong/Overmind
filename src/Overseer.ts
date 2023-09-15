@@ -124,6 +124,10 @@ export class Overseer implements IOverseer {
 		}
 	}
 
+	private hasOverlord(colony: Colony, name: string): boolean {
+		return _.any(this.getOverlordsForColony(colony), overlord => overlord.name == name);
+	}
+
 	isOverlordSuspended(overlord: Overlord): boolean {
 		if (this.memory.suspendUntil[overlord.ref]) {
 			if (Game.time < this.memory.suspendUntil[overlord.ref]) {
@@ -347,7 +351,7 @@ export class Overseer implements IOverseer {
 			if (room.my) {
 				ownedRooms.push(room);
 				// TODO: unsuspend on invasion
-				if (room.controller!.ticksToDowngrade < 90000 && isColonySuspended(room.name)) {
+				if (room.controller!.ticksToDowngrade < 50000 && isColonySuspended(room.name)) {
 					OvermindConsole.unsuspendColony(room.name);
 					return;
 				}
@@ -365,11 +369,13 @@ export class Overseer implements IOverseer {
 		if (Game.cpu.bucket < Overseer.settings.cpuBucketLowerBound) {
 			for (let i=coloniesByOutpost.length-1; i >= 0; --i) {
 				// TODO: remove outposts
+				// AKA: remove all flags in a farest outpost room
 			}
 
 			for (let i = roomsByTickdown.length -1; i>=0; --i) {
 				const room = roomsByTickdown[i];
-				if (!isColonySuspended(room.name) && Overmind.colonies[room.name].defcon == DEFCON.safe) {
+				if (!isColonySuspended(room.name) && Overmind.colonies[room.name].defcon == DEFCON.safe && 
+				!this.hasOverlord(Overmind.colonies[room.name], 'warmup')) {
 					OvermindConsole.suspendColony(room.name);
 					return;
 				}

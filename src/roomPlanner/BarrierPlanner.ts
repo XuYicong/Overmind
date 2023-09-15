@@ -28,7 +28,7 @@ export class BarrierPlanner {
 	static settings = {
 		buildBarriersAtRCL: 3,
 		padding           : 3, // allow this much space between structures and barriers (if possible)
-		bunkerizeRCL      : 7
+		bunkerizeRCL      : 9
 	};
 
 	constructor(roomPlanner: RoomPlanner) {

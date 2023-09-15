@@ -108,16 +108,19 @@ export class DynamicPlanner {
         const numberToBuild: {[type: string]: number} = {};
         for (const structureType of typesConcerned) {
             if(bunkerLayout[level]!.buildings[structureType]) {
-                const totalNumber = bunkerLayout[level]!.buildings[structureType].pos.length;
-                // TODO: Calculate number to build accurately
+                let totalNumber = bunkerLayout[level]!.buildings[structureType].pos.length;
+                // 由 dynamic 管理的 structure，不应该出现在 structureMap 中
                 if (countExistingStructures[structureType]) {
-                    numberToBuild[structureType] = totalNumber - countExistingStructures[structureType];
-                } else if (structureMap[structureType]) {
-                    numberToBuild[structureType] = totalNumber - structureMap[structureType].length;
+                    totalNumber -= countExistingStructures[structureType];
                 }
+                // else if (structureMap[structureType]) {
+                //     totalNumber -= structureMap[structureType].length;
+                // }
+                numberToBuild[structureType] = totalNumber;
             } else {
                 numberToBuild[structureType] = 0;
             }
+            // log.info(structureType +": "+ numberToBuild[structureType]);
         }
         // Walk along structure cluster edge to look for new pos
         let cur: {x:number, y:number} = rightest;

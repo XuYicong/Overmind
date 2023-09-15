@@ -15,7 +15,7 @@ export const bunkerLayout: StructureLayout = {
 		'shard'    : 'shard2',
 		'rcl'      : '1',
 		'buildings': {
-			'spawn': {'pos': [{'x': 29, 'y': 25}]}
+			'spawn': {'pos': [{'x': 26, 'y': 24}]}
 		}
 	},
 	2   : {
@@ -29,7 +29,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 28
 				}, {'x': 29, 'y': 26}]
 			},
-			'spawn'    : {'pos': [{'x': 29, 'y': 25}]},
+			'spawn'    : {'pos': [{'x': 26, 'y': 24},]},
 			'container': {'pos': [{'x': 27, 'y': 30}]}
 		}
 	},
@@ -48,7 +48,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 29
 				}, {'x': 29, 'y': 26}]
 			},
-			'spawn'    : {'pos': [{'x': 29, 'y': 25}]},
+			'spawn'    : {'pos': [{'x': 26, 'y': 24},]},
 			'container': {'pos': [{'x': 27, 'y': 30}]}
 		}
 	},
@@ -116,7 +116,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 27
 				}, {'x': 25, 'y': 29}]
 			},
-			'spawn'     : {'pos': [{'x': 29, 'y': 25}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 27, 'y': 30}]}
 		}
 	},
@@ -190,7 +190,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 29
 				}, {'x': 22, 'y': 29}]
 			},
-			'spawn'     : {'pos': [{'x': 29, 'y': 25}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 27, 'y': 30}]}
 		}
 	},
@@ -270,7 +270,7 @@ export const bunkerLayout: StructureLayout = {
 					'y': 27
 				}, {'x': 25, 'y': 29}]
 			},
-			'spawn'     : {'pos': [{'x': 29, 'y': 25}]},
+			'spawn'     : {'pos': [{'x': 26, 'y': 24},]},
 			'container' : {'pos': [{'x': 27, 'y': 30}]}
 		}
 	},

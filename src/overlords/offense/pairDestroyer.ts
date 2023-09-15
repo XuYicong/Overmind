@@ -32,11 +32,11 @@ export class PairDestroyerOverlord extends Overlord {
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[3], boostResources.tough[3], boostResources.move[3]]
+			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[3]]
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[3], boostResources.tough[3], boostResources.move[3],]
+			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[3],]
 		});
 	}
 
@@ -53,7 +53,7 @@ export class PairDestroyerOverlord extends Overlord {
 				const creepTarget = CombatTargeting.findClosestHostile(attacker, true);
 				if (creepTarget) return creepTarget;
 				// Target nearby hostile structures
-				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker);
+				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker, true);
 				if (structureTarget) return structureTarget;
 			}
 		}
@@ -142,6 +142,8 @@ export class PairDestroyerOverlord extends Overlord {
 			amount = 0;
 		}
 
+		this.reassignIdleCreeps(Roles.melee);
+		this.reassignIdleCreeps(Roles.healer);
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
 																				  : CombatSetups.zerglings.default;

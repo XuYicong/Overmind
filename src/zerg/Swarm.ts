@@ -380,12 +380,32 @@ export class Swarm implements ProtoSwarm {
 	 */
 	private getFormationPositionsFromAnchor(anchor: RoomPosition): { [creepName: string]: RoomPosition } {
 		const formationPositions: { [creepName: string]: RoomPosition } = {};
-		for (let dy = 0; dy < this.formation.length; dy++) {
-			for (let dx = 0; dx < this.formation[dy].length; dx++) {
-				if (this.formation[dy][dx]) {
-					formationPositions[this.formation[dy][dx]!.name] = anchor.getOffsetPos(dx, dy);
-				}
-			}
+		if (!anchor.room) {
+			log.warning(`${this.print} No room! (Why?)`);
+			return {};
+		}
+		const terrain = anchor.room.getTerrain();
+		for (let offsetX = 0; offsetX >= -1; offsetX--) {
+			let formationValid = false;
+			for (let offsetY = 0; offsetY >= -1; offsetY--) {
+				for (let dy = 0; dy < this.formation.length; dy++) {
+					for (let dx = 0; dx < this.formation[dy].length; dx++) {
+						if (this.formation[dy][dx]) {
+							const pos = anchor.getOffsetPos(dx+offsetX, dy+offsetY);
+							if (terrain.get(pos.x, pos.y) == TERRAIN_MASK_WALL) {
+								formationValid = false;
+								break;
+							} else {
+								formationValid = true;
+							}
+							formationPositions[this.formation[dy][dx]!.name] = pos;
+						} // if
+					} // for dx
+					if (!formationValid) break;
+				} // for dy
+				if (formationValid) break;
+			} // for offsetY
+			if (formationValid) break;
 		}
 		// this.debug(`Formation positions: `, JSON.stringify(formationPositions));
 		return formationPositions;
@@ -733,9 +753,9 @@ export class Swarm implements ProtoSwarm {
 
 		if (!this.isInFormation()) {
 			this.debug(`Regrouping!`);
-			if (!_.some(this.creeps, creep => creep.pos.isEdge)) {
+			// if (!_.some(this.creeps, creep => creep.pos.isEdge)) {
 				return this.regroup();
-			}
+			// }
 		}
 
 		// Handle recovery if low on HP

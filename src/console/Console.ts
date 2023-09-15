@@ -137,7 +137,7 @@ export class OvermindConsole {
 
 
 	static setSignature(signature: string | undefined): string | undefined {
-		const sig = signature ? signature : MY_USERNAME;
+		const sig = signature ? signature : "";
 		if (sig.length > 100) {
 			throw new Error(`Invalid signature: ${signature}; length is over 100 chars.`);
 		} else {

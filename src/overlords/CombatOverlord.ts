@@ -2,13 +2,19 @@ import {Directive} from '../directives/Directive';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {profile} from '../profiler/decorator';
 import {CombatZerg} from '../zerg/CombatZerg';
-import {Overlord} from './Overlord';
+import {Overlord, OverlordMemory} from './Overlord';
 
 
+export interface CombatOverlordMemory extends OverlordMemory {
+	[_MEM.TICK]: number;
+}
 export interface CombatOverlordOptions {
 
 }
 
+const getDefaultCombatOverlordMemory: () => CombatOverlordMemory = () => ({
+	[_MEM.TICK]: Game.time,
+});
 /**
  * CombatOverlords extend the base Overlord class to provide additional combat-specific behavior
  */
@@ -29,6 +35,9 @@ export abstract class CombatOverlord extends Overlord {
 	// Standard sequence of actions for running combat creeps
 	autoRun(roleCreeps: CombatZerg[], creepHandler: (creep: CombatZerg) => void) {
 		for (const creep of roleCreeps) {
+			// if (creep.spawning) {
+			// 	return;
+			// }
 			if (creep.hasValidTask) {
 				creep.run();
 			} else {
@@ -39,6 +48,15 @@ export abstract class CombatOverlord extends Overlord {
 				}
 			}
 		}
+	}
+	/**
+	 * Contains logic for shutting down the overlord
+	 */
+	finish(successful: boolean): void {
+		for (const zerg of this.getAllZerg()) {
+			zerg.reassign(this.colony.overlords.default);
+		}
+		// TODO: CombatOverlord
 	}
 
 }

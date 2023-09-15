@@ -89,7 +89,7 @@ export class CombatTargeting {
 	}
 
 	static findClosestHurtFriendly(healer: Zerg): Creep | null {
-		return healer.pos.findClosestByRange(_.filter(healer.room.creeps, creep => creep.hits < creep.hitsMax));
+		return healer.pos.findClosestByRange(_.filter(healer.room.creeps, creep => (creep.hitsPredicted ? creep.hitsPredicted : creep.hits) < creep.hitsMax));
 	}
 
 	/**

@@ -3,7 +3,7 @@ import {Task} from '../Task';
 
 export type signControllerTargetType = StructureController;
 export const signControllerTaskName = 'signController';
-const outpostSignature = "Don't hit my workers, they're innocent!";
+const outpostSignature = "remote mining";
 @profile
 export class TaskSignController extends Task {
 

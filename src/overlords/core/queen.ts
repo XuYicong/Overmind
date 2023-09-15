@@ -69,14 +69,11 @@ export class QueenOverlord extends Overlord {
 	}
 
 	private mineralActions(loader: Zerg): void {
-		// Assuming store has no energy here, and guarantee store has nothing after
-		if (loader.carry.getUsedCapacity(RESOURCE_ENERGY) > 0 || loader.hasValidTask) return;
+		if (loader.hasValidTask) return;
+
+		// Assume loader is idle here
 		const commandCenter = this.colony.commandCenter;
 		if (!commandCenter) return;
-
-		// Handle withdraw requests
-		let request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'withdraw', 
-							req => req.resourceType != RESOURCE_ENERGY);
 		const evacuate = function(resourceType: ResourceConstant): Task {
 			if (commandCenter.terminal && commandCenter.terminal.store.getFreeCapacity(resourceType) > 0) {
 				return Tasks.transfer(commandCenter.terminal, resourceType);
@@ -86,36 +83,46 @@ export class QueenOverlord extends Overlord {
 				return Tasks.drop(loader.pos, resourceType);
 			}
 		}
+
+		// Handle withdraw requests
+		let request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'withdraw', 
+							req => req.resourceType != RESOURCE_ENERGY);
 		if (request) {
 			const task = Tasks.withdraw(request.target, request.resourceType);
 			loader.task = evacuate(request.resourceType).fork(task);
-			return;
-		}
 
-		// Handle supply tasks
-		// TODO: add multiple tasks at the same time
-		const store = commandCenter.terminal || commandCenter.storage;
-		let supplyTask: TaskTransfer | undefined;
-		for (const priority in this.hatchery.transportRequests.supply) {
-			for (const request of this.hatchery.transportRequests.supply[priority]) {
-				if (request.resourceType == RESOURCE_ENERGY) continue;
-				// figure out how much you can withdraw
-				const amount = Math.min(
-					Math.min(
-						request.amount, 
-						store.store.getUsedCapacity(request.resourceType)
-					), 
-					loader.carry.getFreeCapacity(request.resourceType)
+		} else {
+			// Handle supply tasks
+			// TODO: add multiple tasks at the same time
+			const store = commandCenter.terminal || commandCenter.storage;
+			let supplyTask: TaskTransfer | undefined;
+			for (const priority in this.hatchery.transportRequests.supply) {
+				for (const request of this.hatchery.transportRequests.supply[priority]) {
+					if (request.resourceType == RESOURCE_ENERGY) continue;
+					// figure out how much you can withdraw
+					const amount = Math.min(
+						Math.min(
+							request.amount, 
+							store.store.getUsedCapacity(request.resourceType)
+						), 
+						loader.carry.getFreeCapacity(request.resourceType)
+					);
+					if (amount == 0) continue;
+					supplyTask = Tasks.transfer(request.target, request.resourceType, amount);
+				}
+			}
+			if (supplyTask) {
+				log.info(supplyTask.data.resourceType+', '+supplyTask.data.amount);
+				loader.task = supplyTask.fork(
+					Tasks.withdraw(store, supplyTask.data.resourceType, supplyTask.data.amount),
 				);
-				if (amount == 0) continue;
-				supplyTask = Tasks.transfer(request.target, request.resourceType, amount);
 			}
 		}
-		if (supplyTask) {
-			log.info(supplyTask.data.resourceType+', '+supplyTask.data.amount);
-			loader.task = supplyTask.fork(
-				Tasks.withdraw(store, supplyTask.data.resourceType, supplyTask.data.amount),
-			);
+
+		// Put energies aside first, if got a task
+		if (loader.hasValidTask && loader.carry.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+			loader.task!.fork(evacuate(RESOURCE_ENERGY));
+			return;
 		}
 	}
 
@@ -156,13 +163,13 @@ export class QueenOverlord extends Overlord {
 	}
 
 	private handleLoader(loader: Zerg): void {
-		if (loader.carry.energy > 0) {
-			this.supplyActions(loader);
-		} else {
-			if (loader.isIdle) {
-				this.mineralActions(loader);
-			}
-			if (loader.isIdle) {
+		if (loader.isIdle) {
+			this.mineralActions(loader);
+		}
+		if (loader.isIdle) {
+			if (loader.carry.energy > 0) {
+				this.supplyActions(loader);
+			} else {
 				this.rechargeActions(loader);
 			}
 		}

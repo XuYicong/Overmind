@@ -61,7 +61,7 @@ export const dynamicLayout: StructureLayout = {
             //     {'x': 23, 'y': 23}]
 			// },
 			'spawn': {'pos': [{'x': 26, 'y': 24}]},
-			// 'container': {'pos': [{'x': 26, 'y': 27}]}
+			'container': {'pos': [{'x': 26, 'y': 27}]}
 		}
 	},
 	3   : {
@@ -75,7 +75,7 @@ export const dynamicLayout: StructureLayout = {
             //     {'x': 23, 'y': 23}]
 			// },
 			'spawn': {'pos': [{'x': 26, 'y': 24}]},
-			// 'container': {'pos': [{'x': 26, 'y': 27}]}
+			'container': {'pos': [{'x': 26, 'y': 27}]}
 		}
 	},
 	4   : {
@@ -102,7 +102,7 @@ export const dynamicLayout: StructureLayout = {
             //     {'x': 23, 'y': 23}]
 			// },
 			'spawn': {'pos': [{'x': 26, 'y': 24}]},
-			// 'container': {'pos': [{'x': 26, 'y': 27}]}
+			'container': {'pos': [{'x': 26, 'y': 27}]}
 		}
 	},
 	5   : {

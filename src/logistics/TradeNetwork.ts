@@ -54,14 +54,14 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 	default: 5.0,
 	[RESOURCE_HYDROGEN]: 10,
 	[RESOURCE_OXYGEN]: 30,
-	[RESOURCE_UTRIUM]: 20,
+	[RESOURCE_UTRIUM]: 39,
 	[RESOURCE_LEMERGIUM]: 15,
 	[RESOURCE_KEANIUM]: 8,
 	[RESOURCE_ZYNTHIUM]: 30,
 	[RESOURCE_CATALYST]: 30,
 	[RESOURCE_ENERGY]: 7,
 };
-
+// TODO: decide by room owner instead of room name
 export const hostileTraders = [
 	'W54N7',	// V1king
 	'W49N6',	// V1king

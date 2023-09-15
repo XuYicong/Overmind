@@ -23,7 +23,7 @@ export class HaulingOverlord extends Overlord {
 	requiredRCL: 4;
 
 	constructor(directive: DirectiveHaul, priority = directive.hasDrops ? OverlordPriority.collectionUrgent.haul :
-													 OverlordPriority.collection.haul) {
+													 OverlordPriority.tasks.haul) {
 		super(directive, 'haul', priority);
 		this.directive = directive;
 		if(this.directive.waypoints) {
