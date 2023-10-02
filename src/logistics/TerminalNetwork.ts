@@ -11,7 +11,10 @@ import {Energetics} from './Energetics';
 import {MAX_ENERGY_BUY_ORDERS, MAX_ENERGY_SELL_ORDERS, TraderJoe} from './TradeNetwork';
 
 interface TerminalNetworkMemory {
-	equalizeIndex: number;
+	equalizeIndex: number,
+	sendToRoom: string,
+	sendResourceType: string,
+	sendResourceAmount: number
 }
 
 interface TerminalNetworkStats {
@@ -31,7 +34,10 @@ interface TerminalNetworkStats {
 }
 
 const TerminalNetworkMemoryDefaults: TerminalNetworkMemory = {
-	equalizeIndex: 0
+	equalizeIndex: 0,
+	sendToRoom: '',
+	sendResourceType: '',
+	sendResourceAmount: 0
 };
 
 const TerminalNetworkStatsDefaults: TerminalNetworkStats = {
@@ -493,7 +499,33 @@ export class TerminalNetwork implements ITerminalNetwork {
 					}
 				}
 			}
-
+			// Handle resource send command
+			if (this.memory.sendResourceAmount > 0) {
+				// choose the closest room
+				const allColonies = getAllColonies();
+				const depature = _.min( _.filter(allColonies, colony => 
+					colony.terminal && !colony.terminal.cooldown && !!colony.terminal.store[<ResourceConstant>this.memory.sendResourceType]),
+					colony => Game.map.getRoomLinearDistance(colony.room.name, this.memory.sendToRoom, true)
+				);
+				let amount = this.memory.sendResourceAmount;
+				log.info('向房间'+this.memory.sendToRoom+'发送'+amount+'单位'+this.memory.sendResourceType);
+				if (depature.terminal) {
+					if (this.memory.sendResourceType == RESOURCE_ENERGY) {
+						amount = Math.min(amount, depature.terminal!.store[RESOURCE_ENERGY]/2);
+					} else {
+						amount = Math.min(amount, depature.terminal!.store[RESOURCE_ENERGY]);
+						amount = Math.min(amount, depature.terminal!.store[<ResourceConstant>this.memory.sendResourceType]);
+					}
+					const response = depature.terminal!.send(<ResourceConstant>this.memory.sendResourceType, 
+						amount, this.memory.sendToRoom, "execute resource send command");
+					if (response == OK) {
+						this.memory.sendResourceAmount -= amount;
+						log.info('从房间'+depature.name+'发送'+amount);
+					} else {
+						log.warning('发送资源失败，错误码'+response);
+					}
+				}
+			}
 		}
 		// Do notifications
 		if (this.notifications.length > 0) {

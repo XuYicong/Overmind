@@ -182,3 +182,15 @@ export const boostResources: { [actionName: string]: { [boostLevel: number]: _Re
 
 };
 
+export const BASE_RESOURCES: ResourceConstant[] = [
+	RESOURCE_CATALYST,
+	RESOURCE_ZYNTHIUM,
+	RESOURCE_LEMERGIUM,
+	RESOURCE_KEANIUM,
+	RESOURCE_UTRIUM,
+	RESOURCE_OXYGEN,
+	RESOURCE_HYDROGEN,
+];
+export const _baseResourcesLookup: { [resource: string]: boolean | undefined } =
+				 _.zipObject(BASE_RESOURCES, _.map(BASE_RESOURCES, () => true));
+

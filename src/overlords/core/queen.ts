@@ -63,6 +63,8 @@ export class QueenOverlord extends Overlord {
 			} else {
 				loader.task = task;
 			}
+		} else if(loader.pos.roomName != this.pos.roomName) {
+			loader.task = Tasks.goToRoom(this.pos.roomName)
 		} else if(loader.isIdle) {
 			this.rechargeActions(loader); // if there are no targets, refill yourself
 		}
@@ -166,12 +168,10 @@ export class QueenOverlord extends Overlord {
 		if (loader.isIdle) {
 			this.mineralActions(loader);
 		}
-		if (loader.isIdle) {
-			if (loader.carry.energy > 0) {
-				this.supplyActions(loader);
-			} else {
-				this.rechargeActions(loader);
-			}
+		if (loader.carry.energy > 0) {
+			this.supplyActions(loader);
+		} else if (loader.isIdle) {
+			this.rechargeActions(loader);
 		}
 		// If there aren't any tasks that need to be done, recharge the battery from link
 		if (loader.isIdle) {

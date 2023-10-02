@@ -1,7 +1,8 @@
 import { withdrawTargetType } from 'tasks/instances/withdraw';
 import {$} from '../../caching/GlobalCache';
+import {BASE_RESOURCES} from '../../resources/map_resources'
 import {Roles, Setups} from '../../creepSetups/setups';
-import {HasGeneralPurposeStore, isCreep, isPowerCreep, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
+import {isCreep, isPowerCreep, isResource, isRuin, isTombstone} from '../../declarations/typeGuards';
 import {TERMINAL_STATE_REBUILD} from '../../directives/terminalState/terminalState_rebuild';
 import {CommandCenter} from '../../hiveClusters/commandCenter';
 import {SpawnRequestOptions} from '../../hiveClusters/hatchery';
@@ -9,10 +10,11 @@ import {Energetics} from '../../logistics/Energetics';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
-import {hasMinerals, minBy} from '../../utilities/utils';
+import {minBy} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {WorkerOverlord} from './worker';
+import { transferTargetType } from 'tasks/instances/transfer';
 
 /**
  * Command center overlord: spawn and run a dediated commandCenter attendant
@@ -25,6 +27,26 @@ export class CommandCenterOverlord extends Overlord {
 	commandCenter: CommandCenter;
 	depositTarget: StructureTerminal | StructureStorage;
 	managerRepairTarget: StructureRampart | StructureWall | undefined;
+
+	static settings = {
+		terminal: {
+			mineral: {
+				equilibrium: 20000,
+				tolerance: 10000
+			}
+		},
+		factory: {
+			mineral: {
+				cap: 45000,
+				equilibrium: 3000,
+				tolerance: 2000
+			},
+			energy: {
+				equilibrium: 2000,
+				tolerance: 1000
+			}
+		}
+	};
 
 	constructor(commandCenter: CommandCenter, priority = OverlordPriority.core.manager) {
 		super(commandCenter, 'manager', priority);
@@ -135,10 +157,12 @@ export class CommandCenterOverlord extends Overlord {
 
 	/**
 	 * Move energy into terminal if storage is too full and into storage if storage is too empty
+	 * Move mineral into factory if factory is not full and into terminal if terminal is too empty
 	 */
 	private equalizeStorageAndTerminal(manager: Zerg): boolean {
 		const storage = this.commandCenter.storage;
 		const terminal = this.commandCenter.terminal;
+		const factory = this.commandCenter.factory;
 		if (!storage || !terminal) return false;
 
 		const equilibrium = Energetics.settings.terminal.energy.equilibrium;
@@ -151,21 +175,52 @@ export class CommandCenterOverlord extends Overlord {
 			storageEnergyCap = terminalState.amounts[RESOURCE_ENERGY] || 0;
 		}
 
+		if (this.unloadCarry(manager)) return true;
+		const transfer = function(from: withdrawTargetType, to: transferTargetType, resourceType?: ResourceConstant): boolean {
+			manager.task = Tasks.withdraw(from, resourceType);
+			manager.task.parent = Tasks.transfer(to, resourceType);
+			return true;
+		}
+
 		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
 		if ((terminal.energy < equilibrium - tolerance || storage.energy > storageEnergyCap + storageTolerance)
 			&& storage.energy > 0) {
-			if (this.unloadCarry(manager)) return true;
-			manager.task = Tasks.withdraw(storage);
-			manager.task.parent = Tasks.transfer(terminal);
-			return true;
+			return transfer(storage, terminal);
 		}
 
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
 		if (terminal.energy > equilibrium + tolerance && storage.energy < storageEnergyCap) {
-			if (this.unloadCarry(manager)) return true;
-			manager.task = Tasks.withdraw(terminal);
-			manager.task.parent = Tasks.transfer(storage);
-			return true;
+			return transfer(terminal, storage);
+		}
+
+		const eq = CommandCenterOverlord.settings.terminal.mineral.equilibrium;
+		const tl = CommandCenterOverlord.settings.terminal.mineral.tolerance;
+
+		for (const resource in terminal.store) {
+			if (resource == RESOURCE_ENERGY) continue;
+
+			if (terminal.store[<ResourceConstant>resource] > eq + tl && storage.store.getFreeCapacity() > terminal.store.getFreeCapacity()) {
+				return transfer(terminal, storage, <ResourceConstant>resource);
+			}
+		}
+		for (const resource in storage.store) {
+			if (resource == RESOURCE_ENERGY) continue;
+
+			if (terminal.store[<ResourceConstant>resource] < eq - tl) {
+				return transfer(storage, terminal, <ResourceConstant>resource);
+			}
+		}
+
+		if (!factory) return false;
+
+		for (const baseResource of BASE_RESOURCES) {
+			if (terminal.store[baseResource] < eq - tl && factory.store.getUsedCapacity(baseResource) > 0) {
+				return transfer(factory, terminal, baseResource);
+			}
+			if (factory.store.getUsedCapacity() > CommandCenterOverlord.settings.factory.mineral.cap) break;
+			if (storage.store[baseResource] <= 0) continue;
+
+			return transfer(storage, factory, baseResource);
 		}
 
 		// Nothing has happened
@@ -186,24 +241,6 @@ export class CommandCenterOverlord extends Overlord {
 			manager.task = Tasks.withdraw(terminal);
 			manager.task.parent = Tasks.transfer(storage);
 			return true;
-		}
-		return false;
-	}
-
-	private moveMineralsToTerminal(manager: Zerg): boolean {
-		const storage = this.commandCenter.storage;
-		const terminal = this.commandCenter.terminal;
-		if (!storage || !terminal) {
-			return false;
-		}
-		// Move all non-energy resources from storage to terminal
-		for (const resourceType in storage.store) {
-			if (resourceType != RESOURCE_ENERGY && storage.store[<ResourceConstant>resourceType]! > 0) {
-				if (this.unloadCarry(manager)) return true;
-				manager.task = Tasks.withdraw(storage, <ResourceConstant>resourceType);
-				manager.task.parent = Tasks.transfer(terminal, <ResourceConstant>resourceType);
-				return true;
-			}
 		}
 		return false;
 	}
@@ -255,10 +292,6 @@ export class CommandCenterOverlord extends Overlord {
 		}
 		// Pick up any dropped resources on ground
 		if (this.pickupActions(manager)) return;
-		// Move minerals from storage to terminal if needed
-		if (hasMinerals(this.commandCenter.storage.store)) {
-			if (this.moveMineralsToTerminal(manager)) return;
-		}
 		// Fill up storage before you destroy terminal if rebuilding room
 		if (this.colony.terminalState == TERMINAL_STATE_REBUILD) {
 			if (this.moveEnergyFromRebuildingTerminal(manager)) return;

@@ -10,6 +10,7 @@ import {printRoomName} from '../../utilities/utils';
 import {MY_USERNAME} from '../../~settings';
 import {Directive} from '../Directive';
 import { ShardVisibilityScoutOverlord } from 'overlords/scouting/shardVisibility';
+import { OutpostDefenseOverlord } from 'overlords/defense/outpostDefense';
 
 
 /**
@@ -29,6 +30,7 @@ export class DirectiveColonize extends Directive {
 		claim: ClaimingOverlord;
 		pioneer: PioneerOverlord;
 		shardVisibility: ShardVisibilityScoutOverlord;
+		defends: OutpostDefenseOverlord;
 	};
 
 	constructor(flag: Flag) {
@@ -64,6 +66,7 @@ export class DirectiveColonize extends Directive {
 			});
 		this.overlords.pioneer = new PioneerOverlord(this);
 		this.overlords.shardVisibility = new ShardVisibilityScoutOverlord(this);
+		this.overlords.defends = new OutpostDefenseOverlord(this);
 	}
 
 	init() {

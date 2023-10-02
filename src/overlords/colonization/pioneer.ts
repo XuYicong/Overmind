@@ -8,6 +8,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
+import { CombatIntel } from 'intel/CombatIntel';
 
 /**
  * Spawn pioneers - early workers which help to build a spawn in a new colony, then get converted to workers or drones
@@ -69,15 +70,18 @@ export class PioneerOverlord extends Overlord {
 			// Build and recharge
 			if (pioneer.carry.energy == 0) {
 				pioneer.task = Tasks.recharge();
-			} else if (this.room && this.room.controller &&
+			} else {
+				// const dismantlePotential = _.sum(this.room!.hostiles, h => CombatIntel.getDismantlePotential(h));
+				if (this.room && this.room.controller &&
 					   (this.room.controller.ticksToDowngrade < 9000 
-						|| !this.spawnSite 
+						|| !this.spawnSite || this.room.playerHostiles.length > 0
 						|| this.room.controller.progress >= this.room.controller.progressTotal) &&
 					   !(this.room.controller.upgradeBlocked > 0)) {
-				// Save controller if it's about to downgrade or if you have nothing else to do
-				pioneer.task = Tasks.upgrade(this.room.controller);
-			} else if (this.spawnSite) {
-				pioneer.task = Tasks.build(this.spawnSite);
+					// Save controller if it's about to downgrade or if you have nothing else to do
+					pioneer.task = Tasks.upgrade(this.room.controller);
+				} else if (this.spawnSite) {
+					pioneer.task = Tasks.build(this.spawnSite);
+				}
 			}
 		} else {
 			// pioneer.task = Tasks.goTo(this.pos);

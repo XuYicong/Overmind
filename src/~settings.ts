@@ -60,7 +60,7 @@ export const MAX_OWNED_ROOMS = 10;
 /**
  * If you are running on shard3 (CPU limit 20), only claim this many rooms
  */
-export const SHARD3_MAX_OWNED_ROOMS = 3;
+export const SHARD3_MAX_OWNED_ROOMS = 2;
 
 /**
  * The global Overmind object will be re-instantiated after this many ticks. In the meantime, refresh() is used.

@@ -128,7 +128,7 @@ export const bunkerLayout: StructureLayout = {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': []},
 			'nuker'     : {'pos': []},
-			'tower'     : {'pos': [{'x': 25, 'y': 24}, {'x': 25, 'y': 26}]},
+			'tower'     : {'pos': [{'x': 25, 'y': 26}]},
 			'powerSpawn': {'pos': []},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},
 			'road'      : {
@@ -202,7 +202,7 @@ export const bunkerLayout: StructureLayout = {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
 			'nuker'     : {'pos': []},
-			'tower'     : {'pos': [{'x': 25, 'y': 24}, {'x': 25, 'y': 26}]},
+			'tower'     : {'pos': [{'x': 25, 'y': 26}]},
 			'powerSpawn': {'pos': []},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},
 			'road'      : {
@@ -282,7 +282,7 @@ export const bunkerLayout: StructureLayout = {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
 			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
-			'tower'     : {'pos': [{'x': 25, 'y': 24}, {'x': 25, 'y': 26}, {'x': 25, 'y': 23}]},
+			'tower'     : {'pos': [{'x': 25, 'y': 26}, {'x': 25, 'y': 23}]},
 			'powerSpawn': {'pos': []},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},
 			'road'      : {
@@ -373,11 +373,12 @@ export const bunkerLayout: StructureLayout = {
 			'storage'   : {'pos': [{'x': 24, 'y': 25}]},
 			'terminal'  : {'pos': [{'x': 26, 'y': 25}]},
 			'factory'	: {'pos': [{'x': 24, 'y': 24}]},
+			'nuker'		: {'pos': [{'x': 25, 'y': 24}]},
 			'tower'     : {
 				'pos': [{'x': 27, 'y': 25}, {'x': 23, 'y': 25}, {'x': 25, 'y': 27}, {
 					'x': 25,
 					'y': 23
-				}, {'x': 25, 'y': 24}, {'x': 25, 'y': 26}]
+				}, {'x': 25, 'y': 26}]
 			},
 			'powerSpawn': {'pos': [{'x': 24, 'y': 26}]},
 			'link'      : {'pos': [{'x': 26, 'y': 26}]},

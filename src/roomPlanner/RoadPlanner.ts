@@ -22,7 +22,7 @@ export interface RoadPlannerMemory {
 
 const PLAIN_COST = 3;
 const SWAMP_COST = 4;
-const WALL_COST = 15 * PLAIN_COST;
+const WALL_COST = 40 * PLAIN_COST;
 const EXISTING_PATH_COST = PLAIN_COST - 1;
 
 const memoryDefaults: RoadPlannerMemory = {

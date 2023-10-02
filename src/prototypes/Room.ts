@@ -121,7 +121,8 @@ Object.defineProperty(Room.prototype, 'dangerousHostiles', {
 				this._dangerousHostiles = _.filter(this.hostiles,
 												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0
 																	 || creep.getActiveBodyparts(WORK) > 0
-																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0);
+																	 || creep.getActiveBodyparts(RANGED_ATTACK) > 0
+																	 || creep.getActiveBodyparts(CLAIM) > 0);
 			} else {
 				this._dangerousHostiles = _.filter(this.hostiles,
 												   (creep: Creep) => creep.getActiveBodyparts(ATTACK) > 0

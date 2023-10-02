@@ -129,8 +129,8 @@ export class Hatchery extends HiveCluster {
 
 	spawnMoarOverlords() {
 		if (this.colony.layout == 'bunker' && (this.colony.storage || this.colony.terminal)
-		// I'm experimenting a dynamic queue loading algorithm competing bunker queue. Leave both for comparison
-			&& this.colony.assets[RESOURCE_ENERGY] > 10000 && this.colony.room.name.endsWith('9')) {
+		// Not using bunker queen since I have sufficiently good dynamic queen
+			&& this.colony.assets[RESOURCE_ENERGY] > 1234567) {
 			this.overlord = new BunkerQueenOverlord(this); // use bunker queen if has storage and enough energy
 		} else {
 			this.overlord = new QueenOverlord(this);

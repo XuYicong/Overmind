@@ -52,7 +52,7 @@ export class Overseer implements IOverseer {
 	notifier: Notifier;
 
 	static settings = {
-		outpostCheckFrequency: onPublicServer() ? 817 : 100,
+		outpostCheckFrequency: onPublicServer() ? 512 : 100,
 		cpuBucketLowerBound: 8000,
 		cpuUsageLowerBound: 0.75,
 	};
@@ -368,8 +368,30 @@ export class Overseer implements IOverseer {
 		// Suspend colony on low CPU bucket
 		if (Game.cpu.bucket < Overseer.settings.cpuBucketLowerBound) {
 			for (let i=coloniesByOutpost.length-1; i >= 0; --i) {
-				// TODO: remove outposts
-				// AKA: remove all flags in a farest outpost room
+				// if (coloniesByOutpost[i].roomNames.length <= 1) break;
+				const names = _.filter(coloniesByOutpost[i].roomNames, 
+					rmnm => rmnm != coloniesByOutpost[i].room.name && !!Game.rooms[rmnm]);
+				// choose any room not adjacent to colony
+				const farOuts = _.filter(names, roomName => {
+					const neighboringRooms = _.values(Game.map.describeExits(roomName)) as string[];
+					return !neighboringRooms.includes(coloniesByOutpost[i].room.name)
+				});
+				let roomName = "";
+				if (farOuts.length > 0) {
+					roomName = farOuts[0];
+				} else if (names.length > 0) {
+					// choose any room not same as colony
+					roomName = names[0];
+				} else {
+					// if no vision in any outpost
+					continue;
+				}
+				// remove all flags here
+				for (const flag of Game.rooms[roomName].flags) {
+					flag.remove();
+				}
+				log.info('remove outpost '+roomName);
+				return;
 			}
 
 			for (let i = roomsByTickdown.length -1; i>=0; --i) {

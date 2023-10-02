@@ -200,6 +200,9 @@ export class WorkerOverlord extends Overlord {
 					}
 					return numWorkers;
 				});
+				if (this.colony.defcon != DEFCON.safe) {
+					numWorkers += 2;
+				}
 			}
 		}
 		this.wishlist(numWorkers, setup);
@@ -312,6 +315,31 @@ export class WorkerOverlord extends Overlord {
 		}
 	}
 
+	private overRepairActions(worker: Zerg, fortifyStructures = this.room.barriers): boolean {
+		if (this.colony.defcon == DEFCON.safe) return false;
+		const lowestBarrier = _.min(fortifyStructures, structure => structure.hits);
+		const closeTarget = _.findWhere(fortifyStructures,
+			s => s.hits - lowestBarrier.hits < 1 && s.pos.inRangeToPos(worker.pos, 3));
+		let target = lowestBarrier;
+		// if (!!closeTarget) {
+		// 	target = closeTarget;
+		// }
+		if (!target.pos) return false;
+		if (worker.creep.store.getUsedCapacity(RESOURCE_ENERGY) <= 1) {
+			worker.task = Tasks.recharge();
+			return true;
+		}
+		if (!worker.pos.inRangeToPos(target.pos, 3)) {
+			worker.goTo(target, {range: 3, fleeRange: 2});
+		} else {
+			if (_.any(this.room.playerHostiles, creep => creep.pos.inRangeToPos(worker.pos, 3))) {
+				worker.flee(this.room.playerHostiles, undefined, {range: 3});
+			}
+			worker.creep.repair(target);
+		}
+		return true
+	}
+
 	private nukeFortifyActions(worker: Zerg, fortifyStructures = this.nukeDefenseRamparts): boolean {
 		const target = minBy(fortifyStructures, rampart => {
 			const structuresUnderRampart = rampart.pos.lookFor(LOOK_STRUCTURES);
@@ -355,6 +383,10 @@ export class WorkerOverlord extends Overlord {
 			// Fortify critical barriers
 			if (this.criticalBarriers.length > 0) {
 				if (this.fortifyActions(worker, this.criticalBarriers)) return;
+			}
+			// Outrepair attacks
+			if (this.colony.defcon !== DEFCON.safe) {
+				if (this.overRepairActions(worker)) return;
 			}
 			// Build new structures
 			if (this.constructionSites.length > 0) {

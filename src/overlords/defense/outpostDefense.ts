@@ -7,6 +7,7 @@ import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
+import { Directive } from 'directives/Directive';
 
 /**
  * General purpose skirmishing overlord for dealing with player combat in an outpost
@@ -19,7 +20,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	healers: CombatZerg[];
 	melees: CombatZerg[];
 
-	constructor(directive: DirectiveOutpostDefense, priority = OverlordPriority.outpostDefense.outpostDefense) {
+	constructor(directive: Directive, priority = OverlordPriority.outpostDefense.outpostDefense) {
 		super(directive, 'outpostDefense', priority, 1);
 		this.spawnGroup.settings.flexibleEnergy = true;
 		this.melees = this.combatZerg(Roles.melee);
@@ -36,6 +37,14 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 			zerg.doMedicActions(this.room.name);
 		} else {
 			zerg.autoSkirmish(this.pos.roomName);
+		}
+	}
+
+	private handleMelee(zerg: CombatZerg): void {
+		if (this.room && this.room.hostiles.length > 0) {
+			zerg.attackAndChase(this.room.hostiles[0]);
+		} else {
+			zerg.goTo(this.pos, {range: 22});
 		}
 	}
 
@@ -111,7 +120,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	run() {
-		this.autoRun(this.melees, melee => this.handleCombat(melee));
+		this.autoRun(this.melees, melee => this.handleMelee(melee));
 		this.autoRun(this.broodlings, broodling => this.handleCombat(broodling));
 		this.autoRun(this.ranged, mutalisk => this.handleCombat(mutalisk));
 		this.autoRun(this.healers, healer => this.handleHealer(healer));

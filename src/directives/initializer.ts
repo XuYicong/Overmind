@@ -12,6 +12,7 @@ import { DirectiveWarmupScout } from './defense/warmupScout';
 import {Directive} from './Directive';
 import {DirectiveControllerAttack} from './offense/controllerAttack';
 import {DirectivePairDestroy} from './offense/pairDestroy';
+import { DirectivePairHarasser } from './offense/pairHarasser';
 import {DirectiveSwarmDestroy} from './offense/swarmDestroy';
 import {DirectiveExtract} from './resource/extract';
 import {DirectiveHarvest} from './resource/harvest';
@@ -73,6 +74,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSwarmDestroy(flag);
 				case COLOR_CYAN:
 					return new DirectivePairDestroy(flag);
+				case COLOR_BROWN:
+					return new DirectivePairHarasser(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
 			}

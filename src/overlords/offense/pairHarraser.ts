@@ -1,6 +1,6 @@
 import { Directive } from 'directives/Directive';
 import {CombatSetups, Roles} from '../../creepSetups/setups';
-import {DirectivePairDestroy} from '../../directives/offense/pairDestroy';
+import {DirectivePairHarasser} from '../../directives/offense/pairHarasser';
 import {DirectiveTargetSiege} from '../../directives/targeting/siegeTarget';
 import {CombatIntel} from '../../intel/CombatIntel';
 import {RoomIntel} from '../../intel/RoomIntel';
@@ -16,7 +16,7 @@ import {Overlord} from '../Overlord';
  *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
  */
 @profile
-export class PairDestroyerOverlord extends Overlord {
+export class PairHarraserOverlord extends Overlord {
 
 	directive: Directive;
 	attackers: CombatZerg[];
@@ -28,11 +28,11 @@ export class PairDestroyerOverlord extends Overlord {
 	};
 
 	constructor(directive: Directive, priority = OverlordPriority.offense.destroy) {
-		super(directive, 'destroy', priority);
+		super(directive, 'harras', priority);
 		this.directive = directive;
-		this.attackers = this.combatZerg(Roles.melee, {
+		this.attackers = this.combatZerg(Roles.ranged, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[3]]
+			boostWishlist     : [boostResources.ranged_attack[1], boostResources.tough[1], boostResources.move[3]]
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
@@ -48,6 +48,8 @@ export class PairDestroyerOverlord extends Overlord {
 								(directive: { getTarget: () => any; }) => directive.getTarget())) as Structure[];
 			if (targetedStructures.length > 0) {
 				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
+			// } else if (this.room.controller && !this.room.controller.my && this.room.controller.level >= 3) {
+
 			} else {
 				// Target nearby hostile creeps
 				const creepTarget = CombatTargeting.findClosestHostile(attacker, true);
@@ -63,16 +65,17 @@ export class PairDestroyerOverlord extends Overlord {
 		const target = this.findTarget(attacker);
 		if (target) {
 			if (attacker.pos.isNearTo(target)) {
-				attacker.attack(target);
+				attacker.rangedMassAttack();
 			} else {
 				Movement.pairwiseMove(attacker, healer, target);
-				attacker.autoMelee();
+				attacker.autoRanged();
 			}
 		}
 	}
 
 	private handleSquad(attacker: CombatZerg): void {
 		const healer = attacker.findPartner(this.healers);
+		attacker.autoHeal()
 		// Case 1: you don't have an active healer
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
@@ -86,8 +89,8 @@ export class PairDestroyerOverlord extends Overlord {
 		else {
 			// Activate retreat condition if necessary
 			// Handle recovery if low on HP
-			if (attacker.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent) ||
-				healer.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent)) {
+			if (attacker.needsToRecover(PairHarraserOverlord.settings.retreatHitsPercent) ||
+				healer.needsToRecover(PairHarraserOverlord.settings.retreatHitsPercent)) {
 				// Healer leads retreat to fallback position
 				Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
 			} else {
@@ -151,18 +154,16 @@ export class PairDestroyerOverlord extends Overlord {
 			amount = 0;
 		}
 
-		this.reassignIdleCreeps(Roles.melee);
+		this.reassignIdleCreeps(Roles.ranged);
 		this.reassignIdleCreeps(Roles.healer);
-		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
-																				  : CombatSetups.zerglings.default;
-		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
+		const rangedPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
+		const rangedSetup = this.canBoostSetup(CombatSetups.hydralisks.boosted_T3) ? CombatSetups.hydralisks.boosted_T3
+																				  : CombatSetups.hydralisks.default;
+		this.wishlist(amount, rangedSetup, {priority: rangedPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
 		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
-								: (
-									this.room && this.room.controller && this.room.controller.owner!=undefined && !this.room.controller.my
-								) ? CombatSetups.healers.armored : CombatSetups.healers.default;
+								: CombatSetups.healers.armored;
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 
