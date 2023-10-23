@@ -39,7 +39,7 @@ export class PioneerOverlord extends Overlord {
 			// We are crossing shards to reach the room. Reduce shards CPU use by sending less
 			this.wishlist(1, Setups.pioneer);
 		} else {
-			this.wishlist(4, Setups.pioneer);
+			this.wishlist(4, Setups.pioneer, {reassignIdle:true});
 		}
 	}
 
@@ -57,8 +57,13 @@ export class PioneerOverlord extends Overlord {
 	}
 
 	private handlePioneer(pioneer: Zerg): void {
-		// Ensure you are in the assigned room
-		if (pioneer.room == this.room && !pioneer.pos.isEdge) {
+		if (pioneer.flee(pioneer.room.dangerousPlayerHostiles, {dropEnergy: false}, {fleeRange: 5})) {
+			return;
+		}
+		// Build and recharge
+		if (pioneer.carry.energy == 0) {
+			pioneer.task = Tasks.recharge();
+		} else if (pioneer.room == this.room && !pioneer.pos.isEdge) {
 			// Remove any blocking structures preventing claimer from reaching controller
 			if (!this.room.my && this.room.structures.length > 0) {
 				const dismantleTarget = this.findStructureBlockingController(pioneer);
@@ -67,20 +72,33 @@ export class PioneerOverlord extends Overlord {
 					return;
 				}
 			}
-			// Build and recharge
-			if (pioneer.carry.energy == 0) {
-				pioneer.task = Tasks.recharge();
+			// const dismantlePotential = _.sum(this.room!.hostiles, h => CombatIntel.getDismantlePotential(h));
+			if (!this.room || !this.room.controller) {
+				log.warning('not this room or not this room controller');
+				return;
+			}
+			const danger = this.room.playerHostiles.length > 0 || this.room.creeps.length > 6;
+			const shouldUpgrade = this.room.controller.ticksToDowngrade < 9000 || 
+				this.room.controller.progress >= this.room.controller.progressTotal ||
+				(danger && this.room.controller.maxTicksToDowngrade - this.room.controller.ticksToDowngrade > 1000);
+			const canUpgrade = !(this.room.controller.upgradeBlocked > 0);
+			const canBuild = this.spawnSite && !danger;
+
+			if (canUpgrade && shouldUpgrade) {
+				// Save controller if it's about to downgrade 
+				pioneer.task = Tasks.upgrade(this.room.controller);
+			} else if (canBuild) {
+				pioneer.task = Tasks.build(this.spawnSite!);
+			} else if (this.room.barriers.length > 0) {
+				pioneer.task = Tasks.fortify(_.min(this.room.barriers, b => b.hits));
+			} else if (canUpgrade) {
+				// or if you have nothing else to do
+				pioneer.task = Tasks.upgrade(this.room.controller);
 			} else {
-				// const dismantlePotential = _.sum(this.room!.hostiles, h => CombatIntel.getDismantlePotential(h));
-				if (this.room && this.room.controller &&
-					   (this.room.controller.ticksToDowngrade < 9000 
-						|| !this.spawnSite || this.room.playerHostiles.length > 0
-						|| this.room.controller.progress >= this.room.controller.progressTotal) &&
-					   !(this.room.controller.upgradeBlocked > 0)) {
-					// Save controller if it's about to downgrade or if you have nothing else to do
-					pioneer.task = Tasks.upgrade(this.room.controller);
-				} else if (this.spawnSite) {
-					pioneer.task = Tasks.build(this.spawnSite);
+				// cases are: upgrade blocked and (danger or !spawnSite) and no barriers
+				const rampartSite = this.room.constructionSites.find(s => s.structureType == STRUCTURE_RAMPART);
+				if (rampartSite) {
+					pioneer.task = Tasks.build(rampartSite);
 				}
 			}
 		} else {

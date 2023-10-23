@@ -99,6 +99,8 @@ export class UpgradeSite extends HiveCluster {
 				} else if (amountOver > 300000) {
 					upgradePower *= 2;
 				}
+				// 冲级
+				if(Overmind.colonies.length>7) upgradePower *=4;
 				if (this.controller.level == 8) {
 					upgradePower = Math.min(upgradePower, 15); // don't go above 15 work parts at RCL 8
 				}

@@ -26,7 +26,7 @@ const SpawnGroupMemoryDefaults: SpawnGroupMemory = {
 
 
 const MAX_LINEAR_DISTANCE = 10; // maximum linear distance to search for ANY spawn group
-const MAX_PATH_DISTANCE = 600;	// maximum path distance to consider for ANY spawn group
+const MAX_PATH_DISTANCE = 400;	// maximum path distance to consider for ANY spawn group
 const DEFAULT_RECACHE_TIME = onPublicServer() ? 2000 : 1000;
 
 const defaultSettings: SpawnGroupSettings = {
@@ -86,7 +86,8 @@ export class SpawnGroup {
 		this.colonyNames = _.filter(this.memory.colonies,
 									roomName => this.memory.distances[roomName] <= this.settings.maxPathDistance &&
 												Game.rooms[roomName] && Game.rooms[roomName].my &&
-												Game.rooms[roomName].controller!.level >= this.settings.requiredRCL);
+												Game.rooms[roomName].controller!.level >= this.settings.requiredRCL &&
+												Overmind.colonies[roomName]?.assets[RESOURCE_ENERGY] > 100e3);
 		if (this.colonyNames.length == 0) {
 			log.warning(`No colonies meet the requirements for SwarmGroup: ${this.ref}`);
 		}

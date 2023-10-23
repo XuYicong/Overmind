@@ -26,25 +26,6 @@ export class TaskGoTo extends Task {
 		return true;
 	}
 
-	isValid(): boolean {
-		let validTask = false;
-		if (this.creep) {
-			validTask = this.isValidTask();
-		}
-		// Return if the task is valid; if not, finalize/delete the task and return false
-		if (validTask) {
-			return true;
-		} else {
-			// Switch to parent task if there is one
-			let isValid = false;
-			if (this.parent) {
-				isValid = this.parent.isValid();
-			}
-			this.finish();
-			return isValid;
-		}
-	}
-
 	work() {
 		return OK;
 	}

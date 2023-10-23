@@ -296,11 +296,11 @@ export class EvolutionChamber extends HiveCluster {
 		for (const lab of labs) {
 			const {mineralType, amount} = this.labReservations[lab.id];
 			// Empty out incorrect minerals
-			if (lab.mineralType && lab.mineralType != mineralType && lab.store.getUsedCapacity(lab.mineralType) > 0) {
-				this.transportRequests.requestOutput(lab, Priority.NormalHigh, {resourceType: lab.mineralType!});
+			if (lab.mineralType != mineralType && lab.mineralAmount > 0) {
+				this.transportRequests.requestOutput(lab, Priority.High, {resourceType: lab.mineralType!});
 			} else {
-				this.transportRequests.requestInput(lab, Priority.NormalHigh, {
-					resourceType: <ResourceConstant>mineralType,
+				this.transportRequests.requestInput(lab, Priority.High, {
+					resourceType: mineralType,
 					amount      : amount - lab.mineralAmount
 				});
 			}
@@ -309,7 +309,7 @@ export class EvolutionChamber extends HiveCluster {
 
 	private registerRequests(): void {
 		// Separate product labs into actively boosting or ready for reaction
-		const boostingProductLabs = _.filter(this.productLabs, lab => !!this.labReservations[lab.id]);
+		const boostingProductLabs = _.filter(this.productLabs, lab => this.labReservations[lab.id]);
 		const reactionProductLabs = _.filter(this.productLabs, lab => !this.labReservations[lab.id]);
 
 		// Handle energy requests for labs with different priorities

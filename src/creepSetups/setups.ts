@@ -10,7 +10,7 @@ export const Roles = {
 	claim     : 'claim',
 	pioneer   : 'startup',
 	manager   : 'bus',
-	loader     : 'loader',
+	loader    : 'loader',
 	scout     : 'visibility',
 	transport : 'transport',
 	worker    : 'worker',
@@ -19,11 +19,12 @@ export const Roles = {
 	guardMelee: 'healedMelee',
 	// guardRanged: 'mutalisk',
 	melee     : 'melee',
+	police		: 'small',
 	ranged    : 'healedRanged',
 	armedHealer: 'rangedHeal',
 	healer    : 'heal',
 	bunkerGuard : 'meleeMelee',
-	dismantler: 'recycle',
+	dismantler: 'che',
 	drill           : 'drill',
 	coolant         : 'coolant',
 };
@@ -76,7 +77,7 @@ export const Setups = {
 	infestors: {
 
 		claim: new CreepSetup(Roles.claim, {
-			pattern  : [CLAIM, MOVE],
+			pattern  : [MOVE, MOVE, MOVE, MOVE, CLAIM, MOVE],
 			sizeLimit: 1
 		}),
 
@@ -86,8 +87,10 @@ export const Setups = {
 		}),
 
 		controllerAttacker: new CreepSetup(Roles.claim, {
-			pattern  : [CLAIM, MOVE],
+			pattern  : [MOVE, CLAIM],
 			sizeLimit: Infinity,
+			prefix: [MOVE],
+			propotionalPrefixSuffix: false,
 		}),
 
 	},
@@ -167,6 +170,10 @@ export const Setups = {
 			sizeLimit: Infinity,
 		}),
 
+		sleep: new CreepSetup(Roles.worker, {
+			pattern  : [WORK, CARRY, MOVE],
+			sizeLimit: 1,
+		}),
 	},
 
 	upgraders: {
@@ -216,17 +223,23 @@ export const CombatSetups = {
 			sizeLimit: Infinity,
 		}),
 
+		boosted_T1: new CreepSetup(Roles.melee, {
+			pattern  : [ATTACK, ATTACK, MOVE],
+			sizeLimit: Infinity,
+		}),
+
 		sourceKeeper: new CreepSetup(Roles.melee, {
 			pattern  : [MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE],
 			sizeLimit: Infinity,
 			ordered	 : true,
 		}),
+	},
 
-		police: new CreepSetup(Roles.melee, {
+	police: {
+		default: new CreepSetup(Roles.melee, {
 			pattern  : [MOVE, MOVE, ATTACK],
 			sizeLimit: 1,
 		}),
-
 	},
 
 	/**
@@ -242,6 +255,8 @@ export const CombatSetups = {
 		default: new CreepSetup(Roles.ranged, {
 			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
+			suffix	 : [HEAL, MOVE],
+			propotionalPrefixSuffix: false,
 		}),
 
 		boosted_T3: new CreepSetup(Roles.ranged, {
@@ -251,14 +266,30 @@ export const CombatSetups = {
 			ordered	 : true,
 		}),
 
+		boosted_T1: new CreepSetup(Roles.ranged, {
+			pattern  : [RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
+						MOVE, MOVE, HEAL],
+			suffix	 : [HEAL, MOVE],
+			propotionalPrefixSuffix: false,
+			sizeLimit: Infinity,
+			ordered	 : true,
+		}),
+
 		siege: new CreepSetup(Roles.ranged, {
-			pattern  : [RANGED_ATTACK, RANGED_ATTACK, MOVE, MOVE, MOVE, MOVE, HEAL, HEAL],
+			pattern  : [RANGED_ATTACK, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 
 		siege_T3: new CreepSetup(Roles.ranged, {
-			pattern  : [TOUGH, TOUGH, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK,
-						MOVE, MOVE, HEAL, HEAL],
+			pattern  : [TOUGH, RANGED_ATTACK, RANGED_ATTACK, MOVE, HEAL],
+			sizeLimit: Infinity,
+			ordered	 : true,
+		}),
+
+		siege_T1: new CreepSetup(Roles.ranged, {
+			pattern  : [RANGED_ATTACK, MOVE, HEAL],
+			suffix	 : [HEAL, MOVE],
+			propotionalPrefixSuffix: false,
 			sizeLimit: Infinity,
 			ordered	 : true,
 		}),
@@ -289,12 +320,20 @@ export const CombatSetups = {
 		}),
 
 		armored: new CreepSetup(Roles.healer, {
-			pattern  : [TOUGH, HEAL, HEAL, HEAL, MOVE, MOVE, MOVE, MOVE],
+			pattern  : [HEAL, HEAL, HEAL, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
+			prefix: [TOUGH, TOUGH],
+			suffix: [MOVE, MOVE],
+			propotionalPrefixSuffix: false,
 		}),
 
 		boosted_T3: new CreepSetup(Roles.healer, {
 			pattern  : [TOUGH, TOUGH, HEAL, HEAL, HEAL, HEAL, HEAL, HEAL, MOVE, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		boosted_T1: new CreepSetup(Roles.healer, {
+			pattern  : [HEAL, HEAL, MOVE],
 			sizeLimit: Infinity,
 		}),
 
@@ -311,7 +350,7 @@ export const CombatSetups = {
 		}),
 
 		default: new CreepSetup(Roles.guardMelee, {
-			pattern  : [TOUGH, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE, MOVE, MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 
@@ -339,8 +378,11 @@ export const CombatSetups = {
 
 		boosted_T3: new CreepSetup(Roles.bunkerGuard, {
 			// 22 ATTACK, 3 MOVE times 2
-			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK,
-				ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, MOVE, MOVE, MOVE],
+			pattern  : [ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, 
+						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, 
+						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, 
+						ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, 
+						ATTACK, ATTACK, MOVE, MOVE, MOVE],
 			sizeLimit: Infinity,
 		}),
 
@@ -354,6 +396,8 @@ export const CombatSetups = {
 		default: new CreepSetup(Roles.dismantler, {
 			pattern  : [WORK, MOVE],
 			sizeLimit: Infinity,
+			suffix: [RANGED_ATTACK, MOVE],
+			propotionalPrefixSuffix: false,
 		}),
 
 		armored: new CreepSetup(Roles.dismantler, {
@@ -372,6 +416,8 @@ export const CombatSetups = {
 		default: new CreepSetup(Roles.drill, {
 			pattern  : [MOVE, ATTACK, ATTACK, MOVE],
 			sizeLimit: Infinity,
+			suffix	 : [ATTACK, MOVE],
+			propotionalPrefixSuffix: false,
 		}),
 	},
 

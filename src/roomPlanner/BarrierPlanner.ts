@@ -26,7 +26,7 @@ export class BarrierPlanner {
 	barrierPositions: RoomPosition[];
 
 	static settings = {
-		buildBarriersAtRCL: 3,
+		buildBarriersAtRCL: 1,
 		padding           : 3, // allow this much space between structures and barriers (if possible)
 		bunkerizeRCL      : 9
 	};
@@ -278,7 +278,7 @@ export class BarrierPlanner {
 			if (!this.roomPlanner.memory.relocating && this.colony.level >= BarrierPlanner.settings.buildBarriersAtRCL
 				&& this.roomPlanner.shouldRecheck(2)) {
 				this.buildMissingRamparts();
-				if (this.colony.layout == 'bunker' && this.colony.level >= 7) {
+				if (this.colony.layout == 'bunker' && this.colony.level >= BarrierPlanner.settings.bunkerizeRCL) {
 					this.buildMissingBunkerRamparts();
 				}
 			}

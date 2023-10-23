@@ -7,12 +7,14 @@ import {claimTargetType, claimTaskName, TaskClaim} from './instances/claim';
 import {dismantleTargetType, dismantleTaskName, TaskDismantle} from './instances/dismantle';
 import {dropTargetType, dropTaskName, TaskDrop} from './instances/drop';
 import {fortifyTargetType, fortifyTaskName, TaskFortify} from './instances/fortify';
+import { generateSafeModeTargetType, generateSafeModeTaskName, TaskGenerateSafeMode } from './instances/generateSafeMode';
 import {getBoostedTargetType, getBoostedTaskName, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, getRenewedTaskName, TaskGetRenewed} from './instances/getRenewed';
-import {goToTaskName} from './instances/goTo';
+import {goToTargetType, goToTaskName, TaskGoTo} from './instances/goTo';
 import {goToRoomTargetType, goToRoomTaskName, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, harvestTaskName, TaskHarvest} from './instances/harvest';
 import {healTargetType, healTaskName, TaskHeal} from './instances/heal';
+import { helpTaskName, TaskHelp } from './instances/help';
 import {TaskInvalid} from './instances/invalid';
 import {meleeAttackTargetType, meleeAttackTaskName, TaskMeleeAttack} from './instances/meleeAttack';
 import {pickupTargetType, pickupTaskName, TaskPickup} from './instances/pickup';
@@ -60,6 +62,9 @@ export function initializeTask(protoTask: ProtoTask): Task {
 		case fortifyTaskName:
 			task = new TaskFortify(target as fortifyTargetType);
 			break;
+		case generateSafeModeTaskName:
+			task = new TaskGenerateSafeMode(target as generateSafeModeTargetType);
+			break;
 		case getBoostedTaskName:
 			task = new TaskGetBoosted(target as getBoostedTargetType,
 									  protoTask.data.resourceType as _ResourceConstantSansEnergy);
@@ -68,8 +73,8 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			task = new TaskGetRenewed(target as getRenewedTargetType);
 			break;
 		case goToTaskName:
-			// task = new TaskGoTo(derefRoomPosition(ProtoTask._target._pos) as goToTargetType);
-			task = new TaskInvalid();
+			task = new TaskGoTo(derefRoomPosition(protoTask._target._pos) as goToTargetType);
+			// task = new TaskInvalid();
 			break;
 		case goToRoomTaskName:
 			task = new TaskGoToRoom(protoTask._target._pos.roomName as goToRoomTargetType);
@@ -79,6 +84,9 @@ export function initializeTask(protoTask: ProtoTask): Task {
 			break;
 		case healTaskName:
 			task = new TaskHeal(target as healTargetType);
+			break;
+		case helpTaskName:
+			task = new TaskHelp(target as buildTargetType);
 			break;
 		case meleeAttackTaskName:
 			task = new TaskMeleeAttack(target as meleeAttackTargetType);

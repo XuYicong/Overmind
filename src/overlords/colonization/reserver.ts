@@ -1,3 +1,4 @@
+import { Directive } from 'directives/Directive';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectiveOutpost} from '../../directives/colony/outpost';
 import {RoomIntel} from '../../intel/RoomIntel';
@@ -17,7 +18,7 @@ export class ReservingOverlord extends Overlord {
 	reservers: Zerg[];
 	reserveBuffer: number;
 
-	constructor(directive: DirectiveOutpost, priority = OverlordPriority.remoteRoom.reserve) {
+	constructor(directive: Directive, priority = OverlordPriority.remoteRoom.reserve) {
 		super(directive, 'reserve', priority);
 		// Change priority to operate per-outpost
 		this.priority += this.outpostIndex * OverlordPriority.remoteRoom.roomIncrement;
@@ -43,7 +44,7 @@ export class ReservingOverlord extends Overlord {
 				amount = 1;
 			}
 		}
-		this.wishlist(amount, Setups.infestors.reserve);
+		this.wishlist(amount, Setups.infestors.reserve, {reassignIdle: true});
 	}
 
 	private handleReserver(reserver: Zerg): void {

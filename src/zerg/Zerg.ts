@@ -526,8 +526,16 @@ export class Zerg {
 	 * For now, that means RIP
 	 */
 	retire() {
-		this.say('💀 RIP 💀', true);
-		return this.suicide();
+		// Detect creep body parts:
+		// case: CLAIM: reserver
+		// case: WORK: worker
+		// case: ATTACK, HEAL: healedAttack
+		// case: RANGED, HEAL: healedRanged
+		// case: ATTACK: melee
+		// case: RANGED: ranged
+		// case: HEAL: healer
+		// case: CARRY: transport
+		// default: visibility
 	}
 	/* Reassigns the creep to work under a new overlord and as a new role. */
 	reassign(newOverlord: Overlord | null, newRole?: string, invalidateTask = true) {

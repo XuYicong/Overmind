@@ -2,7 +2,6 @@ import {Colony, ColonyMemory} from '../Colony';
 import {Directive} from '../directives/Directive';
 import {alignedNewline, bullet} from '../utilities/stringConstants';
 import {color, toColumns} from '../utilities/utils';
-import {asciiLogoRL} from '../visuals/logos';
 import {MY_USERNAME, USE_PROFILER} from '../~settings';
 import {log} from './log';
 
@@ -26,6 +25,8 @@ export class OvermindConsole {
 		global.setLogLevel = log.setLogLevel;
 		global.suspendColony = this.suspendColony;
 		global.unsuspendColony = this.unsuspendColony;
+		global.sleepColony = this.sleepColony;
+		global.unsleepColony = this.unsleepColony;
 		global.openRoomPlanner = this.openRoomPlanner;
 		global.closeRoomPlanner = this.closeRoomPlanner;
 		global.cancelRoomPlanner = this.cancelRoomPlanner;
@@ -40,10 +41,9 @@ export class OvermindConsole {
 		global.removeFlagsByColor = this.removeFlagsByColor;
 		global.removeErrantFlags = this.removeErrantFlags;
 		global.deepCleanMemory = this.deepCleanMemory;
-		global.startRemoteDebugSession = this.startRemoteDebugSession;
-		global.endRemoteDebugSession = this.endRemoteDebugSession;
 		global.profileMemory = this.profileMemory;
 		global.cancelMarketOrders = this.cancelMarketOrders;
+		global.sendResource = this.sendResource;
 	}
 
 	// Help, information, and operational changes ======================================================================
@@ -64,6 +64,8 @@ export class OvermindConsole {
 		descr['setLogLevel(int)'] = 'set the logging level from 0 - 4';
 		descr['suspendColony(roomName)'] = 'suspend operations within a colony';
 		descr['unsuspendColony(roomName)'] = 'resume operations within a suspended colony';
+		descr['sleepColony(roomName)'] = '睡眠 colony，节约 CPU 并保活 controller';
+		descr['unsleepColony(roomName)'] = '唤醒睡眠中的 colony';
 		descr['openRoomPlanner(roomName)'] = 'open the room planner for a room';
 		descr['closeRoomPlanner(roomName)'] = 'close the room planner and save changes';
 		descr['cancelRoomPlanner(roomName)'] = 'close the room planner and discard changes';
@@ -78,7 +80,7 @@ export class OvermindConsole {
 		descr['removeErrantFlags()'] = 'remove all flags which don\'t match a directive';
 		descr['deepCleanMemory()'] = 'deletes all non-critical portions of memory (be careful!)';
 		descr['profileMemory(depth=1)'] = 'scan through memory to get the size of various objects';
-		descr['startRemoteDebugSession()'] = 'enables the remote debugger so Muon can debug your code';
+		descr['sendResource(type, amount, to)'] = '向指定房间发送指定数量的特定资源';
 		descr['cancelMarketOrders(filter?)'] = 'cancels all market orders matching filter (if provided)';
 		// Console list
 		const descrMsg = toColumns(descr, {justify: true, padChar: '.'});
@@ -95,10 +97,6 @@ export class OvermindConsole {
 		const msg = `Codebase updated or global reset. Type "help" for a list of console commands.` + joinChar +
 					OvermindConsole.info(aligned);
 		log.alert(msg);
-	}
-
-	static printTrainingMessage(): void {
-		console.log('\n' + asciiLogoRL.join('\n') + '\n');
 	}
 
 	static info(aligned = false): string {
@@ -159,16 +157,6 @@ export class OvermindConsole {
 		return `Disabled debugging for ${thing.name}.`;
 	}
 
-	static startRemoteDebugSession(): string {
-		global.remoteDebugger.enable();
-		return `Started remote debug session.`;
-	}
-
-	static endRemoteDebugSession(): string {
-		global.remoteDebugger.disable();
-		return `Ended remote debug session.`;
-	}
-
 	static print(...args: any[]): string {
 		for (const arg of args) {
 			let cache: any = [];
@@ -207,6 +195,44 @@ export class OvermindConsole {
 
 
 	// Colony suspension ===============================================================================================
+
+	static sleepColony(roomName: string): string {
+		if (Overmind.colonies[roomName]) {
+			const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+			if (colonyMemory) {
+				if (colonyMemory.sleep) {
+					return `Colony ${roomName} 早已睡眠`;
+				} else {
+					colonyMemory.sleep = true;
+					Overmind.shouldBuild = true;
+					return `Colony ${roomName} 睡眠完成`;
+				}
+			} else {
+				return `${roomName} 没有 colony memory`;
+			}
+		} else {
+			return `${roomName} 不是有效 colony`;
+		}
+	}
+
+	static unsleepColony(roomName: string): string {
+		if (Overmind.colonies[roomName]) {
+			const colonyMemory = Memory.colonies[roomName] as ColonyMemory | undefined;
+			if (colonyMemory) {
+				if (colonyMemory.sleep) {
+					delete colonyMemory.sleep;
+					Overmind.shouldBuild = true;
+					return `Colony ${roomName} 唤醒完成`;
+				} else {
+					return `Colony ${roomName} 未曾睡眠`;
+				}
+			} else {
+				return `${roomName} 没有 colony memory`;
+			}
+		} else {
+			return `${roomName} 不是有效 colony`;
+		}
+	}
 
 	static suspendColony(roomName: string): string {
 		if (Overmind.colonies[roomName]) {
@@ -464,6 +490,14 @@ export class OvermindConsole {
 		OvermindConsole.recursiveMemoryProfile(Memory, sizes, depth);
 		console.log(`Time elapsed: ${Game.cpu.getUsed() - start}`);
 		return JSON.stringify(sizes, undefined, '\t');
+	}
+
+	// Terminals ===============================================================================================
+
+	static sendResource(type: string, amount: number, to: string) {
+		global.Memory.Overmind.terminalNetwork.sendResourceType = type;
+		global.Memory.Overmind.terminalNetwork.sendToRoom = to;
+		global.Memory.Overmind.terminalNetwork.sendResourceAmount = amount;
 	}
 
 	static cancelMarketOrders(filter?: (order: Order) => any): string {

@@ -398,22 +398,22 @@ export abstract class Overlord {
 
 	// TODO: finish this; currently requires host colony to have evolution chamber
 	canBoostSetup(setup: CreepSetup): boolean {
-		// if (this.colony.evolutionChamber && this.boosts[setup.role] && this.boosts[setup.role]!.length > 0) {
-		// 	let energyCapacityAvailable: number;
-		// 	if (this.spawnGroup) {
-		// 		energyCapacityAvailable = this.spawnGroup.energyCapacityAvailable;
-		// 	} else if (this.colony.spawnGroup) {
-		// 		energyCapacityAvailable = this.colony.spawnGroup.energyCapacityAvailable;
-		// 	} else if (this.colony.hatchery) {
-		// 		energyCapacityAvailable = this.colony.hatchery.room.energyCapacityAvailable;
-		// 	} else {
-		// 		return false;
-		// 	}
-		// 	const body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
-		// 	if (body.length == 0) return false;
-		// 	return _.all(this.boosts[setup.role]!,
-		// 				 boost => this.colony.evolutionChamber!.canBoost(body, boost));
-		// }
+		if (this.colony.evolutionChamber && this.boosts[setup.role] && this.boosts[setup.role]!.length > 0) {
+			let energyCapacityAvailable: number;
+			if (this.spawnGroup) {
+				energyCapacityAvailable = this.spawnGroup.energyCapacityAvailable;
+			} else if (this.colony.spawnGroup) {
+				energyCapacityAvailable = this.colony.spawnGroup.energyCapacityAvailable;
+			} else if (this.colony.hatchery) {
+				energyCapacityAvailable = this.colony.hatchery.room.energyCapacityAvailable;
+			} else {
+				return false;
+			}
+			const body = _.map(setup.generateBody(energyCapacityAvailable), part => ({type: part, hits: 100}));
+			if (body.length == 0) return false;
+			return _.all(this.boosts[setup.role]!,
+						 boost => this.colony.evolutionChamber!.canBoost(body, boost));
+		}
 		return false;
 	}
 

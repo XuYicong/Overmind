@@ -40,7 +40,7 @@ export class WorkerOverlord extends Overlord {
 			4       : 2.6e+5,
 			5       : 4e+5,
 			6       : 1e+6,
-			7       : 1e+4,
+			7       : 3e+6,
 			8       : 2e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
@@ -129,7 +129,7 @@ export class WorkerOverlord extends Overlord {
 	}
 
 	private neededRampartHits(rampart: StructureRampart): number {
-		let neededHits = WorkerOverlord.settings.barrierHits[this.colony.level];
+		let neededHits = 0; // WorkerOverlord.settings.barrierHits[this.colony.level];
 		for (const nuke of rampart.pos.lookFor(LOOK_NUKES)) {
 			neededHits += 10e6;
 		}
@@ -154,7 +154,7 @@ export class WorkerOverlord extends Overlord {
 		if (this.colony.stage == ColonyStage.Larva) {
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
-				const MAX_WORKERS = 10; // Maximum number of workers to spawn
+				const MAX_WORKERS = 16; // Maximum number of workers to spawn
 				const energyMinedPerTick = _.sum(_.map(this.colony.miningSites, function(site) {
 					const overlord = site.overlords.mine;
 					const miningPowerAssigned = _.sum(overlord.miners, miner => miner.getActiveBodyparts(WORK));
@@ -412,10 +412,12 @@ export class WorkerOverlord extends Overlord {
 			if ((this.colony.level < 8 || this.colony.upgradeSite.overlord.upgraders.length == 0)
 				&& this.colony.defcon == DEFCON.safe) {
 				if (this.upgradeActions(worker)) return;
+			} else {
+				this.fortifyActions(worker, this.room.walkableRamparts);
 			}
 		} else {
 			// Acquire more energy
-			const workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 750 : 100;
+			const workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 400 : 100;
 			worker.task = Tasks.recharge(workerWithdrawLimit);
 		}
 	}

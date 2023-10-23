@@ -30,6 +30,7 @@ export class CommandCenter extends HiveCluster {
 	terminal: StructureTerminal | undefined;				// The colony terminal
 	terminalNetwork: TerminalNetwork;						// Reference to Overmind.terminalNetwork
 	towers: StructureTower[];								// Towers within range 3 of storage are part of cmdCenter
+	extensions: StructureExtension[];						// Help fill some extra extensions at RCL8
 	powerSpawn: StructurePowerSpawn | undefined;			// Colony Power Spawn
 	nuker: StructureNuker | undefined;						// Colony nuker
 	factory: StructureFactory | undefined;					// Colony factory
@@ -59,6 +60,7 @@ export class CommandCenter extends HiveCluster {
 			this.link = this.colony.bunker.anchor.findClosestByLimitedRange(colony.availableLinks, 1);
 			this.colony.linkNetwork.claimLink(this.link);
 			this.towers = this.colony.bunker.anchor.findInRange(colony.towers, 1);
+			this.extensions = this.colony.bunker.anchor.findInRange(colony.extensions, 1);
 		} else {
 			this.link = this.pos.findClosestByLimitedRange(colony.availableLinks, 2);
 			this.colony.linkNetwork.claimLink(this.link);
@@ -72,7 +74,7 @@ export class CommandCenter extends HiveCluster {
 	refresh() {
 		this.memory = Mem.wrap(this.colony.memory, 'commandCenter');
 		$.refreshRoom(this);
-		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers', 'factory');
+		$.refresh(this, 'storage', 'terminal', 'powerSpawn', 'nuker', 'observer', 'link', 'towers', 'factory', 'extensions');
 		this.transportRequests.refresh();
 		this.observeRoom = undefined;
 	}
@@ -130,6 +132,8 @@ export class CommandCenter extends HiveCluster {
 		// Refill towers as needed with variable priority
 		const refillTowers = _.filter(this.towers, tower => tower.store[RESOURCE_ENERGY] < CommandCenter.settings.refillTowersBelow);
 		_.forEach(refillTowers, tower => this.transportRequests.requestInput(tower, Priority.High));
+		const refillExtensions = _.filter(this.extensions, ext => ext.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+		_.forEach(refillExtensions, tower => this.transportRequests.requestInput(tower, Priority.Normal));
 
 		// Refill core spawn (only applicable to bunker layouts)
 		if (this.colony.bunker && this.colony.bunker.coreSpawn) {
@@ -138,15 +142,22 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill power spawn
-		if (this.powerSpawn && this.powerSpawn.store[RESOURCE_ENERGY] < this.powerSpawn.store.getCapacity(RESOURCE_ENERGY)) {
+		if (this.powerSpawn && this.powerSpawn.store.getUsedCapacity(RESOURCE_ENERGY) <= 0 && this.storage.store[RESOURCE_ENERGY] > 100000) {
 			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 		}
-		if (this.powerSpawn && this.powerSpawn.store[RESOURCE_POWER] < this.powerSpawn.store.getCapacity(RESOURCE_POWER)) {
-			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow, {resourceType: RESOURCE_POWER});
+		if (this.powerSpawn && this.powerSpawn.store.getUsedCapacity(RESOURCE_POWER) <= 0
+			&& this.colony.assets[RESOURCE_POWER]) {
+			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow, {
+				resourceType: RESOURCE_POWER, amount: Math.min(
+					this.powerSpawn.store.getFreeCapacity(RESOURCE_POWER), 
+					this.colony.assets[RESOURCE_POWER]
+					)
+				}
+			);
 		}
 		// Refill nuker with low priority
 		if (this.nuker) {
-			if (this.nuker.store[RESOURCE_ENERGY] < this.nuker.store.getCapacity(RESOURCE_ENERGY) && this.storage.store[RESOURCE_ENERGY] > 200000) {
+			if (this.nuker.store[RESOURCE_ENERGY] < this.nuker.store.getCapacity(RESOURCE_ENERGY) && this.storage.store[RESOURCE_ENERGY] > 300000) {
 				this.transportRequests.requestInput(this.nuker, Priority.Low);
 			}
 			if (this.nuker.ghodium < this.nuker.ghodiumCapacity
@@ -182,6 +193,13 @@ export class CommandCenter extends HiveCluster {
 		}
 	}
 
+	private runPowerSpawn(): void {
+		if (!this.powerSpawn) return;
+		const store = this.powerSpawn.store;
+		if (store.getUsedCapacity(RESOURCE_ENERGY) <= 0 || store.getUsedCapacity(RESOURCE_POWER) <= 0) return;
+		this.powerSpawn.processPower();
+	}
+
 	// Initialization and operation ====================================================================================
 
 	init(): void {
@@ -191,6 +209,7 @@ export class CommandCenter extends HiveCluster {
 
 	run(): void {
 		this.runObserver();
+		this.runPowerSpawn();
 	}
 
 	visuals(coord: Coord): Coord {

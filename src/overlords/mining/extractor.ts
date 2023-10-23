@@ -74,6 +74,7 @@ export class ExtractorOverlord extends Overlord {
 		if (originPos) {
 			const path = Pathing.findShortestPath(this.pos, originPos).path;
 			const pos = _.find(path, pos => pos.getRangeTo(this) == 1);
+			Pathing.serializePath(originPos, path, 'cyan');
 			if (pos) return pos;
 		}
 		// Shouldn't ever get here

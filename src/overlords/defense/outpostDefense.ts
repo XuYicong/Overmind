@@ -8,6 +8,7 @@ import {profile} from '../../profiler/decorator';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {CombatOverlord} from '../CombatOverlord';
 import { Directive } from 'directives/Directive';
+import { CombatTargeting } from 'targeting/CombatTargeting';
 
 /**
  * General purpose skirmishing overlord for dealing with player combat in an outpost
@@ -23,13 +24,23 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	constructor(directive: Directive, priority = OverlordPriority.outpostDefense.outpostDefense) {
 		super(directive, 'outpostDefense', priority, 1);
 		this.spawnGroup.settings.flexibleEnergy = true;
-		this.melees = this.combatZerg(Roles.melee);
-		this.broodlings = this.combatZerg(Roles.guardMelee);
-		this.ranged = this.combatZerg(Roles.ranged, { 
-			boostWishlist: [boostResources.tough[1], boostResources.ranged_attack[1],
+		this.melees = this.combatZerg(Roles.melee, { 
+			boostWishlist: [boostResources.attack[1],
+				boostResources.heal[1]]
+		}).concat(this.combatZerg(Roles.police));
+
+		this.broodlings = this.combatZerg(Roles.guardMelee, { 
+			boostWishlist: [boostResources.attack[1],
 				boostResources.heal[1]]
 		});
-		this.healers = this.combatZerg(Roles.healer);
+		this.ranged = this.combatZerg(Roles.ranged, { 
+			boostWishlist: [boostResources.ranged_attack[1],
+				boostResources.heal[1], boostResources.move[1]]
+		});
+		this.healers = this.combatZerg(Roles.healer, {
+			boostWishlist: [
+				boostResources.heal[1], boostResources.move[1]]
+		});
 	}
 
 	private handleCombat(zerg: CombatZerg): void {
@@ -41,10 +52,11 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 	}
 
 	private handleMelee(zerg: CombatZerg): void {
-		if (this.room && this.room.hostiles.length > 0) {
-			zerg.attackAndChase(this.room.hostiles[0]);
+		if (zerg.inSameRoomAs(this) && zerg.room.hostiles.length > 0) {
+			const target = CombatTargeting.findClosestHostile(zerg, false, true);
+			if(target) zerg.attackAndChase(target);
 		} else {
-			zerg.goTo(this.pos, {range: 22});
+			zerg.goTo(this.pos, {range: 12});
 		}
 	}
 
@@ -56,7 +68,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 				healer.suicide(); // you're useless at this point // TODO: this isn't smart
 			}
 		} else {
-			if (this.room && _.some([...this.broodlings, ...this.ranged], creep => creep.room == this.room)) {
+			if (this.room && _.some([...this.broodlings, ...this.ranged, ...this.melees], creep => creep.room == this.room)) {
 				this.handleCombat(healer); // go to room if there are any fighters in there
 			} else {
 				healer.autoSkirmish(healer.room.name);
@@ -99,7 +111,10 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 
 		const {attack, rangedAttack, heal} = this.getEnemyPotentials();
 
-		const hydraliskSetup = mode == 'NORMAL' ? CombatSetups.hydralisks.default : CombatSetups.hydralisks.early;
+		const hydraliskSetup = mode == 'NORMAL' ? 
+				this.canBoostSetup(CombatSetups.hydralisks.boosted_T1) ? 
+				CombatSetups.hydralisks.boosted_T1 :CombatSetups.hydralisks.default : 
+			CombatSetups.hydralisks.early;
 		const hydraliskAmount = this.computeNeededHydraliskAmount(hydraliskSetup, rangedAttack);
 		this.wishlist(hydraliskAmount, hydraliskSetup, {priority: this.priority - .2, reassignIdle: true});
 
@@ -108,15 +123,19 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		this.wishlist(broodlingAmount, broodlingSetup, {priority: this.priority - .1, reassignIdle: true});
 
 		const enemyHealers = _.filter(this.room ? this.room.hostiles : [], creep => CombatIntel.isHealer(creep)).length;
+		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T1) ? 
+						CombatSetups.healers.boosted_T1 :CombatSetups.healers.default
 		let healerAmount = (enemyHealers > 0 || mode == 'EARLY') ?
-						   this.computeNeededHealerAmount(CombatSetups.healers.default, heal) : 0;
+						   this.computeNeededHealerAmount(healerSetup, heal) : 0;
 		if (mode == 'EARLY' && attack + rangedAttack > 0) {
 			healerAmount = Math.max(healerAmount, 1);
 		}
-		this.wishlist(healerAmount, CombatSetups.healers.default, {priority: this.priority, reassignIdle: true});
+		this.wishlist(healerAmount, healerSetup, {priority: this.priority, reassignIdle: true});
+		let meleeAmount = 0;
 		if (hydraliskAmount + broodlingAmount + healerAmount <= 0) {
-			this.wishlist(1, CombatSetups.zerglings.police, {priority: this.priority - .3, reassignIdle: true});
+			meleeAmount = 1;
 		}
+		this.wishlist(meleeAmount, CombatSetups.police.default, {priority: this.priority - .3, reassignIdle: true});
 	}
 
 	run() {

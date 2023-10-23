@@ -6,11 +6,14 @@ import {dismantleTargetType, TaskDismantle} from './instances/dismantle';
 import {dropTargetType, TaskDrop} from './instances/drop';
 // import {fleeTargetType, TaskFlee} from './instances/flee';
 import {fortifyTargetType, TaskFortify} from './instances/fortify';
+import { generateSafeModeTargetType, TaskGenerateSafeMode } from './instances/generateSafeMode';
 import {getBoostedTargetType, TaskGetBoosted} from './instances/getBoosted';
 import {getRenewedTargetType, TaskGetRenewed} from './instances/getRenewed';
+import { goToTargetType, TaskGoTo } from './instances/goTo';
 import {goToRoomTargetType, TaskGoToRoom} from './instances/goToRoom';
 import {harvestTargetType, TaskHarvest} from './instances/harvest';
 import {healTargetType, TaskHeal} from './instances/heal';
+import { TaskHelp } from './instances/help';
 import {meleeAttackTargetType, TaskMeleeAttack} from './instances/meleeAttack';
 import {pickupTargetType, TaskPickup} from './instances/pickup';
 import {rangedAttackTargetType, TaskRangedAttack} from './instances/rangedAttack';
@@ -81,6 +84,11 @@ export class Tasks {
 		return new TaskFortify(target, options);
 	}
 
+	static generateSafeMode(target: generateSafeModeTargetType, 
+						options = {} as TaskOptions): TaskGenerateSafeMode {
+		return new TaskGenerateSafeMode(target, options);
+	}
+
 	static getBoosted(target: getBoostedTargetType,
 					  boostType: _ResourceConstantSansEnergy,
 					  amount?: number,
@@ -90,6 +98,10 @@ export class Tasks {
 
 	static getRenewed(target: getRenewedTargetType, options = {} as TaskOptions): TaskGetRenewed {
 		return new TaskGetRenewed(target, options);
+	}
+
+	static goTo(target: goToTargetType, options = {} as TaskOptions): TaskGoToRoom {
+		return new TaskGoTo(target, options);
 	}
 
 	static goToRoom(target: goToRoomTargetType, options = {} as TaskOptions): TaskGoToRoom {
@@ -102,6 +114,10 @@ export class Tasks {
 
 	static heal(target: healTargetType, options = {} as TaskOptions): TaskHeal {
 		return new TaskHeal(target, options);
+	}
+
+	static help(target: buildTargetType, options = {} as TaskOptions): TaskHelp {
+		return new TaskHelp(target, options);
 	}
 
 	static meleeAttack(target: meleeAttackTargetType, options = {} as TaskOptions): TaskMeleeAttack {

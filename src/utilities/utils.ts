@@ -40,8 +40,8 @@ export function hasMinerals(store: StoreDefinition): boolean {
 export function getUsername(): string {
 	for (const i in Game.rooms) {
 		const room = Game.rooms[i];
-		if (room.controller && room.controller.owner && room.controller.my) {
-			return room.controller.owner.username;
+		if (room.controller?.my) {
+			return room.controller.owner!.username;
 		}
 	}
 	for (const i in Game.creeps) {
@@ -50,7 +50,8 @@ export function getUsername(): string {
 			return creep.owner.username;
 		}
 	}
-	console.log('ERROR: Could not determine username. You can set this manually in src/settings/settings_user');
+	console.log('ERROR: Could not determine username in utilities/utils.ts.');
+	Game.cpu.halt ? Game.cpu.halt() : console.log('玩家没有任何房间或爬，无法确定用户名，且环境不支持 halt');
 	return 'ERROR: Could not determine username.';
 }
 
@@ -60,19 +61,6 @@ export function hasJustSpawned(): boolean {
 
 export function onPublicServer(): boolean {
 	return Game.shard.name.includes('shard');
-}
-
-export function onTrainingEnvironment(): boolean {
-	return !!Memory.reinforcementLearning && !!Memory.reinforcementLearning.enabled;
-}
-
-export function getReinforcementLearningTrainingVerbosity(): number {
-	if (Memory.reinforcementLearning) {
-		if (Memory.reinforcementLearning.verbosity != undefined) {
-			return Memory.reinforcementLearning.verbosity;
-		}
-	}
-	return 0;
 }
 
 interface ToColumnOpts {
@@ -105,6 +93,7 @@ export function toColumns(obj: { [key: string]: string }, opts = {} as ToColumnO
 	});
 
 	const ret = [];
+	// FIXME: 字符宽度不一
 	const keyPadding = _.max(_.map(_.keys(obj), str => str.length)) + 1;
 	const valPadding = _.max(_.mapValues(obj, str => str.length));
 

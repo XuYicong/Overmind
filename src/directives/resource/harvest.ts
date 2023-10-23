@@ -11,6 +11,7 @@ import {Directive} from '../Directive';
 export const _HARVEST_MEM_PATHING = 'P';
 export const _HARVEST_MEM_USAGE = 'u';
 export const _HARVEST_MEM_DOWNTIME = 'd';
+export const _HARVEST_MEM_DIRECTION = 'n';
 
 interface DirectiveHarvestMemory extends FlagMemory {
 	[_HARVEST_MEM_PATHING]?: {
@@ -19,6 +20,7 @@ interface DirectiveHarvestMemory extends FlagMemory {
 	};
 	[_HARVEST_MEM_USAGE]: number;
 	[_HARVEST_MEM_DOWNTIME]: number;
+	[_HARVEST_MEM_DIRECTION]?: DirectionConstant;
 }
 
 const defaultDirectiveHarvestMemory: DirectiveHarvestMemory = {

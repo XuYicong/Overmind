@@ -60,6 +60,21 @@ Object.defineProperty(StructureController.prototype, 'signedByScreeps', {
 	configurable: true,
 });
 
+Object.defineProperty(StructureController.prototype, 'maxTicksToDowngrade', {
+	get         : function() {
+		return [0,
+			20000,
+			10000,
+			20000,
+			40000,
+			80000,
+			120000,
+			150000,
+			200000,
+		][this.level];
+	},
+	configurable: true,
+});
 
 StructureController.prototype.needsReserving = function(reserveBuffer: number): boolean {
 	return !this.reservation || (this.reservedByMe && this.reservation.ticksToEnd < reserveBuffer);

@@ -28,26 +28,22 @@ var __decorate = this && this.__decorate || function (decorators, target, key, d
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { Overshard } from './Overshard';
-import { assimilationLocked } from './assimilation/decorator';
 import { GameCache } from './caching/GameCache';
 import { Colony, getAllColonies } from './Colony';
 import { log } from './console/log';
-import { AllContracts } from './contracts/contractsList';
 import { DirectiveWrapper } from './directives/initializer';
 import { NotifierPriority } from './directives/Notifier';
 import { RoomIntel } from './intel/RoomIntel';
 import { TerminalNetwork } from './logistics/TerminalNetwork';
 import { TraderJoe } from './logistics/TradeNetwork';
 import { Mem } from './memory/Memory';
-// import { Segmenter } from './memory/Segmenter';
 import { Overseer } from './Overseer';
 import { profile } from './profiler/decorator';
 import { Stats } from './stats/stats';
 import { ExpansionPlanner } from './strategy/ExpansionPlanner';
 import { alignedNewline } from './utilities/stringConstants';
-import { asciiLogoSmall } from './visuals/logos';
 import { Visualizer } from './visuals/Visualizer';
-import { MUON, MY_USERNAME, NEW_OVERMIND_INTERVAL, PROFILER_COLONY_LIMIT, PROFILER_INCLUDE_COLONIES, USE_PROFILER, USE_TRY_CATCH } from './~settings';
+import { NEW_OVERMIND_INTERVAL, PROFILER_COLONY_LIMIT, PROFILER_INCLUDE_COLONIES, USE_PROFILER, USE_TRY_CATCH } from './~settings';
 // javascript-obfuscator:enable
 const profilerRooms = {};
 if (USE_PROFILER) {
@@ -168,9 +164,12 @@ let _Overmind = class _Overmind {
         for (const ownedRoom in Game.rooms) {
             if (Game.rooms[ownedRoom]['my']) {
                 const colony = Memory.colonies[ownedRoom];
-                if (colony && colony[_0x9e16('0x39')]) {
+                if (colony && colony['suspend']) {
                     this.overseer[_0x9e16('0x3a')][_0x9e16('0x3b')](_0x9e16('0x3c'), ownedRoom, NotifierPriority[_0x9e16('0x3d')]);
                     continue;
+                }
+                if (colony && colony['sleep']) {
+                    this.overseer[_0x9e16('0x3a')][_0x9e16('0x3b')]('Colony 睡眠中', ownedRoom, NotifierPriority[_0x9e16('0x3d')]);
                 }
                 if (Game.rooms[ownedRoom][_0x9e16('0x3e')]) {
                     outposts[ownedRoom] = _[_0x9e16('0x32')](
@@ -222,13 +221,13 @@ let _Overmind = class _Overmind {
             if (this.directives[_0x4d31b6]) {
                 continue;
             }
-            const _0x53d7dd = Game[_0x9e16('0x3e')][_0x4d31b6][_0x9e16('0x5')]['C'];
-            if (_0x53d7dd) {
-                if (USE_PROFILER && !profilerRooms[_0x53d7dd]) {
+            const colony = Game[_0x9e16('0x3e')][_0x4d31b6][_0x9e16('0x5')]['C'];
+            if (colony) {
+                if (USE_PROFILER && !profilerRooms[colony]) {
                     continue;
                 }
-                const _0x51f1bf = Memory.colonies[_0x53d7dd];
-                if (_0x51f1bf && _0x51f1bf[_0x9e16('0x39')]) {
+                const memory = Memory.colonies[colony];
+                if (memory && (memory['suspend'] || memory.sleep)) {
                     continue;
                 }
             }
@@ -274,32 +273,18 @@ let _Overmind = class _Overmind {
         for (const _0x339ce6 in this.colonies) {
             this["try"](() => this.colonies[_0x339ce6]["run"](), _0x339ce6);
         }
-        if (MY_USERNAME == MUON) {
-            for (const contract of AllContracts) {
-                this["try"](() => contract["run"]());
-            }
-        }
         this["try"](() => this.terminalNetwork["run"]());
         this["try"](() => this[_0x9e16('0x14')]["run"]());
         this["try"](() => this[_0x9e16('0x15')]["run"]());
         this["try"](() => RoomIntel["run"]());
         this["try"](() => this.overshard.run());
-        // this["try"](() => Assimilator["run"]());
     }
     [_0x9e16('0x52')]() {
-        this["try"](() => VersionUpdater["run"]());
-        // this["try"](() => Segmenter["run"]());
         this[_0x9e16('0x29')]();
     }
     [_0x9e16('0x53')]() {
-        if (Game[_0x9e16('0x4c')][_0x9e16('0x54')] > 0x2328) {
+        if (Game[_0x9e16('0x4c')][_0x9e16('0x54')] > 8000) {
             Visualizer[_0x9e16('0x53')]();
-            if (VersionUpdater[_0x9e16('0x5')][_0x9e16('0x55')]) {
-                const _0x458fea = VersionUpdater[_0x9e16('0x5')][_0x9e16('0x55')];
-                if (VersionUpdater[_0x9e16('0x56')](_0x458fea)) {
-                    this.overseer[_0x9e16('0x3a')][_0x9e16('0x3b')](_0x9e16('0x57') + __VERSION__ + _0x9e16('0x58') + _0x458fea, undefined, -0x1);
-                }
-            }
             this.overseer[_0x9e16('0x53')]();
             for (const _0x64d8ea in this.colonies) {
                 this.colonies[_0x64d8ea][_0x9e16('0x53')]();
@@ -312,7 +297,7 @@ let _Overmind = class _Overmind {
         }
     }
 };
-_Overmind = __decorate([profile, assimilationLocked], _Overmind);
+_Overmind = __decorate([profile], _Overmind);
 export default _Overmind;
 class IntelManagement {
     static [_0x9e16('0x5c')]() {
@@ -341,105 +326,8 @@ class IntelManagement {
         _[_0x9e16('0x1')](Overmind.colonies)
     }
     static [_0x9e16('0x6c')]() {
-        // if (!Assimilator[_0x9e16('0x6d')](MY_USERNAME)) {
-        //     const _0x5a2622 = [[COLOR_RED, COLOR_RED]];
-        //     for (const _0x2c0dbd in Game[_0x9e16('0x3e')]) {
-        //         const _0x3a00ca = Game[_0x9e16('0x3e')][_0x2c0dbd];
-        //         const _0x1c0b76 = [_0x3a00ca[_0x9e16('0x6e')], _0x3a00ca[_0x9e16('0x6f')]];
-        //         if (_0x5a2622[_0x9e16('0x63')](_0x1c0b76)) { }
-        //     }
-        // }
     }
     static ["run"]() {
         this[_0x9e16('0x5c')]();
-        if (Game.time % (0x3 * 0x1f) == 0x0) {
-            this[_0x9e16('0x6c')]();
-        }
     }
 }
-class VersionUpdater {
-    static get [_0x9e16('0x5')]() {
-        return Mem[_0x9e16('0x70')](Memory[_0x9e16('0x6')], _0x9e16('0x71'), {
-            'versions': {}
-            , 'newestVersion': undefined
-        }
-        );
-    }
-    static [_0x9e16('0x72')]() {
-        // if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
-        //     Segmenter[_0x9e16('0x75')](MUON, this[_0x9e16('0x76')]);
-        // }
-        // else if (Game.time % this.CheckFrequency == this.CheckOnTick) {
-        //     const _0x25ce0d = Segmenter[_0x9e16('0x77')]();
-        //     if (_0x25ce0d) {
-        //         return _0x25ce0d[_0x9e16('0x78')];
-        //     }
-        // }
-    }
-    static [_0x9e16('0x56')](_0xaa5430) {
-        const [_0x2ae244, _0x5391fd, _0x24c5a1] = _[_0x9e16('0x32')](__VERSION__[_0x9e16('0x79')]('.'), _0x2ae98a => parseInt(_0x2ae98a, 0xa));
-        const [_0x34116f, _0x2e335f, _0xc5c749] = _[_0x9e16('0x32')](_0xaa5430[_0x9e16('0x79')]('.'), _0x129f43 => parseInt(_0x129f43, 0xa));
-        return _0x34116f > _0x2ae244 || _0x2e335f > _0x5391fd || _0xc5c749 > _0x24c5a1;
-    }
-    static [_0x9e16('0x7a')]() {
-        // if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x2) {
-        //     Segmenter[_0x9e16('0x7b')](this[_0x9e16('0x76')]);
-        // }
-        // else if (Game.time % this.CheckFrequency == this.CheckOnTick - 0x1) {
-        //     Segmenter[_0x9e16('0x7c')](this[_0x9e16('0x76')]);
-        //     Segmenter[_0x9e16('0x7d')](this[_0x9e16('0x76')], _0x9e16('0x78'), __VERSION__);
-        // }
-    }
-    static [_0x9e16('0x7e')](_0x504723, _0x19a7e9) {
-        let _0x5d0856 = '\x0a';
-        for (const _0x425873 of asciiLogoSmall) {
-            _0x5d0856 += _0x425873 + '\x0a';
-        }
-        const _0x52d706 = _0x9e16('0x7f');
-        const _0x2227a9 = _0x9e16('0x80');
-        const _0x23de82 = _0x9e16('0x81') + (_0x9e16('0x82') + _0x504723 + _0x9e16('0x58') + _0x19a7e9 + _0x9e16('0x83')) + (_0x9e16('0x84') + _0x52d706 + _0x9e16('0x85') + _0x2227a9 + _0x9e16('0x86')) + _0x9e16('0x87');
-        return _0x5d0856 + _0x23de82;
-    }
-    static [_0x9e16('0x88')](_0x3af0f4, _0x492f50) {
-        const _0x207d2f = _0x9e16('0x7f');
-        const _0x5e5126 = _0x9e16('0x80');
-        const _0x64ac05 = _0x9e16('0x89') + _0x9e16('0x8a') + _0x9e16('0x8b') + (_0x9e16('0x8c') + _0x3af0f4 + _0x9e16('0x58') + _0x492f50 + _0x9e16('0x8d')) + (_0x9e16('0x8e') + _0x207d2f + _0x9e16('0x85') + _0x5e5126 + _0x9e16('0x8f')) + _0x9e16('0x90');
-        return '\x0a' + _0x64ac05;
-    }
-    static [_0x9e16('0x91')](_0x4ee7ac) {
-        const _0x44c6f2 = this[_0x9e16('0x7e')](__VERSION__, _0x4ee7ac);
-        console[_0x9e16('0x4e')](_0x9e16('0x92') + _0x44c6f2 + _0x9e16('0x93'));
-    }
-    static [_0x9e16('0x94')](_0xef121e) {
-        for (const _0x15d424 in Game[_0x9e16('0x5e')]) {
-            const _0x3c552a = Game[_0x9e16('0x5e')][_0x15d424];
-            _0x3c552a[_0x9e16('0x95')](_0x9e16('0x96'), !![]);
-        }
-    }
-    static [_0x9e16('0x97')](_0x57ca27) {
-        const _0x458837 = this[_0x9e16('0x88')](__VERSION__, _0x57ca27);
-        Game[_0x9e16('0x98')](_0x9e16('0x92') + _0x458837 + _0x9e16('0x93'));
-    }
-    static ["run"]() {
-        if (MY_USERNAME == MUON) {
-            this[_0x9e16('0x7a')]();
-        }
-        const _0x299af9 = this[_0x9e16('0x72')]();
-        if (_0x299af9) {
-            this[_0x9e16('0x5')][_0x9e16('0x55')] = _0x299af9;
-        }
-        const _0x2cb767 = this[_0x9e16('0x5')][_0x9e16('0x55')];
-        if (_0x2cb767 && this[_0x9e16('0x56')](_0x2cb767)) {
-            if (Game.time % 0xa == 0x0) {
-                this[_0x9e16('0x91')](_0x2cb767);
-                this[_0x9e16('0x94')](_0x2cb767);
-            }
-            if (Game.time % 0x2710 == 0x0) {
-                this[_0x9e16('0x97')](_0x2cb767);
-            }
-        }
-    }
-}
-VersionUpdater.CheckFrequency = 0x3f3f3f3f;
-VersionUpdater.CheckOnTick = 0x5b;
-VersionUpdater[_0x9e16('0x76')] = 0x63;

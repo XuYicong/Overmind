@@ -1,3 +1,4 @@
+import { DirectiveHaul } from 'directives/resource/haul';
 import {log} from '../../console/log';
 import {Roles, Setups} from '../../creepSetups/setups';
 import {DirectivePowerMine} from '../../directives/resource/powerMine';
@@ -17,7 +18,6 @@ export class PowerHaulingOverlord extends Overlord {
 	directive: DirectivePowerMine;
 	tickToSpawnOn: number;
 	numHaulers: number;
-	totalCollected: number;
 
 	// TODO bug where haulers can come from tiny rooms not ready yet
 	requiredRCL = 6;
@@ -28,7 +28,6 @@ export class PowerHaulingOverlord extends Overlord {
 		super(directive, 'powerHaul', priority);
 		this.directive = directive;
 		this.haulers = this.zerg(Roles.transport);
-		this.totalCollected = this.totalCollected || 0;
 		// Spawn haulers to collect ALL the power at the same time.
 		const haulingPartsNeeded = this.directive.totalResources / CARRY_CAPACITY;
 		// Calculate amount of hauling each hauler provides in a lifetime
@@ -51,13 +50,18 @@ export class PowerHaulingOverlord extends Overlord {
 				// hauler.say('💀 RIP 💀', true);
 				// log.warning(`${hauler.name} is committing suicide as directive is done!`);
 				this.numHaulers = 0;
-				// hauler.retire();
-				for (const haul of this.haulers) {
-					if (haul.carry.getUsedCapacity() > 0) {
-						hauler.goTo(haul, {range: 1});
-						return;
-					}
+				// 找装得最多的，帮他运一半
+				const target = _.max(this.haulers, h => 
+					h.carry.getUsedCapacity()
+				);
+				if (hauler.pos.inRangeToPos(target.pos, 1)) {
+					const amount = Math.ceil(target.carry.getUsedCapacity(RESOURCE_POWER)/2);
+					target.transfer(hauler, RESOURCE_POWER, amount);
+					this.directive.memory.totalCollected -= amount;
+				} else {
+					hauler.goTo(target, {range: 1});
 				}
+				return;
 			}
 			// Travel to directive and collect resources
 			if (hauler.inSameRoomAs(this.directive)) {
@@ -73,13 +77,13 @@ export class PowerHaulingOverlord extends Overlord {
 					if (hauler.pos.getRangeTo(this.directive.powerBank) > 4) {
 						hauler.goTo(this.directive.powerBank);
 					} else {
-						hauler.say('🚬', true);
+						hauler.say('🚬');
 					}
 					return;
 				} else if (this.room && this.room.ruins) {
-					const pb = this.room.ruins.filter(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
-					if (pb.length > 0) {
-						hauler.task = Tasks.withdraw(pb[0], RESOURCE_POWER);
+					const pb = this.room.ruins.find(ruin => !!ruin.store[RESOURCE_POWER] && ruin.store[RESOURCE_POWER]! > 0);
+					if (pb) {
+						hauler.task = Tasks.withdraw(pb, RESOURCE_POWER);
 					}
 				} else if (this.room && this.room.drops) {
 					const allDrops: Resource[] = _.flatten(_.values(this.room.drops));
@@ -90,7 +94,7 @@ export class PowerHaulingOverlord extends Overlord {
 					} else {
 						hauler.say('💀 RIP 💀', true);
 						log.warning(`${hauler.name} is committing suicide!`);
-						// hauler.retire();
+						hauler.retire();
 						return;
 					}
 				}
@@ -118,6 +122,7 @@ export class PowerHaulingOverlord extends Overlord {
 				// Shouldn't reach here
 				log.warning(`${hauler.name} in ${hauler.room.print}: nowhere to put resources!`);
 			} else {
+				this.directive.memory.totalCollected += hauler.carry[RESOURCE_POWER];
 				hauler.task = Tasks.goToRoom(this.colony.room.name);
 			}
 		}
@@ -135,7 +140,12 @@ export class PowerHaulingOverlord extends Overlord {
 			if (hauler.isIdle) {
 				this.handleHauler(hauler);
 			}
-			hauler.run();
+			// 临死时原地呼救
+			if (hauler.ticksToLive !== undefined && hauler.ticksToLive <= 1) {
+				DirectiveHaul.createIfNotPresent(hauler.pos, "pos");
+			} else {
+				hauler.run();
+			}
 		}
 	}
 }

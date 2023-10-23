@@ -195,7 +195,7 @@ interface StructureController {
 	reservedByMe: boolean;
 	signedByMe: boolean;
 	signedByScreeps: boolean;
-
+	maxTicksToDowngrade: number;
 	needsReserving(reserveBuffer: number): boolean;
 }
 

@@ -1,5 +1,4 @@
 import { NotifierPriority } from 'directives/Notifier';
-import { assimilationLocked } from '../assimilation/decorator';
 import { log } from '../console/log';
 import { Mem } from '../memory/Memory';
 import { profile } from '../profiler/decorator';
@@ -48,18 +47,18 @@ const TraderStatsDefaults: TraderStats = {
 	sold: {},
 };
 
-// Maximum prices I'm willing to pay to buy various resources - based on shard3 market data in July 2023
+// Maximum prices I'm willing to pay to buy various resources - based on shard3 market data in October 2023
 // (might not always be up to date)
 export const maxMarketPrices: { [resourceType: string]: number } = {
 	default: 5.0,
-	[RESOURCE_HYDROGEN]: 10,
-	[RESOURCE_OXYGEN]: 30,
-	[RESOURCE_UTRIUM]: 39,
-	[RESOURCE_LEMERGIUM]: 15,
-	[RESOURCE_KEANIUM]: 8,
-	[RESOURCE_ZYNTHIUM]: 30,
-	[RESOURCE_CATALYST]: 30,
-	[RESOURCE_ENERGY]: 7,
+	[RESOURCE_HYDROGEN]: 20,
+	[RESOURCE_OXYGEN]: 50,
+	[RESOURCE_UTRIUM]: 60,
+	[RESOURCE_LEMERGIUM]: 25,
+	[RESOURCE_KEANIUM]: 15,
+	[RESOURCE_ZYNTHIUM]: 50,
+	[RESOURCE_CATALYST]: 50,
+	[RESOURCE_ENERGY]: 12,
 };
 // TODO: decide by room owner instead of room name
 export const hostileTraders = [

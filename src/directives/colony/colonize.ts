@@ -47,8 +47,12 @@ export class DirectiveColonize extends Directive {
 	}
 
 	spawnMoarOverlords() {
+		// TODO: on occupation, burst defense when energy sufficient
+		if (this.colony.assets[RESOURCE_ENERGY] < 9e4) return;
+		let safeModeBonus = 0;
+		if (this.room?.controller?.safeMode) safeModeBonus = OverlordPriority.colonization.safeModeBonus;
 		this.overlords.claim = new ClaimingOverlord(this, 
-			OverlordPriority.colonization.claim, 
+			OverlordPriority.colonization.claim - safeModeBonus, 
 			() => {
 				if(this.waypoints && this.waypoints.length > 4) {
 					// We are crossing shards. To save CPU, wait for pioneers to go first
@@ -64,9 +68,9 @@ export class DirectiveColonize extends Directive {
 				}
 				return true
 			});
-		this.overlords.pioneer = new PioneerOverlord(this);
+		this.overlords.pioneer = new PioneerOverlord(this, OverlordPriority.colonization.pioneer - safeModeBonus);
 		this.overlords.shardVisibility = new ShardVisibilityScoutOverlord(this);
-		this.overlords.defends = new OutpostDefenseOverlord(this);
+		this.overlords.defends = new OutpostDefenseOverlord(this, OverlordPriority.colonization.claim -1 - safeModeBonus);
 	}
 
 	init() {

@@ -49,8 +49,8 @@ export class ControllerAttackerOverlord extends Overlord {
 	}
 
 	init() {
-		// TODO: Prespawn attackers to arrive as cooldown disappears
-		if (this.attackPositions.length > 0 && Game.time >= this.readyTick) {
+		// Prespawn attackers to arrive as cooldown disappears
+		if (this.attackPositions.length > 0 && Game.time >= this.readyTick - CREEP_CLAIM_LIFE_TIME) {
 			this.wishlist(this.attackPositions.length, Setups.infestors.controllerAttacker, {noLifetimeFilter: true});
 		}
 	}
@@ -76,10 +76,10 @@ export class ControllerAttackerOverlord extends Overlord {
 	private launchAttack(): void {
 		let signed = false;
 		if (this.room && this.room.controller) {
-			for (const infestor of this.controllerAttackers) {
-				infestor.attackController(this.room.controller);
+			for (const attacker of this.controllerAttackers) {
+				attacker.attackController(this.room.controller);
 				if (!signed) {
-					signed = (infestor.signController(this.room.controller, 'For the swarm') == OK);
+					signed = (attacker.signController(this.room.controller, '到此一游') == OK);
 				}
 			}
 		}

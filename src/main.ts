@@ -1,9 +1,3 @@
-
-//
-// Overmind repository: github.com/bencbartlett/overmind
-//
-
-
 // @formatter:off
 /* tslint:disable:ordered-imports */
 
@@ -20,17 +14,13 @@ import './prototypes/Structures'; // Prototypes for accessed structures
 import './prototypes/Miscellaneous'; // Everything else
 import './tasks/initializer'; // This line is necessary to ensure proper compilation ordering...
 import './zerg/CombatZerg'; // ...so is this one... rollup is dumb about generating reference errors
-import {RL_TRAINING_MODE, USE_PROFILER} from './~settings';
-import {sandbox} from './sandbox';
+import {USE_PROFILER} from './~settings';
 import {Mem} from './memory/Memory';
 import {OvermindConsole} from './console/Console';
 import {Stats} from './stats/stats';
 import profiler from './profiler/screeps-profiler';
 import _Overmind from './Overmind_obfuscated'; // this should be './Overmind_obfuscated' unless you are me
 import { log } from 'console/log';
-// import {VersionMigration} from './versionMigration/migrator';
-// import {RemoteDebugger} from './debug/remoteDebugger';
-// import {ActionParser} from './reinforcementLearning/actionParser';
 // =====================================================================================================================
 
 // Main loop
@@ -62,20 +52,7 @@ function main(): void {
 
 	// timeRec = Game.cpu.getUsed() - timeRec;
 	// log.debug('used last: '+(timeRec-7)); // 35 creeps
-	// Post-run code: handle sandbox code and error catching -----------------------------------------------------------
-	sandbox();														// Sandbox: run any testing code
-	// global.remoteDebugger.run();									// Run remote debugger code if enabled
 	Overmind.postRun();												// Error catching is run at end of every tick
-}
-
-// Main loop if RL mode is enabled (~settings.ts)
-function main_RL(): void {
-	Mem.clean();
-
-	delete global.Overmind;
-	global.Overmind = new _Overmind();
-
-	// ActionParser.run();
 }
 
 // This gets run on each global reset
@@ -87,41 +64,20 @@ function onGlobalReset(): void {
 	OvermindConsole.printUpdateMessage();
 	// Make a new Overmind object
 	global.Overmind = new _Overmind();
-	// Make a remote debugger
-	// global.remoteDebugger = new RemoteDebugger();
-}
-
-
-// Global reset function if RL mode is enabled
-function onGlobalReset_RL(): void {
-	Mem.format();
 }
 
 // Decide which loop to export as the script loop
-let _loop: () => void;
-if (RL_TRAINING_MODE) {
-	// Use stripped version for training reinforcment learning model
-	_loop = main_RL;
+export var loop: () => void;
+if (USE_PROFILER) {
+	// Wrap the main loop in the profiler
+	loop = () => profiler.wrap(main);
 } else {
-	if (USE_PROFILER) {
-		// Wrap the main loop in the profiler
-		_loop = () => profiler.wrap(main);
-	} else {
-		// Use the default main loop
-		_loop = main;
-	}
+	// Use the default main loop
+	loop = main;
 }
 
-export const loop = _loop;
-
-// Run the appropriate global reset function
-if (RL_TRAINING_MODE) {
-	OvermindConsole.printTrainingMessage();
-	onGlobalReset_RL();
-} else {
-	// Run the global reset code
-	onGlobalReset();
-}
+// Run the global reset code
+onGlobalReset();
 
 
 

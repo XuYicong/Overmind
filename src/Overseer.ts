@@ -23,7 +23,7 @@ import {profile} from './profiler/decorator';
 import {CombatPlanner} from './strategy/CombatPlanner';
 import {Cartographer, ROOMTYPE_CONTROLLER, ROOMTYPE_SOURCEKEEPER} from './utilities/Cartographer';
 import {isRoomAvailable, derefCoords, hasJustSpawned, minBy, onPublicServer} from './utilities/utils';
-import {MUON, MY_USERNAME, USE_TRY_CATCH} from './~settings';
+import {USE_TRY_CATCH} from './~settings';
 
 
 // export const DIRECTIVE_CHECK_FREQUENCY = 2;
@@ -53,8 +53,8 @@ export class Overseer implements IOverseer {
 
 	static settings = {
 		outpostCheckFrequency: onPublicServer() ? 512 : 100,
-		cpuBucketLowerBound: 8000,
-		cpuUsageLowerBound: 0.75,
+		cpuBucketLowerBound: 7000,
+		cpuUsageLowerBound: 0.85,
 	};
 
 	constructor() {
@@ -189,7 +189,7 @@ export class Overseer implements IOverseer {
 	private handleBootstrapping(colony: Colony) {
 		// Bootstrap directive: in the event of catastrophic room crash, enter emergency spawn mode.
 		// Doesn't apply to incubating colonies.
-		if (!colony.isIncubating) {
+		if (!colony.isIncubating && !colony.memory.sleep) {
 			const noQueen = colony.getCreepsByRole(Roles.loader).length == 0;
 			if (noQueen && colony.hatchery && !colony.spawnGroup) {
 				const setup = colony.hatchery.overlord.queenSetup;
@@ -290,7 +290,7 @@ export class Overseer implements IOverseer {
 			if (isBlocked) {
 				// Game.notify("Room " + roomName + " is blocked, not expanding there.");
 			}
-			const disregardReservations = !onPublicServer() || MY_USERNAME == MUON;
+			const disregardReservations = !onPublicServer() && colony.room.energyAvailable > 300005;
 			if (alreadyOwned || (alreadyReserved && !disregardReservations)) {
 				return false;
 			}
@@ -307,7 +307,7 @@ export class Overseer implements IOverseer {
 	}
 
 	private handleNewOutposts(colony: Colony): boolean {
-		// TODO: adjust outpost numbers based on CPU stats
+		// TODO: adjust outpost allocations based on energy stats
 
 		const possibleOutposts = this.computePossibleOutposts(colony);
 

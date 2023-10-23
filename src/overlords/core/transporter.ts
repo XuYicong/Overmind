@@ -40,7 +40,7 @@ export class TransportOverlord extends Overlord {
 			if (!o.isSuspended && o.miners.length > 0) {
 				// Only count sites which have a container output and which have at least one miner present
 				// (this helps in difficult "rebooting" situations)
-				if ((o.container && !o.link) || o.allowDropMining) {
+				if (o.container && !o.link) {
 					transportPower += o.energyPerTick * scaling * o.distance;
 				}
 			}

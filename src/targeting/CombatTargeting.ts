@@ -74,8 +74,7 @@ export class CombatTargeting {
 				targets = zerg.room.hostiles;
 			}
 			if (checkReachable) {
-				const targetsByRange = _.sortBy(targets, target => zerg.pos.getRangeTo(target));
-				return _.find(targetsByRange, target => Pathing.isReachable(zerg.pos, target.pos, zerg.room.barriers));
+				return CombatTargeting.findClosestReachable(zerg.pos, targets);
 			} else {
 				return zerg.pos.findClosestByRange(targets) as Creep | undefined;
 			}
@@ -83,9 +82,11 @@ export class CombatTargeting {
 	}
 
 	// This method is expensive
-	static findClosestReachable(pos: RoomPosition, targets: (Creep | Structure)[]): Creep | Structure | undefined {
+	static findClosestReachable<T extends Creep | Structure>(pos: RoomPosition, targets: T[]): T | undefined {
 		const targetsByRange = _.sortBy(targets, target => pos.getRangeTo(target));
-		return _.find(targetsByRange, target => Pathing.isReachable(pos, target.pos, target.room.barriers));
+		return _.find(targetsByRange, target => 
+			// !target.pos.lookForStructure(STRUCTURE_RAMPART) &&
+			Pathing.isReachable(pos, target.pos, target.room.barriers));
 	}
 
 	static findClosestHurtFriendly(healer: Zerg): Creep | null {

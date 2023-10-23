@@ -25,11 +25,6 @@ export let OverlordPriority = {
 		controllerAttack: 399
 	},
 
-	colonization: { 			// Colonizing new rooms
-		claim  : 540,
-		pioneer: 541,
-	},
-
 	ownedRoom: { 				// Operation of an owned room
 		firstTransport: 500,		// High priority to spawn the first transporter
 		mine          : 501,
@@ -42,6 +37,10 @@ export let OverlordPriority = {
 	outpostDefense: {
 		outpostDefense: 504,
 		guard         : 551,
+	},
+
+	outpostOffense: {
+		harass: 580,
 	},
 
 	upgrading: {				// Spawning upgraders
@@ -64,6 +63,13 @@ export let OverlordPriority = {
 		reserve      : 800,
 		mine         : 801,
 		roomIncrement: 5, 			// remote room priorities are incremented by this for each outpost
+	},
+	// In case of low energy, mind your own colony before caring about new ones
+	// Open at least 2 outposts before colonizing
+	colonization: { 			// Colonizing new rooms
+		claim  : 807,
+		pioneer: 808,
+		safeModeBonus: 400,
 	},
 
 	remoteSKRoom: {

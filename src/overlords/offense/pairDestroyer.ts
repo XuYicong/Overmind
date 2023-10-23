@@ -11,6 +11,7 @@ import {boostResources} from '../../resources/map_resources';
 import {CombatTargeting} from '../../targeting/CombatTargeting';
 import {CombatZerg} from '../../zerg/CombatZerg';
 import {Overlord} from '../Overlord';
+import { Tasks } from 'tasks/Tasks';
 
 /**
  *  Destroyer overlord - spawns attacker/healer pairs for combat within a hostile room
@@ -32,39 +33,55 @@ export class PairDestroyerOverlord extends Overlord {
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[3]]
+			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[3],]
+			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[1]]
 		});
 	}
 
 	private findTarget(attacker: CombatZerg): Creep | Structure | undefined {
-		if (this.room) {
-			// Prioritize specifically targeted structures first
-			const targetingDirectives = DirectiveTargetSiege.find(this.room.flags) as DirectiveTargetSiege[];
-			const targetedStructures = _.compact(_.map(targetingDirectives,
-								(directive: { getTarget: () => any; }) => directive.getTarget())) as Structure[];
-			if (targetedStructures.length > 0) {
-				return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
-			} else {
-				// Target nearby hostile creeps
-				const creepTarget = CombatTargeting.findClosestHostile(attacker, true);
-				if (creepTarget) return creepTarget;
-				// Target nearby hostile structures
-				const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker, true);
-				if (structureTarget) return structureTarget;
-			}
+		// Prioritize specifically targeted structures first
+		const targetingDirectives = DirectiveTargetSiege.find(attacker.room.flags) as DirectiveTargetSiege[];
+		const targetedStructures = _.compact(_.map(targetingDirectives,
+							(directive: { getTarget: () => any; }) => directive.getTarget())) as Structure[];
+		if (targetedStructures.length > 0) {
+			return CombatTargeting.findClosestReachable(attacker.pos, targetedStructures);
+		} else {
+			// Target nearby hostile creeps
+			const creepTarget = CombatTargeting.findClosestHostile(attacker, true);
+			if (creepTarget) return creepTarget;
+			// Target nearby hostile structures
+			const structureTarget = CombatTargeting.findClosestPrioritizedStructure(attacker, true);
+			if (structureTarget) return structureTarget;
 		}
 	}
 
 	private attackActions(attacker: CombatZerg, healer: CombatZerg): void {
-		const target = this.findTarget(attacker);
+		// Attack nearby creeps in any condition
+		// const nearHostile = attacker.pos.neighbors.flatMap(p => p.lookFor(LOOK_CREEPS)).find(c=>!c.my);
+		// if (nearHostile) {
+		// 	attacker.attack(nearHostile);
+		// 	return;
+		// }
+		let target: Creep | Structure | undefined 
+		// Range to closest hostile tower
+		const towerRange = _.min(attacker.room.towers.map(t=>attacker.pos.getRangeTo(t)));
+		// Chase Bondi if close
+		if (!towerRange || towerRange > 10) {
+			target= attacker.room.playerHostiles.find(
+				h=> h.hitsMax > 2000 && !h.inRampart && h.pos.inRangeTo(attacker.pos, 3));
+		}
+		// TODO: edge dancing can cause dead loops
+		if (!target) {
+			target = this.findTarget(attacker);
+		}
 		if (target) {
 			if (attacker.pos.isNearTo(target)) {
 				attacker.attack(target);
 			} else {
+				attacker.task = Tasks.goTo(target.pos);
 				Movement.pairwiseMove(attacker, healer, target);
 				attacker.autoMelee();
 			}
@@ -77,7 +94,10 @@ export class PairDestroyerOverlord extends Overlord {
 		if (!healer || healer.spawning || healer.needsBoosts) {
 			// Wait near the colony controller if you don't have a healer
 			if (attacker.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-				attacker.goTo(this.colony.controller, {range: 5});
+				// TODO: 走不回屋when too far,need testing
+				attacker.goTo(this.colony.controller, {
+					range: 5, useFindRoute: false 
+				});
 			} else {
 				attacker.park();
 			}
@@ -88,19 +108,27 @@ export class PairDestroyerOverlord extends Overlord {
 			// Handle recovery if low on HP
 			if (attacker.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent) ||
 				healer.needsToRecover(PairDestroyerOverlord.settings.retreatHitsPercent)) {
+				const fallbackPos = CombatIntel.getFallbackFrom(this.directive.pos);
 				// Healer leads retreat to fallback position
-				Movement.pairwiseMove(healer, attacker, CombatIntel.getFallbackFrom(this.directive.pos));
+				if (attacker.inSameRoomAs(this)) {
+					Movement.pairwiseMove(healer, attacker, fallbackPos);
+				} else {
+					Movement.pairwiseMove(healer, attacker, this.colony.pos);
+				}
 			} else {
 				// Move to room and then perform attacking actions
-				if (!attacker.inSameRoomAs(this)) {
+				if (!attacker.inSameRoomAs(this) && (!attacker.room.dangerousPlayerHostiles.length || attacker.room.controller?.safeMode)) {
 					// if target room is occupied, attack from a certain exit
 					const back = CombatIntel.getFallbackFrom(this.directive.pos);
-					let option: MoveOptions = {avoidSK: true};
-					const directed = this.pos.room && this.pos.room.controller && !this.pos.room.controller.my &&
-					this.pos.room.controller.level > 4;
-					if (!directed || attacker.pos.roomName == back.roomName) {
+					let option: MoveOptions = {avoidSK: true, useFindRoute: false};
+					const directed = !this.pos.room || (this.pos.room.controller && 
+						!this.pos.room.controller.my && this.pos.room.controller.level > 4);
+					// May find optimal path not via back, due to invisibility
+					if (!directed || healer.pos.inRangeTo(back, 4)) {
+						option.range = 1;
 						Movement.pairwiseMove(attacker, healer, this.pos, option);
 					} else {
+						Memory.rooms[this.pos.roomName][_RM.AVOID] = true;
 						Movement.pairwiseMove(attacker, healer, back, option);
 					}
 				} else {
@@ -124,7 +152,7 @@ export class PairDestroyerOverlord extends Overlord {
 			}
 			// Wait near the colony controller if you don't have an attacker
 			if (healer.pos.getMultiRoomRangeTo(this.colony.controller.pos) > 5) {
-				healer.goTo(this.colony.controller, {range: 5});
+				healer.goTo(this.colony.controller, {range: 5, useFindRoute: false});
 			} else {
 				healer.park();
 			}
@@ -132,7 +160,8 @@ export class PairDestroyerOverlord extends Overlord {
 		// Case 2: you have an attacker partner
 		else {
 			if (attacker.hitsMax - attacker.hits > healer.hitsMax - healer.hits) {
-				healer.heal(attacker);
+				if (healer.pos.isNearTo(attacker)) healer.heal(attacker);
+				else healer.rangedHeal(attacker);
 			} else {
 				healer.heal(healer);
 			}
@@ -154,12 +183,12 @@ export class PairDestroyerOverlord extends Overlord {
 		this.reassignIdleCreeps(Roles.melee);
 		this.reassignIdleCreeps(Roles.healer);
 		const attackerPriority = this.attackers.length < this.healers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T3) ? CombatSetups.zerglings.boosted_T3
+		const attackerSetup = this.canBoostSetup(CombatSetups.zerglings.boosted_T1) ? CombatSetups.zerglings.boosted_T1
 																				  : CombatSetups.zerglings.default;
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T3) ? CombatSetups.healers.boosted_T3
+		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T1) ? CombatSetups.healers.boosted_T1
 								: (
 									this.room && this.room.controller && this.room.controller.owner!=undefined && !this.room.controller.my
 								) ? CombatSetups.healers.armored : CombatSetups.healers.default;
@@ -169,7 +198,8 @@ export class PairDestroyerOverlord extends Overlord {
 	run() {
 		for (const attacker of this.attackers) {
 			// Run the creep if it has a task given to it by something else; otherwise, proceed with non-task actions
-			if (attacker.hasValidTask) {
+			if (attacker.hasValidTask && !attacker.room.dangerousPlayerHostiles.length && 
+				attacker.hits == attacker.hitsMax) {
 				attacker.run();
 			} else {
 				if (attacker.needsBoosts) {

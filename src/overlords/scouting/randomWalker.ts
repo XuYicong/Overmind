@@ -5,7 +5,7 @@ import {profile} from '../../profiler/decorator';
 import {Tasks} from '../../tasks/Tasks';
 import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
-import {isRoomAvailable} from '../../utilities/utils';
+import {getUsername, isRoomAvailable} from '../../utilities/utils';
 const DEFAULT_NUM_SCOUTS = 1;
 
 /**
@@ -35,10 +35,13 @@ export class RandomWalkerScoutOverlord extends Overlord {
 		// }
 		// Check if room might be connected to newbie/respawn zone
 		const indestructibleWalls = _.filter(scout.room.walls, wall => wall.hits == undefined);
-		if (indestructibleWalls.length > 0) { // go back to origin colony if you find a room near newbie zone
+		if (indestructibleWalls.length > 0 || (
+			scout.room.controller?.owner && scout.room.controller.owner.username != getUsername())
+			) { // go back to origin colony if you find a room near newbie zone, or an owned room
 			scout.task = Tasks.goToRoom(this.colony.room.name); // todo: make this more precise
 		} else {
 			// Pick a new room
+			// TODO: pick a room that is reachable from current room
 			const neighboringRooms = _.values(Game.map.describeExits(scout.pos.roomName)) as string[];
 			const roomName = _.sample(neighboringRooms)!;
 			if (isRoomAvailable(roomName)) {

@@ -15,6 +15,7 @@ import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import {WorkerOverlord} from './worker';
 import { transferTargetType } from 'tasks/instances/transfer';
+import { log } from 'console/log';
 
 /**
  * Command center overlord: spawn and run a dediated commandCenter attendant
@@ -32,7 +33,7 @@ export class CommandCenterOverlord extends Overlord {
 		terminal: {
 			mineral: {
 				equilibrium: 20000,
-				tolerance: 10000
+				tolerance: 5000
 			}
 		},
 		factory: {
@@ -110,6 +111,7 @@ export class CommandCenterOverlord extends Overlord {
 	private supplyActions(manager: Zerg): boolean {
 		const request = this.commandCenter.transportRequests.popPrioritizedClosestRequest(manager.pos, 'supply');
 		if (request && !isTombstone(request.target) && !isRuin(request.target) && !isResource(request.target)) {
+			// log.info('中心向 '+ request.target.pos +' 供应 '+ request.amount +' 个 '+ request.resourceType);
 			const amount = Math.min(request.amount, manager.carryCapacity);
 			manager.task = Tasks.transfer(request.target, request.resourceType, amount,
 										  {nextPos: this.commandCenter.idlePos});
@@ -123,10 +125,14 @@ export class CommandCenterOverlord extends Overlord {
 					const withdrawAmount = amount - manager.carry.getUsedCapacity();
 					let withdrawFrom: withdrawTargetType = this.commandCenter.storage;
 					if (this.commandCenter.terminal
-						&& (request.resourceType != RESOURCE_ENERGY
-							|| (withdrawFrom.store[request.resourceType] || 0) < withdrawAmount
-							|| this.commandCenter.terminal.energy > Energetics.settings.terminal.energy.equilibrium)) {
+						&& (withdrawFrom.store[request.resourceType] || 0) < withdrawAmount) {
 						withdrawFrom = this.commandCenter.terminal;
+					}
+					if ((withdrawFrom.store[request.resourceType] || 0) < withdrawAmount) {
+						// 该任务无法满足，应该跳过。
+						log.warning('建筑发出无法满足的请求：向 '+ request.target.pos +' 供应 '+ request.amount +' 个 '+ request.resourceType);
+						manager.task = null;
+						return this.supplyActions(manager);
 					}
 					manager.task.fork(Tasks.withdraw(withdrawFrom, request.resourceType, withdrawAmount,
 													 {nextPos: request.target.pos}));
@@ -144,6 +150,7 @@ export class CommandCenterOverlord extends Overlord {
 		if (manager.carry.getFreeCapacity() > 0) {
 			const request = this.commandCenter.transportRequests.popPrioritizedClosestRequest(manager.pos, 'withdraw');
 			if (request && !isCreep(request.target) && !isPowerCreep(request.target) && !isResource(request.target)) {
+				// log.info('中心从 '+ request.target.pos +' 取出 '+ request.amount +' 个 '+ request.resourceType);
 				const amount = Math.min(request.amount, manager.carryCapacity - manager.carry.getUsedCapacity());
 				manager.task = Tasks.withdraw(request.target, request.resourceType, amount);
 				return true;
@@ -175,21 +182,22 @@ export class CommandCenterOverlord extends Overlord {
 			storageEnergyCap = terminalState.amounts[RESOURCE_ENERGY] || 0;
 		}
 
-		if (this.unloadCarry(manager)) return true;
+		const self = this;
 		const transfer = function(from: withdrawTargetType, to: transferTargetType, resourceType?: ResourceConstant): boolean {
+			if (self.unloadCarry(manager)) return true;
 			manager.task = Tasks.withdraw(from, resourceType);
 			manager.task.parent = Tasks.transfer(to, resourceType);
 			return true;
 		}
 
 		// Move energy from storage to terminal if there is not enough in terminal or if there's terminal evacuation
-		if ((terminal.energy < equilibrium - tolerance || storage.energy > storageEnergyCap + storageTolerance)
+		if ((terminal.energy < equilibrium - tolerance || storage.store.getUsedCapacity() > storageEnergyCap + storageTolerance)
 			&& storage.energy > 0) {
 			return transfer(storage, terminal);
 		}
 
 		// Move energy from terminal to storage if there is too much in terminal and there is space in storage
-		if (terminal.energy > equilibrium + tolerance && storage.energy < storageEnergyCap) {
+		if (terminal.energy > equilibrium + tolerance && storage.store.getUsedCapacity() < storageEnergyCap) {
 			return transfer(terminal, storage);
 		}
 
@@ -199,14 +207,15 @@ export class CommandCenterOverlord extends Overlord {
 		for (const resource in terminal.store) {
 			if (resource == RESOURCE_ENERGY) continue;
 
-			if (terminal.store[<ResourceConstant>resource] > eq + tl && storage.store.getFreeCapacity() > terminal.store.getFreeCapacity()) {
+			if (terminal.store.getUsedCapacity(<ResourceConstant>resource) > eq + tl && storage.store.getFreeCapacity() > terminal.store.getFreeCapacity()) {
 				return transfer(terminal, storage, <ResourceConstant>resource);
 			}
 		}
 		for (const resource in storage.store) {
 			if (resource == RESOURCE_ENERGY) continue;
 
-			if (terminal.store[<ResourceConstant>resource] < eq - tl) {
+			// log.info(this.pos.print + ' may transfer storage to terminal '+ resource);
+			if (terminal.store.getUsedCapacity(<ResourceConstant>resource) < eq - tl) {
 				return transfer(storage, terminal, <ResourceConstant>resource);
 			}
 		}
@@ -214,11 +223,11 @@ export class CommandCenterOverlord extends Overlord {
 		if (!factory) return false;
 
 		for (const baseResource of BASE_RESOURCES) {
-			if (terminal.store[baseResource] < eq - tl && factory.store.getUsedCapacity(baseResource) > 0) {
+			if (terminal.store.getUsedCapacity(baseResource) < eq - tl && factory.store.getUsedCapacity(baseResource) > 0) {
 				return transfer(factory, terminal, baseResource);
 			}
-			if (factory.store.getUsedCapacity() > CommandCenterOverlord.settings.factory.mineral.cap) break;
-			if (storage.store[baseResource] <= 0) continue;
+			if (factory.store.getUsedCapacity() > CommandCenterOverlord.settings.factory.mineral.cap) continue;
+			if (storage.store.getUsedCapacity(baseResource) <= 0) continue;
 
 			return transfer(storage, factory, baseResource);
 		}
@@ -250,7 +259,7 @@ export class CommandCenterOverlord extends Overlord {
 	 */
 	private pickupActions(manager: Zerg): boolean {
 		// Pickup any resources that happen to be dropped where you are
-		const resources = manager.pos.lookFor(LOOK_RESOURCES);
+		const resources = manager.pos.findInRange(FIND_DROPPED_RESOURCES, 1);
 		if (resources.length > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.pickup(resources[0]));
 			return true;
@@ -259,6 +268,12 @@ export class CommandCenterOverlord extends Overlord {
 		const tombstones = manager.pos.lookFor(LOOK_TOMBSTONES);
 		if (tombstones.length > 0) {
 			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.withdrawAll(tombstones[0]));
+			return true;
+		}
+		// Look for ruins
+		const ruins = manager.pos.findInRange(FIND_RUINS, 1);
+		if (ruins.length > 0) {
+			manager.task = Tasks.transferAll(this.depositTarget).fork(Tasks.withdrawAll(ruins[0]));
 			return true;
 		}
 		return false;
@@ -300,14 +315,17 @@ export class CommandCenterOverlord extends Overlord {
 		if (this.colony.terminalState && this.colony.terminalState.type == 'out') {
 			if (this.equalizeStorageAndTerminal(manager)) return;
 		}
+		// log.info(this.pos.print + ' before withdraw ');
 		// Fulfill withdraw requests
 		if (this.commandCenter.transportRequests.needsWithdrawing) {
 			if (this.withdrawActions(manager)) return;
 		}
+		// log.info(this.pos.print + ' before supply ');
 		// Fulfill supply requests
 		if (this.commandCenter.transportRequests.needsSupplying) {
 			if (this.supplyActions(manager)) return;
 		}
+		// log.info(this.pos.print + ' after supply ');
 		// Move energy between storage and terminal if needed
 		this.equalizeStorageAndTerminal(manager);
 	}

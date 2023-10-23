@@ -1,4 +1,4 @@
-import {assimilationLocked} from './assimilation/decorator';
+import { SleepOverlord } from 'overlords/core/sleep';
 import {$} from './caching/GlobalCache';
 import {log} from './console/log';
 import {HasGeneralPurposeStore} from './declarations/typeGuards';
@@ -31,6 +31,7 @@ import {Cartographer, ROOMTYPE_CONTROLLER} from './utilities/Cartographer';
 import {maxBy, mergeSum, minBy} from './utilities/utils';
 import {Visualizer} from './visuals/Visualizer';
 import {Zerg} from './zerg/Zerg';
+import { InfestedFactory } from 'hiveClusters/factory';
 
 export enum ColonyStage {
 	Larva = 0,		// No storage and no incubator
@@ -67,6 +68,7 @@ export interface ColonyMemory {
 		expiration: number,
 	};
 	suspend?: boolean;
+	sleep?: boolean;
 }
 
 const defaultColonyMemory: ColonyMemory = {
@@ -163,6 +165,7 @@ export class Colony {
 		logistics: TransportOverlord;
 		scout?: RandomWalkerScoutOverlord;
 	};
+	sleepOverlord: SleepOverlord
 	// Road network
 	roadLogistics: RoadLogistics;
 	// Room planner
@@ -478,9 +481,9 @@ export class Colony {
 		if (this.spawns[0]) {
 			this.hatchery = new Hatchery(this, this.spawns[0]);
 		}
-		// Instantiate evolution chamber once there are three labs all in range 2 of each other
-		if (this.terminal && _.filter(this.labs, lab =>
-			_.every(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 3) {
+		// Instantiate evolution chamber once there are 2 labs all in range 2 of each other
+		if (this.terminal && this.labs.length >= 3 && _.filter(this.labs, lab =>
+			_.every(this.labs, otherLab => lab.pos.inRangeTo(otherLab, 2))).length >= 2) {
 			this.evolutionChamber = new EvolutionChamber(this, this.terminal);
 		}
 		// Instantiate the upgradeSite
@@ -488,6 +491,9 @@ export class Colony {
 		// Instantiate spore crawlers to wrap towers
 		if (this.towers[0]) {
 			this.sporeCrawler = new SporeCrawler(this, this.towers[0]);
+		}
+		if (this.factory) {
+			new InfestedFactory(this, this.factory);
 		}
 		// Reverse the hive clusters for correct order for init() and run()
 		this.hiveClusters.reverse();
@@ -506,6 +512,10 @@ export class Colony {
 	 * Instantiate all overlords for the colony
 	 */
 	spawnMoarOverlords(): void {
+		if (this.memory.sleep) {
+			this.sleepOverlord = new SleepOverlord(this);
+			return;
+		}
 		this.overlords = {
 			default  : new DefaultOverlord(this),
 			work     : new WorkerOverlord(this),
@@ -555,6 +565,7 @@ export class Colony {
 	 * Initializes the state of the colony each tick
 	 */
 	init(): void {
+		if (this.memory.sleep) return;
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.init());	// Initialize each hive cluster
 		this.roadLogistics.init();											// Initialize the road network
 		this.linkNetwork.init();											// Initialize link network
@@ -568,6 +579,14 @@ export class Colony {
 	 * Runs the colony, performing state-changing actions each tick
 	 */
 	run(): void {
+		if (this.memory.sleep) {
+			if (this.hatchery)
+				this.hatchery.run();
+			else if (Game.time % 10 == 0) {
+				log.warning('Sleep does not have a hatchery');
+			}
+			return;
+		}
 		_.forEach(this.hiveClusters, hiveCluster => hiveCluster.run());		// Run each hive cluster
 		this.linkNetwork.run();												// Run the link network
 		this.roadLogistics.run();											// Run the road network

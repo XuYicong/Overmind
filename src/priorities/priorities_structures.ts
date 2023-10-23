@@ -30,6 +30,8 @@ export const FortifyPriorities: BuildableStructureConstant[] = [
 	STRUCTURE_TOWER,
 	STRUCTURE_LAB,
 	STRUCTURE_NUKER,
+	STRUCTURE_FACTORY,
+	STRUCTURE_POWER_SPAWN
 ];
 
 /**

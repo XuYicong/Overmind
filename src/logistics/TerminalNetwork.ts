@@ -511,7 +511,7 @@ export class TerminalNetwork implements ITerminalNetwork {
 				log.info('向房间'+this.memory.sendToRoom+'发送'+amount+'单位'+this.memory.sendResourceType);
 				if (depature.terminal) {
 					if (this.memory.sendResourceType == RESOURCE_ENERGY) {
-						amount = Math.min(amount, depature.terminal!.store[RESOURCE_ENERGY]/2);
+						amount = Math.min(amount, Math.floor(depature.terminal!.store[RESOURCE_ENERGY]/2));
 					} else {
 						amount = Math.min(amount, depature.terminal!.store[RESOURCE_ENERGY]);
 						amount = Math.min(amount, depature.terminal!.store[<ResourceConstant>this.memory.sendResourceType]);

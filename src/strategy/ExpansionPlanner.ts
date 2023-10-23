@@ -1,4 +1,3 @@
-import {assimilationLocked} from '../assimilation/decorator';
 import {Colony, getAllColonies} from '../Colony';
 import {log} from '../console/log';
 import {DirectiveColonize} from '../directives/colony/colonize';
@@ -25,7 +24,6 @@ interface ExpansionPlannerMemory {
 
 const defaultExpansionPlannerMemory: ExpansionPlannerMemory = {};
 
-@assimilationLocked
 @profile
 export class ExpansionPlanner implements IExpansionPlanner {
 

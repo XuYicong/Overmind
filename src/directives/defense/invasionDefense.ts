@@ -58,7 +58,7 @@ export class DirectiveInvasionDefense extends Directive {
 		// If serious bunker busting attempt, spawn lurkers
 		// TODO understand dismantlers damage output
 		if (meleeHostiles.length > 0 && (expectedDamage > ATTACK_POWER * 70)) {
-			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, false);
+			this.overlords.bunkerDefense = new BunkerDefenseOverlord(this, useBoosts);
 		}
 
 	}

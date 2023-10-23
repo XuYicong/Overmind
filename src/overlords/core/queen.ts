@@ -53,6 +53,7 @@ export class QueenOverlord extends Overlord {
 		// Chain two tasks only for now
 		if(loader.task && loader.task._parent) return;
 		// Select the closest supply target out of the highest priority and refill it
+		// TODO: closest to existing task pos, not to self
 		const request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'supply', 
 						(req)=>req.resourceType == RESOURCE_ENERGY);
 		if (request) {
@@ -77,10 +78,10 @@ export class QueenOverlord extends Overlord {
 		const commandCenter = this.colony.commandCenter;
 		if (!commandCenter) return;
 		const evacuate = function(resourceType: ResourceConstant): Task {
-			if (commandCenter.terminal && commandCenter.terminal.store.getFreeCapacity(resourceType) > 0) {
-				return Tasks.transfer(commandCenter.terminal, resourceType);
-			} else if (commandCenter.storage.store.getFreeCapacity(resourceType) > 0) {
-				return Tasks.transfer(commandCenter.storage, resourceType);
+			if (commandCenter.terminal && commandCenter.terminal.store.getFreeCapacity() > 0) {
+				return Tasks.transferAll(commandCenter.terminal);
+			} else if (commandCenter.storage.store.getFreeCapacity() > 0) {
+				return Tasks.transferAll(commandCenter.storage);
 			} else {
 				return Tasks.drop(loader.pos, resourceType);
 			}
@@ -90,9 +91,17 @@ export class QueenOverlord extends Overlord {
 		let request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'withdraw', 
 							req => req.resourceType != RESOURCE_ENERGY);
 		if (request) {
-			const task = Tasks.withdraw(request.target, request.resourceType);
-			loader.task = evacuate(request.resourceType).fork(task);
-
+			// TODO: evacuate ALL
+			loader.task = evacuate(request.resourceType);
+			let amount = 0;
+			while(request) {
+				amount += request.amount;
+				const task = Tasks.withdraw(request.target, request.resourceType);
+				loader.task.fork(task);
+				if (amount >= loader.carryCapacity) break;
+				request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'withdraw', 
+							req => req.resourceType != RESOURCE_ENERGY);
+			}
 		} else {
 			// Handle supply tasks
 			// TODO: add multiple tasks at the same time
@@ -126,6 +135,22 @@ export class QueenOverlord extends Overlord {
 			loader.task!.fork(evacuate(RESOURCE_ENERGY));
 			return;
 		}
+	}
+
+	private generateSafeModeActions(loader: Zerg): void {
+		// Assume store is empty
+		if (this.colony.controller.safeModeAvailable > 3) return;
+		const commandCenter = this.colony.commandCenter;
+		if (!commandCenter) return;
+		const terminal = commandCenter.terminal;
+		if (!terminal) return;
+
+		const GHODIUM_AMOUNT = 1000;
+		if (terminal.store.getUsedCapacity(RESOURCE_GHODIUM) < GHODIUM_AMOUNT ) return;
+		if (loader.carry.getFreeCapacity(RESOURCE_GHODIUM) < GHODIUM_AMOUNT) return;
+
+		loader.task = Tasks.withdraw(terminal, RESOURCE_GHODIUM, GHODIUM_AMOUNT);
+		loader.task.parent = Tasks.generateSafeMode(this.colony.controller);
 	}
 
 	private rechargeActions(loader: Zerg): void {
@@ -171,7 +196,10 @@ export class QueenOverlord extends Overlord {
 		if (loader.carry.energy > 0) {
 			this.supplyActions(loader);
 		} else if (loader.isIdle) {
-			this.rechargeActions(loader);
+			this.generateSafeModeActions(loader);
+			if (loader.isIdle) {
+				this.rechargeActions(loader);
+			}
 		}
 		// If there aren't any tasks that need to be done, recharge the battery from link
 		if (loader.isIdle) {

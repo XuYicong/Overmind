@@ -1,3 +1,4 @@
+import { ERR_CANNOT_PUSH_CREEP, ERR_SWARM_BUSY, ERR_NOT_IMPLEMENTED, ERR_SWARM_ROTATE_FAILED, NO_ACTION } from 'utilities/errors';
 import { Overshard } from 'Overshard';
 import {log} from '../console/log';
 import {Roles} from '../creepSetups/setups';
@@ -13,9 +14,7 @@ import {getTerrainCosts, isExit, normalizePos, sameCoord} from './helpers';
 import {Pathing} from './Pathing';
 import { DEFCON } from 'Colony';
 
-export const NO_ACTION = -20;
 export const CROSSING_PORTAL = -21;
-export const ERR_CANNOT_PUSH_CREEP = -30;
 
 const REPORT_CPU_THRESHOLD = 3; 	// Report when creep uses more than this amount of CPU over lifetime
 const REPORT_SWARM_CPU_THRESHOLD = 1500;
@@ -109,6 +108,9 @@ export interface MoveState {
 	currentXY?: Coord;
 }
 
+export type ZergMoveReturnCode = CreepMoveReturnCode | ERR_NO_PATH | ERR_CANNOT_PUSH_CREEP | ERR_NOT_IN_RANGE | NO_ACTION;
+export type ZergSwarmMoveReturnCode = ZergMoveReturnCode | ERR_SWARM_BUSY | ERR_NOT_IMPLEMENTED | ERR_SWARM_ROTATE_FAILED;
+
 
 /**
  * This is the movement library for Overmind. It was originally based on BonzAI's Traveler library, but it has been
@@ -166,7 +168,7 @@ export class Movement {
 
 		// Fixes bug that causes creeps to idle on the other side of a room
 		if (options.range != undefined && destination.rangeToEdge <= options.range) {
-			options.range = Math.min(Math.abs(destination.rangeToEdge - 1), 0);
+			options.range = Math.max(Math.abs(destination.rangeToEdge - 1), 0);
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
@@ -259,9 +261,9 @@ export class Movement {
 			if(Math.random() > .5) {
 				options.avoidSK = !options.avoidSK;
 			}
-			if(Math.random() > .5) {
-				options.range = 5;
-			}
+			// if(Math.random() > .5) {
+			// 	options.range = 5;
+			// }
 			if(Math.random() > .5) {
 				options.direct = !options.direct;
 			}
@@ -948,7 +950,7 @@ export class Movement {
 
 
 	static swarmCombatMove(swarm: Swarm, approach: PathFinderGoal[], avoid: PathFinderGoal[],
-						   options: CombatMoveOptions = {}): number {
+						   options: CombatMoveOptions = {}): ZergSwarmMoveReturnCode {
 		_.defaults(options, {
 			allowExit     : false,
 			avoidPenalty  : 10,
@@ -976,7 +978,7 @@ export class Movement {
 			return matrix;
 		};
 
-		let outcome = NO_ACTION;
+		let outcome: ZergSwarmMoveReturnCode = NO_ACTION;
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
@@ -1065,7 +1067,7 @@ export class Movement {
 			}
 		};
 
-		let outcome = NO_ACTION;
+		let outcome: ZergMoveReturnCode = NO_ACTION;
 
 		// Flee from bad things that that you're too close to
 		if (avoid.length > 0) {
@@ -1247,7 +1249,7 @@ export class Movement {
 			}
 	
 		} else if(rangeToClosest > fleeStartRange) { // Still not safe, but it's fine just stay here
-			creep.say('敌', true);
+			creep.say('敌');
 			if(!moveData || moveData.path.length <1) {
 				if(moveData) {
 					delete moveData.destination;
@@ -1266,7 +1268,7 @@ export class Movement {
 			if (!moveData) {
 				moveData = {} as MoveData;
 			}
-			creep.say('逃', true);
+			creep.say('逃');
 			moveData.fleeWait = 2;
 
 			// Invalidate path if needed

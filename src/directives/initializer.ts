@@ -25,10 +25,13 @@ import {DirectiveRPHatchery} from './roomPlanner/roomPlanner_hatchery';
 import {DirectiveBootstrap} from './situational/bootstrap';
 import {DirectiveNukeResponse} from './situational/nukeResponse';
 import {DirectiveDismantle} from './targeting/dismantle';
+import { DirectiveHelp } from './situational/help';
 import {DirectiveTargetSiege} from './targeting/siegeTarget';
 import {DirectiveTerminalEmergencyState} from './terminalState/terminalState_emergency';
 import {DirectiveTerminalEvacuateState} from './terminalState/terminalState_evacuate';
 import {DirectiveTerminalRebuildState} from './terminalState/terminalState_rebuild';
+import { DirectiveHarass } from './offense/harass';
+import { DirectiveQuad } from './offense/quad';
 /**
  * This is the initializer for directives, which maps flags by their color code to the corresponding directive
  */
@@ -74,10 +77,14 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveSwarmDestroy(flag);
 				case COLOR_CYAN:
 					return new DirectivePairDestroy(flag);
+				case COLOR_GREEN:
+					return new DirectiveQuad(flag);
 				case COLOR_BROWN:
 					return new DirectivePairHarasser(flag);
 				case COLOR_PURPLE:
 					return new DirectiveControllerAttack(flag);
+				case COLOR_WHITE:
+					return new DirectiveHarass(flag);
 			}
 			break;
 
@@ -143,6 +150,8 @@ export function DirectiveWrapper(flag: Flag): Directive | undefined {
 					return new DirectiveTargetSiege(flag);
 				case COLOR_YELLOW:
 					return new DirectiveDismantle(flag);
+				case COLOR_BLUE:
+					return new DirectiveHelp(flag);
 			}
 			break;
 

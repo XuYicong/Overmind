@@ -1,5 +1,6 @@
 import {CombatIntel} from '../intel/CombatIntel';
-import {Movement, NO_ACTION} from '../movement/Movement';
+import {Movement} from '../movement/Movement';
+import { ERR_SWARM_BUSY, ERR_NOT_IMPLEMENTED, NO_ACTION, errorForCode, ERR_SWARM_ROTATE_FAILED_1 } from 'utilities/errors';
 import {profile} from '../profiler/decorator';
 import {insideBunkerBounds} from '../roomPlanner/layouts/bunker';
 import {CombatTargeting} from '../targeting/CombatTargeting';
@@ -159,6 +160,14 @@ export class CombatZerg extends Zerg {
 		}
 	}
 
+	autoDismantle(possibleTargets = this.room.hostileStructures) {
+		const target = CombatTargeting.findBestStructureTargetInRange(this, 1, true);
+		this.debug(`Dismantle target: ${target}`);
+		if (target) {
+			return this.dismantle(target);
+		}
+	}
+
 	/**
 	 * Automatically ranged-attack the best creep in range
 	 */
@@ -168,7 +177,7 @@ export class CombatZerg extends Zerg {
 		this.debug(`Ranged target: ${target}`);
 		if (target) {
 			if (allowMassAttack
-				&& CombatIntel.getMassAttackDamage(this, possibleTargets) > CombatIntel.getRangedAttackDamage(this)) {
+				&& CombatIntel.getMassAttackDamage(this, possibleTargets, false) > CombatIntel.getRangedAttackDamage(this)) {
 				return this.rangedMassAttack();
 			} else {
 				return this.rangedAttack(target);
@@ -221,7 +230,7 @@ export class CombatZerg extends Zerg {
 
 		// Skirmish within the room
 		const goals = GoalFinder.skirmishGoals(this);
-		this.debug(JSON.stringify(goals));
+		// this.debug(JSON.stringify(goals));
 		return Movement.combatMove(this, goals.approach, goals.avoid);
 
 	}
@@ -237,6 +246,9 @@ export class CombatZerg extends Zerg {
 		}
 		if (this.getActiveBodyparts(RANGED_ATTACK) > 0) {
 			this.autoRanged();
+		}
+		if (this.getActiveBodyparts(WORK) > 0) {
+			this.autoDismantle();
 		}
 		if (this.canExecute('heal')) {
 			this.autoHeal(this.canExecute('rangedHeal'));
@@ -256,7 +268,7 @@ export class CombatZerg extends Zerg {
 
 		// Fight within the room
 		const target = CombatTargeting.findTarget(this);
-		const preferRanged = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK);
+		const preferRanged = this.getActiveBodyparts(RANGED_ATTACK) > this.getActiveBodyparts(ATTACK)+this.getActiveBodyparts(WORK);
 		const targetRange = preferRanged ? 3 : 0;
 		this.debug(`${target}, ${targetRange}`);
 		if (target) {
@@ -270,7 +282,7 @@ export class CombatZerg extends Zerg {
 				}
 
 				// Require ramparts if ranged hostile is too strong
-				if(Game.time % 80 > 0) {
+				if(Overmind.colonies[roomName] && Game.time % 80 > 0) {
 					const rangedDamage = _.sum(this.room.hostiles, (h: Creep | Zerg) => CombatIntel.getRangedAttackDamage(h));
 					requireRamparts = rangedDamage > 64 * this.getActiveBodyparts(HEAL);
 				}

@@ -23,7 +23,8 @@ const DEBUG = false;
 export class GoalFinder {
 
 	// Standard set of goals for fighting small groups of hostiles (not optimal for larger fights)
-	static skirmishGoals(creep: CombatZerg): { approach: PathFinderGoal[], avoid: PathFinderGoal[] } {
+	static skirmishGoals(creep: CombatZerg,
+		includeStructures = true): { approach: PathFinderGoal[], avoid: PathFinderGoal[] } {
 
 		const approach: PathFinderGoal[] = [];
 		const avoid: PathFinderGoal[] = [];
@@ -84,6 +85,18 @@ export class GoalFinder {
 			}
 		}
 
+		if (approach.length == 0 && includeStructures) {
+			const approachStructures: Structure[] = [];
+			for (const structure of room.hostileStructures) {
+				approachStructures.push(structure);
+			}
+			for (const wall of room.walls) {
+				approachStructures.push(wall);
+			}
+			for (const approachStructure of approachStructures) {
+				approach.push({pos: approachStructure.pos, range: 1});
+			}
+		}
 		// If there's nothing left to approach, group up with other creeps
 		if (approach.length == 0) {
 			for (const friendly of room.creeps) {

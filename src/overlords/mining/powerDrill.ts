@@ -36,7 +36,9 @@ export class PowerDrillOverlord extends CombatOverlord {
 		this.directive = directive;
 		this.priority += this.outpostIndex * OverlordPriority.powerMine.roomIncrement;
 		this.drills = this.combatZerg(Roles.drill);
-		this.coolant = this.combatZerg(Roles.coolant, {boostWishlist: [boostResources.heal[1],]});
+		this.coolant = this.combatZerg(Roles.coolant, 
+			// {boostWishlist: [boostResources.heal[1],]}
+			);
 		this.memory = Mem.wrap(this.directive.memory, 'powerDrill');
 		this.partnerMap = new Map();
 	}
@@ -50,9 +52,9 @@ export class PowerDrillOverlord extends CombatOverlord {
 		// const levelBuff = (this.colony.level - 6) * 400;
 		const numPairs = Math.min(3, this.directive.pos.availableNeighbors(true).length);
 		// TODO: account for travel distance while determining prespawn
-		const prespawn = CREEP_LIFE_TIME - CREEP_LIFE_TIME/numPairs;
-		this.wishlist(1, CombatSetups.drill.default, {reassignIdle: true, prespawn: prespawn});
-		this.wishlist(2, CombatSetups.coolant.small, {reassignIdle: true, prespawn: prespawn});
+		const prespawn = 0;
+		this.wishlist(numPairs, CombatSetups.drill.default, {reassignIdle: true, prespawn: prespawn});
+		this.wishlist(numPairs *2, CombatSetups.coolant.small, {reassignIdle: true, prespawn: prespawn});
 	}
 
 	private getHostileDrill(powerBank: StructurePowerBank) {
@@ -62,6 +64,16 @@ export class PowerDrillOverlord extends CombatOverlord {
 	private handleHostileDrill(hostileDrill: Creep, powerBank: StructurePowerBank) {
 		Game.notify(`${hostileDrill.owner.username} power harvesting ${powerBank.room.name}, competing for same power bank.`);
 		// this.directive.remove();
+	}
+
+	public reassign() {
+		// if (this.directive.powerBank)
+		this.drills.forEach(drill => {
+			drill.reassign(this.directive.overlords.guard, Roles.melee, true);
+		});
+		this.coolant.forEach(heal => {
+			heal.reassign(this.directive.overlords.guard, Roles.healer, true);
+		});
 	}
 
 	private handleDrill(drill: CombatZerg) {
@@ -122,7 +134,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 				coolant.doMedicActions(this.directive.pos.roomName);
 				return;
 			}
-			coolant.goTo(target, {range: 1});
+			coolant.goTo(target, {range: 1, ignoreCreeps: Math.random() < 0.5});
 			coolant.heal(target, true);
 		}
 	}
@@ -166,7 +178,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 	// }
 
 	static periodicSay(zerg: Zerg, text: string) {
-		if (Game.time % 10 == PowerDrillOverlord.getCreepNameOffset(zerg)) {
+		if (Game.time % 20 == PowerDrillOverlord.getCreepNameOffset(zerg)) {
 			zerg.say(text, true);
 		}
 	}
