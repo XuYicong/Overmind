@@ -102,7 +102,6 @@ export class OvermindConsole {
 	static info(aligned = false): string {
 		const b = bullet;
 		const baseInfo = [
-			`${b}Version:        ${__VERSION__}`,
 			`${b}Operating mode: ${Memory.settings.operationMode}`,
 		];
 		const joinChar = aligned ? alignedNewline : '\n';

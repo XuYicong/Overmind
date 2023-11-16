@@ -53,9 +53,7 @@ export function getAllColonies(): Colony[] {
 
 export interface BunkerData {
 	anchor: RoomPosition;
-	topSpawn: StructureSpawn | undefined;
 	coreSpawn: StructureSpawn | undefined;
-	rightSpawn: StructureSpawn | undefined;
 }
 
 export interface ColonyMemory {
@@ -315,7 +313,8 @@ export class Colony {
 										   lab => 50 * lab.pos.y + lab.pos.x));
 		this.pos = (this.storage || this.terminal || this.spawns[0] || this.controller).pos;
 		// Register physical objects across all rooms in the colony
-		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.sources)),
+		// Ignore SK room sources, and only mine minerals
+		$.set(this, 'sources', () => _.sortBy(_.flatten(_.map(this.rooms, room => room.controller ? room.sources:[])),
 											  source => source.pos.getMultiRoomRangeTo(this.pos)));
 		for (const source of this.sources) {
 			DirectiveHarvest.createIfNotPresent(source.pos, 'pos');
@@ -432,9 +431,7 @@ export class Colony {
 			// log.debug(JSON.stringify(`spawnPoses: ${rightSpawnPos}, ${topSpawnPos}, ${coreSpawnPos}`));
 			this.bunker = {
 				anchor    : anchor,
-				topSpawn  : topSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
 				coreSpawn : coreSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
-				rightSpawn: rightSpawnPos.lookForStructure(STRUCTURE_SPAWN) as StructureSpawn | undefined,
 			};
 		} else {
 			this.layout = 'twoPart';
@@ -454,14 +451,8 @@ export class Colony {
 		this.transportRequests.refresh();
 		this.roomPlanner.refresh();
 		if (this.bunker) {
-			if (this.bunker.topSpawn) {
-				this.bunker.topSpawn = Game.getObjectById(this.bunker.topSpawn.id) as StructureSpawn | undefined;
-			}
 			if (this.bunker.coreSpawn) {
 				this.bunker.coreSpawn = Game.getObjectById(this.bunker.coreSpawn.id) as StructureSpawn | undefined;
-			}
-			if (this.bunker.rightSpawn) {
-				this.bunker.rightSpawn = Game.getObjectById(this.bunker.rightSpawn.id) as StructureSpawn | undefined;
 			}
 		}
 		this.roadLogistics.refresh();
@@ -473,8 +464,8 @@ export class Colony {
 	 */
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
-		// Instantiate the command center if there is storage in the room - this must be done first!
-		if (this.stage > ColonyStage.Larva) {
+		// Instantiate the command center if there is level 6 - this must be done first!
+		if (this.level >= 6) {
 			this.commandCenter = new CommandCenter(this, this.storage!);
 		}
 		// Instantiate the hatchery - the incubation directive assignes hatchery to incubator's hatchery if none exists
@@ -547,7 +538,6 @@ export class Colony {
 	 * Summarizes the total of all resources in colony store structures, labs, and some creeps
 	 */
 	private getAllAssets(verbose = false): { [resourceType: string]: number } {
-		// if (this.name == 'E8S45') verbose = true; // 18863
 		// Include storage structures, lab contents, and manager carry
 		const stores = _.map(<HasGeneralPurposeStore[]>_.compact([this.storage, this.terminal]), s => s.store);
 		const creepCarriesToInclude = <any>_.map(this.creeps, creep => creep.store);
@@ -630,6 +620,17 @@ export class Colony {
 	}
 
 	visuals(): void {
+		if (this.controller.ticksToDowngrade < 8000) {
+			this.room.visual.text(`${this.controller.ticksToDowngrade}`,
+				this.room.controller!.pos, {color: "red"}
+			);
+		} else if (this.level < 8) {
+			this.room.visual.text(`${
+				(this.room.controller!.progress/this.room.controller!.progressTotal*100).truncate(8)
+			}(${this.room.controller!.progressTotal-this.room.controller!.progress})`,
+				this.room.controller!.pos
+			);
+		}
 		let x = 1;
 		let y = 11.5;
 		let coord: Coord;

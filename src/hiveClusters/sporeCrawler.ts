@@ -1,5 +1,5 @@
 import {$} from '../caching/GlobalCache';
-import {Colony} from '../Colony';
+import {Colony, DEFCON} from '../Colony';
 import {log} from '../console/log';
 import {TERMINAL_STATE_REBUILD} from '../directives/terminalState/terminalState_rebuild';
 import {CombatIntel} from '../intel/CombatIntel';
@@ -118,7 +118,7 @@ export class SporeCrawler extends HiveCluster {
 	// }
 
 	run() {
-		if (this.room.hostiles.length > 0) {
+		if ((this.colony.defcon>DEFCON.safe || Game.time%10 == this.colony.id) && this.room.hostiles.length > 0) {
 			const myDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(ATTACK) > 1);
 			const myRangedDefenders = _.filter(this.room.creeps, creep => creep.getActiveBodyparts(RANGED_ATTACK) > 1);
 			const myCreepDamage = ATTACK_POWER * _.sum(myDefenders, creep => CombatIntel.getAttackPotential(creep)) +

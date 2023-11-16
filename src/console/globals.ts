@@ -1,6 +1,3 @@
-declare const __VERSION__: string;
-global.__VERSION__ = '0.5.3';
-
 declare function deref(ref: string): RoomObject | null;
 
 global.deref = function(ref: string): _HasId | Flag | null { // dereference any object from identifier

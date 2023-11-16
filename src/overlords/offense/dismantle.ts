@@ -1,24 +1,11 @@
-import { Zerg } from 'zerg/Zerg';
-import {$} from '../../caching/GlobalCache';
-import {log} from '../../console/log';
-import {CombatSetups, Roles, Setups} from '../../creepSetups/setups';
-import {DirectiveSwarmDestroy} from '../../directives/offense/swarmDestroy';
+import {CombatSetups, Roles} from '../../creepSetups/setups';
 import {CombatIntel} from '../../intel/CombatIntel';
-import {RoomIntel} from '../../intel/RoomIntel';
 import {Mem} from '../../memory/Memory';
 import {OverlordPriority} from '../../priorities/priorities_overlords';
 import {profile} from '../../profiler/decorator';
-import {boostResources} from '../../resources/map_resources';
-import {Visualizer} from '../../visuals/Visualizer';
 import {CombatZerg} from '../../zerg/CombatZerg';
-import {Swarm} from '../../zerg/Swarm';
-import {SwarmOverlord} from '../SwarmOverlord';
-import { Overlord } from 'overlords/Overlord';
 import { Directive } from 'directives/Directive';
-import { Priority } from 'priorities/priorities';
 import { CombatOverlord } from 'overlords/CombatOverlord';
-
-const DEBUG = false;
 
 /**
  * Spawns 黄球来拆家
@@ -67,7 +54,7 @@ export class DismantleOverlord extends CombatOverlord {
 	}
 
 	init() {
-		this.wishlist(4, CombatSetups.dismantlers.default, {priority: OverlordPriority.offense.destroy, reassignIdle: true});
+		this.wishlist(1, CombatSetups.dismantlers.default, {priority: OverlordPriority.offense.destroy, reassignIdle: true});
 	}
 
 	run() {

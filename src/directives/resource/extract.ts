@@ -26,6 +26,8 @@ export class DirectiveExtract extends Directive {
 	}
 
 	spawnMoarOverlords() {
+		// Where would you even put it if no storage?
+		if (!this.colony.storage && !this.colony.terminal) return;
 		let priority: number;
 		if (this.room && this.room.my) {
 			if (this.colony.level == 8) {

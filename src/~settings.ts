@@ -32,14 +32,6 @@ export const PROFILER_INCLUDE_COLONIES: string[] = [/*'E15S49'*/];
 export const USE_TRY_CATCH: boolean = true;
 
 /**
- * Default controller signature; don't change this.
- * You can set your controller signature with the console command "setSignature()"
- * Operation will be penalized by skipping every 3rd tick for using a signature that does not contain the substring
- * "overmind" or the small-caps variant.
- */
-global.__DEFAULT_OVERMIND_SIGNATURE__ = "global.__DEFAULT_OVERMIND_SIGNATURE__";
-
-/**
  * If this is enabled, Memory.bot will default to true. This will not change the mode if already set - use setMode().
  */
 export const DEFAULT_OPERATION_MODE: operationMode = 'automatic';

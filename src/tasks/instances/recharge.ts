@@ -71,7 +71,7 @@ export class TaskRecharge extends Task {
 				const availableSources = _.filter(creep.room.sources, function(source) {
 					// Only harvest from sources which aren't surrounded by creeps excluding yourself
 					const isSurrounded = source.pos.availableNeighbors(false).length == 0;
-					return !isSurrounded || creep.pos.isNearTo(source);
+					return source.energy>0 && (!isSurrounded || creep.pos.isNearTo(source));
 				});
 				const availableSource = creep.pos.findClosestByMultiRoomRange(availableSources);
 				if (availableSource) {

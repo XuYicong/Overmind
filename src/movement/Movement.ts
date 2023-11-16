@@ -172,13 +172,15 @@ export class Movement {
 		}
 
 		// traverse through a portal waypoint or check that has just been traversed
-		if (options.waypoints && !destination.isEqualTo(finalDestination) &&
-			(moveData.portaling || creep.pos.isNearTo(destination))) {
-			const portalTraversed = this.traversePortalWaypoint(creep, destination);
-			if (portalTraversed) {
-				return this.goTo(creep, finalDestination, options);
-			} else {
-				return CROSSING_PORTAL;
+		if (options.waypoints && !destination.isEqualTo(finalDestination)) {
+			options.range = 0;
+			if ((moveData.portaling || creep.pos.isNearTo(destination))) {
+				const portalTraversed = this.traversePortalWaypoint(creep, destination);
+				if (portalTraversed) {
+					return this.goTo(creep, finalDestination, options);
+				} else {
+					return CROSSING_PORTAL;
+				}
 			}
 		}
 

@@ -5,11 +5,6 @@ import { profile } from "profiler/decorator";
 import { getPosFromString, onPublicServer } from "utilities/utils";
 import { Zerg, normalizeZerg } from "zerg/Zerg";
 
-// The earliest packet to consider receiving, compared to latest received packet
-// Receive window should be large enough to tolerate latency caused by cpu throtlle
-// While small enough to ignore creeps dieing during portaling
-const MAX_RECEIVE_WINDOW = 200;
-
 const getInterShardMemory = function(shard: string): InterShardMemory | null {
     if(!InterShardMemory) return null;
     let raw: string|null;
@@ -59,17 +54,13 @@ export class Overshard implements IOvershard {
 			}
 		});
         log.info('Inter shard packet: Sending creep '+creep.name+' to '+targetShard+' with TTL: '+creep.ticksToLive);
-        if((creep.ticksToLive || 0) < 9) {
-            log.info('Creep is too old to be sent. Ignoring');
-            return;
-        }
 		my[targetShard].packets[Game.time][creep.name] = creep.memory;
         const zerg= normalizeZerg(creep);
         if(isZerg(zerg)) {
             const overlord = zerg.overlord;
             if(overlord != null) {
                 // Optimistically suppose the creep will die of age
-                overlord.suspendFor(zerg.lifetime);
+                overlord.suspendFor(500);
             }
         } else {
             log.warning('Inter shard packet: Creep to send is not zerg (Why?)');
@@ -116,23 +107,25 @@ export class Overshard implements IOvershard {
 				const peerPacketTick = parseInt(peerTick, 10);
 				// If packet already received, ignore it
 				if(peerPacketTick < my[shard].ack) continue;
-
+                let tickHasCreep = false;
 				for(const creepName in peer[Game.shard.name].packets[peerTick]) {
 					// Receive the packet containing creep memory
 					const creep = Game.creeps[creepName];
 					if(!creep) {
                         receiveWindow = receiveWindow ? Math.min(receiveWindow, peerPacketTick) : peerPacketTick;
-                        // TODO: cases where the creep dies while portaling, instead of ignoring all creeps this tick
                         log.debug('Inter shard packet: postponing receiving packet of tick '+peerPacketTick+
                         ', because creep '+creepName+' not appear');
-						break;
+						continue;
 					}
+                    // 处理跨shard丢爬：和爬的延迟接收区分开来，不能无限地等爬
+                    tickHasCreep = true;
 					if(creep.memory && creep.memory[_MEM.SHARD]) {
 						log.warning("Receiving inter shard creep: "+creep.name+
 						    " should have empty memory, but got memory with move data "+JSON.stringify(creep.memory._go)+". Proceeding anyway");
-                        this.creeps = this.creeps.filter(creep => creep.name != creepName);
 					}
-					creep.memory = peer[Game.shard.name].packets[peerTick][creepName];
+                    // 删掉先前的这个爬
+                    this.creeps = this.creeps.filter(crep => crep.name != creepName);
+                    creep.memory = peer[Game.shard.name].packets[peerTick][creepName];
 
                     // Place new creep into this.creeps
                     const zerg = new Zerg(creep);
@@ -141,36 +134,45 @@ export class Overshard implements IOvershard {
                     if(creep.memory._go) {
                         this.creeps.push(zerg);
                         this.moveOptions[creepName] = {
-                            waypoints: this.parseWayPoints(creep.memory._go.waypoints)
+                            waypoints: Overshard.parseWayPoints(creep.memory._go.waypoints)
                         };
                     } else {
                         log.warning('Inter shard creep '+zerg.print+' has no move data. Cannot move');
                     }
 				}
+                // Assumption: 若这个爬之后（或同时）有爬出现，则这个爬丢失。丢弃这个包以及之前的包。
+                if (tickHasCreep) receiveWindow=0;
 				latestPeerTime = Math.max(latestPeerTime, peerPacketTick);
 			}
 
 			// Update ACK
             const ack = latestPeerTime +1;
-            if(receiveWindow && ack - receiveWindow > MAX_RECEIVE_WINDOW) {
-                receiveWindow = ack - MAX_RECEIVE_WINDOW;
-                log.warning("Packets from "+shard+" before "+receiveWindow+" are lost!");
-            }
             // log.debug('Received packets from '+shard+': receiveWindow: '+receiveWindow+', ack: '+ack);
+            // 若有延迟接收的包，把ACK设到那个包的tick
 			my[shard].ack = receiveWindow ? receiveWindow : ack;
 		}
 		setInterShardMemory(my);
 	}
 
-    private parseWayPoints(waypoints: string[] | undefined): RoomPosition[] {
+    public static parseWayPoints(waypoints: string[] | undefined): RoomPosition[] {
         return _.map(waypoints || [], waypoint => getPosFromString(waypoint)!)
     }
 
 	/* Move creeps from other shards along their previous routes */
 	private handleInterShardCreeps(): void {
 		for(const creep of this.creeps) {
-            if(!Overmind.zerg[creep.name] || !creep.memory._go) continue; // Creep is dead
+            if(!Game.creeps[creep.name]) continue; // Creep is dead
             if(Overmind.colonies[creep.memory[_MEM.COLONY]||""]) continue; // Creep belongs to a colony
+            // TODO: execute creep missions
+            if (!creep.memory._go || !creep.memory._go.waypoints || 
+            (creep.memory._go.waypointsVisited && creep.memory._go.waypointsVisited.length == creep.memory._go.waypoints.length)) {
+                if (creep.hasValidTask) {
+                    creep.run();
+                } else if (creep.mission) {
+                    creep.mission.run(creep);
+                }
+                continue;
+            }
             const ret = creep.goTo(
                 // TODO: dynamically determine target based on creep role
                 new RoomPosition(25, 15, creep.pos.roomName),
@@ -202,34 +204,22 @@ export class Overshard implements IOvershard {
     }
 
     build() {
+        this.creeps = [];
         // All creeps without a colony are inter-shard creeps
-        this.creeps = _.map(
-			_.filter(
-				Game.creeps, creep => !!(creep.memory._go && !isZerg(normalizeZerg(creep)))
-			), 
-			creep => Overmind.zerg[creep.name] || new Zerg(creep)
-		);
+        for (const colonyName in Overmind.cache.creepsByColony) {
+            if (!Overmind.colonies[colonyName]) {
+                this.creeps = this.creeps.concat(_.map(
+                    Overmind.cache.creepsByColony[colonyName], 
+                    creep => Overmind.zerg[creep.name] || new Zerg(creep)
+                ));
+            }
+        }
         log.debug('Overshard build phase: collected '+this.creeps.length+' inter shard creeps');
-
-        // EDIT: We have shard visibility scout now
-        // In case multiple creeps crossing shards, sacrifice one to keep shard visibility and avoid global reset
-        // if((Game.shard.name.endsWith('0') || Game.shard.name.endsWith('1')) && 
-        // this.creeps.length == _.keys(Game.creeps).length && this.creeps.length > 1 &&
-        // !this.creeps.find(creep => creep.memory.role == 'scout')) {
-        //     let sight = this.creeps.pop();
-        //     // Ensure we're not sacrificing a pioneer
-        //     if(sight!.memory.role == 'pioneer') {
-        //         this.creeps.push(sight!);
-        //         // Assuming no two other creeps appear at the same time
-        //         sight = this.creeps.shift();
-        //     }
-        //     delete sight!.memory._go;
-        // }
 
         // Assign move options
         for(const creep of this.creeps) {
             this.moveOptions[creep.name] = {
-                waypoints: this.parseWayPoints(creep.memory._go!.waypoints)
+                waypoints: Overshard.parseWayPoints(creep.memory._go?.waypoints)
             };
         }
     }

@@ -23,7 +23,7 @@ export class DirectiveColonize extends Directive {
 	static color = COLOR_PURPLE;
 	static secondaryColor = COLOR_GREY;
 
-	static requiredRCL = 5;
+	static requiredRCL = 3;
 
 	toColonize: Colony | undefined;
 	overlords: {
@@ -38,22 +38,28 @@ export class DirectiveColonize extends Directive {
 							  && colony.name != Directive.getPos(flag).roomName && colony.spawns.length > 0);
 		// Register incubation status
 		this.toColonize = this.room ? Overmind.colonies[Overmind.colonyMap[this.room.name]] : undefined;
-		// Remove if misplaced
-		if (Cartographer.roomType(this.pos.roomName) != ROOMTYPE_CONTROLLER) {
-			log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
-						`removing directive!`);
-			this.remove(true);
+		// 对于开房目标，如果目标位置在过道，则进行转义。取waypoints末尾位置为目标位置。
+		if (this.pos.roomName[this.pos.roomName.length -1] == '0' || this.pos.roomName[2] == '0' || this.pos.roomName[1] == '0') {
+			if (this.waypoints && this.waypoints.length > 0) {
+				// refresh会刷新这个值，设在这里没用
+				// TODO: 根据跨shard flag来建立directive; 
+				// this.pos = this.waypoints.pop()!;
+			} else {
+				log.warning(`${this.print}: ${printRoomName(this.pos.roomName)} is not a controller room; ` +
+							`removing directive!`);
+				this.remove(true);
+			}
 		}
 	}
 
 	spawnMoarOverlords() {
 		// TODO: on occupation, burst defense when energy sufficient
-		if (this.colony.assets[RESOURCE_ENERGY] < 9e4) return;
+		if (this.colony.storage && this.colony.assets[RESOURCE_ENERGY] < 9e4) return;
 		let safeModeBonus = 0;
 		if (this.room?.controller?.safeMode) safeModeBonus = OverlordPriority.colonization.safeModeBonus;
 		this.overlords.claim = new ClaimingOverlord(this, 
 			OverlordPriority.colonization.claim - safeModeBonus, 
-			() => {
+			Game.shard.name == "shard3" ? () => {
 				if(this.waypoints && this.waypoints.length > 4) {
 					// We are crossing shards. To save CPU, wait for pioneers to go first
 					const pioneerOverlord = this.overlords.pioneer;
@@ -67,10 +73,12 @@ export class DirectiveColonize extends Directive {
 					return false;
 				}
 				return true
-			});
+			} : undefined);
 		this.overlords.pioneer = new PioneerOverlord(this, OverlordPriority.colonization.pioneer - safeModeBonus);
 		this.overlords.shardVisibility = new ShardVisibilityScoutOverlord(this);
-		this.overlords.defends = new OutpostDefenseOverlord(this, OverlordPriority.colonization.claim -1 - safeModeBonus);
+		if (this.room) { // 若房被打，必定有视野。若简单开房或跨shard，必定没视野。
+			this.overlords.defends = new OutpostDefenseOverlord(this, OverlordPriority.colonization.claim -1 - safeModeBonus);
+		}
 	}
 
 	init() {

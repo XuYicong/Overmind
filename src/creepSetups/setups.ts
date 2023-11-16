@@ -59,7 +59,7 @@ export const Setups = {
 
 			double: new CreepSetup(Roles.drone, {
 				pattern  : [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE],
-				sizeLimit: 2,
+				sizeLimit: Infinity,
 			}),
 
 			sourceKeeper: new CreepSetup(Roles.drone, {
@@ -77,8 +77,10 @@ export const Setups = {
 	infestors: {
 
 		claim: new CreepSetup(Roles.claim, {
-			pattern  : [MOVE, MOVE, MOVE, MOVE, CLAIM, MOVE],
-			sizeLimit: 1
+			pattern  : [MOVE],
+			suffix: [CLAIM, MOVE],
+			propotionalPrefixSuffix: false,
+			sizeLimit: 4,
 		}),
 
 		reserve: new CreepSetup(Roles.claim, {
@@ -98,6 +100,7 @@ export const Setups = {
 	pioneer: new CreepSetup(Roles.pioneer, {
 		pattern  : [WORK, CARRY, MOVE, MOVE],
 		sizeLimit: Infinity,
+		ordered: true,
 	}),
 
 

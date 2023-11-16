@@ -128,7 +128,8 @@ export class PairDestroyerOverlord extends Overlord {
 						option.range = 1;
 						Movement.pairwiseMove(attacker, healer, this.pos, option);
 					} else {
-						Memory.rooms[this.pos.roomName][_RM.AVOID] = true;
+						if (Memory.rooms[this.pos.roomName])
+							Memory.rooms[this.pos.roomName][_RM.AVOID] = true;
 						Movement.pairwiseMove(attacker, healer, back, option);
 					}
 				} else {

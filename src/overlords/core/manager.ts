@@ -32,8 +32,8 @@ export class CommandCenterOverlord extends Overlord {
 	static settings = {
 		terminal: {
 			mineral: {
-				equilibrium: 20000,
-				tolerance: 5000
+				equilibrium: 22000,
+				tolerance: 2000
 			}
 		},
 		factory: {

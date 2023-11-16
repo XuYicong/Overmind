@@ -40,7 +40,7 @@ export class WorkerOverlord extends Overlord {
 			4       : 2.6e+5,
 			5       : 4e+5,
 			6       : 1e+6,
-			7       : 3e+6,
+			7       : 2e+6,
 			8       : 2e+7,
 		},
 		hitTolerance        : 100000, 	// allowable spread in HP
@@ -55,6 +55,7 @@ export class WorkerOverlord extends Overlord {
 				s.hits < WorkerOverlord.settings.barrierHits[this.colony.level]
 				&& this.colony.roomPlanner.barrierPlanner.barrierShouldBeHere(s.pos)
 			), s => s.hits), 25);
+		// TODO: critical barriers is not refreshed correctly
 		this.criticalBarriers = $.structures(this, 'criticalBarriers', () =>
 			_.filter(this.fortifyBarriers,
 					 barrier => barrier.hits < WorkerOverlord.settings.barrierHits.critical), 10);
@@ -152,6 +153,8 @@ export class WorkerOverlord extends Overlord {
 		const workPartsPerWorker = setup.getBodyPotential(WORK, this.colony);
 		let numWorkers: number;
 		if (this.colony.stage == ColonyStage.Larva) {
+			// TODO: 此时如果存在开房目标，则认为该房是跳板房
+			// if (this.colony.)
 			numWorkers = $.number(this, 'numWorkers', () => {
 				// At lower levels, try to saturate the energy throughput of the colony
 				const MAX_WORKERS = 16; // Maximum number of workers to spawn
@@ -162,7 +165,8 @@ export class WorkerOverlord extends Overlord {
 					return overlord.energyPerTick * saturation;
 				}));
 				const energyPerTickPerWorker = 1.1 * workPartsPerWorker; // Average energy per tick when working
-				const workerUptime = 0.8;
+				// TODO: instead of calculating, use 负反馈调节 to 动态决定数量。如房间存在遗址，就可以生产非常多worker
+				const workerUptime = 0.6;
 				const numWorkers = Math.ceil(energyMinedPerTick / (energyPerTickPerWorker * workerUptime));
 				return Math.min(numWorkers, MAX_WORKERS);
 			});
@@ -373,7 +377,7 @@ export class WorkerOverlord extends Overlord {
 	private handleWorker(worker: Zerg) {
 		if (worker.carry.energy > 0) {
 			// Upgrade controller if close to downgrade
-			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? 20000 : 2000)) {
+			if (this.colony.controller.ticksToDowngrade <= (this.colony.level >= 4 ? this.colony.level >= 6 ? 90000 : 20000 : 2000)) {
 				if (this.upgradeActions(worker)) return;
 			}
 			// Repair damaged non-road non-barrier structures
@@ -400,10 +404,6 @@ export class WorkerOverlord extends Overlord {
 			if (this.colony.roadLogistics.workerShouldRepave(worker) && this.colony.defcon == DEFCON.safe) {
 				if (this.pavingActions(worker)) return;
 			}
-			// Dismantle marked structures
-			if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
-				if (this.dismantleActions(worker)) return;
-			}
 			// Fortify walls and ramparts
 			if (this.fortifyBarriers.length > 0) {
 				if (this.fortifyActions(worker, this.fortifyBarriers)) return;
@@ -416,6 +416,10 @@ export class WorkerOverlord extends Overlord {
 				this.fortifyActions(worker, this.room.walkableRamparts);
 			}
 		} else {
+			// Dismantle marked structures
+			if (this.dismantleStructures.length > 0 && this.colony.defcon == DEFCON.safe) {
+				if (this.dismantleActions(worker)) return;
+			}
 			// Acquire more energy
 			const workerWithdrawLimit = this.colony.stage == ColonyStage.Larva ? 400 : 100;
 			worker.task = Tasks.recharge(workerWithdrawLimit);

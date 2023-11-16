@@ -22,7 +22,7 @@ export class RandomWalkerScoutOverlord extends Overlord {
 	}
 
 	init() {
-		if(this.room && this.room.name.length < 6) {
+		if(this.colony.level < 4) {
 			this.wishlist(DEFAULT_NUM_SCOUTS, Setups.scout);
 		}
 	}

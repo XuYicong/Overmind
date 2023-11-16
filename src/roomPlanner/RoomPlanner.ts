@@ -563,9 +563,9 @@ export class RoomPlanner {
 			return this.barrierPlanner.barrierShouldBeHere(pos);
 		} else if (structureType == STRUCTURE_EXTRACTOR) {
 			return pos.lookFor(LOOK_MINERALS).length > 0;
-		} else if (structureType == STRUCTURE_TOWER) {
-			// Manually place towers for now
-			return true;
+		// } else if (structureType == STRUCTURE_TOWER) {
+		// 	// Manually place towers for now
+		// 	return true;
 		} else {
 			if (this.memory.bunkerData && this.memory.bunkerData.evolutionChamber) {
 				// Be tolerate in dynamic mode, because dynamic maps won't include existing structures
@@ -772,10 +772,10 @@ export class RoomPlanner {
 		}
 		// Build missing structures from room plan
 		for (const structureType of BuildPriorities) {
-			if (structureType == STRUCTURE_TOWER) {
-				// TODO: Place towers based on terrain. Currently should manully place towers
-				continue;
-			}
+			// if (structureType == STRUCTURE_TOWER) {
+			// 	// TODO: Place towers based on terrain. Currently should manully place towers
+			// 	continue;
+			// }
 			if (this.map[structureType]) {
 				for (const pos of this.map[structureType]) {
 					if (count > 0 && RoomPlanner.canBuild(structureType, pos)) {

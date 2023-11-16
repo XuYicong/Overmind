@@ -27,6 +27,7 @@ export class TaskUpgrade extends Task {
 	}
 
 	work() {
+		if (this.target.upgradeBlocked) return ERR_BUSY;
 		return this.creep.upgradeController(this.target);
 	}
 }

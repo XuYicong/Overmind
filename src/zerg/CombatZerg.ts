@@ -203,7 +203,7 @@ export class CombatZerg extends Zerg {
 	/**
 	 * Navigate to a room, then engage hostile creeps there, perform medic actions, etc.
 	 */
-	autoSkirmish(roomName: string, verbose = false) {
+	autoSkirmish(roomName: string, waypoints: RoomPosition[] = [], verbose = false) {
 
 		// Do standard melee, ranged, and heal actions
 		if (this.getActiveBodyparts(ATTACK) > 0) {
@@ -225,7 +225,7 @@ export class CombatZerg extends Zerg {
 		// Travel to the target room
 		if (!this.safelyInRoom(roomName)) {
 			this.debug(`Going to room!`);
-			return this.goToRoom(roomName, {ensurePath: true});
+			return this.goToRoom(roomName, {ensurePath: true, waypoints: waypoints});
 		}
 
 		// Skirmish within the room

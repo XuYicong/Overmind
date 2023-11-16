@@ -15,9 +15,6 @@ import {Overlord} from '../Overlord';
 
 export const StandardMinerSetupCost = bodyCost(Setups.drones.miners.standard.generateBody(Infinity));
 
-export const DoubleMinerSetupCost = bodyCost(Setups.drones.miners.double.generateBody(Infinity));
-
-
 const BUILD_OUTPUT_FREQUENCY = 53;
 const SUICIDE_CHECK_FREQUENCY = 3;
 const MINER_SUICIDE_THRESHOLD = 200;
@@ -40,7 +37,7 @@ export class MiningOverlord extends Overlord {
 	miners: Zerg[];
 	energyPerTick: number;
 	miningPowerNeeded: number;
-	mode: 'early' | 'SK' | 'link' | 'standard' | 'double';
+	mode: 'early' | 'SK' | 'link' | 'standard';
 	setup: CreepSetup;
 	minersNeeded: number;
 
@@ -77,8 +74,7 @@ export class MiningOverlord extends Overlord {
 			this.setup = Setups.drones.miners.default;
 		} else {
 			this.mode = 'standard';
-			this.setup = Setups.drones.miners.standard;
-			// todo: double miner condition
+			this.setup = Game.cpu.limit < 20 ? Setups.drones.miners.double : Setups.drones.miners.standard;
 		}
 		const miningPowerEach = this.setup.getBodyPotential(WORK, this.colony);
 		this.minersNeeded = Math.min(Math.ceil(this.miningPowerNeeded / miningPowerEach),
@@ -209,7 +205,7 @@ export class MiningOverlord extends Overlord {
 	}
 
 	init() {
-		this.wishlist(this.minersNeeded, this.setup);
+		this.wishlist(this.minersNeeded, this.setup, {reassignIdle: true, prespawn: 0});
 		this.registerEnergyRequests();
 	}
 
@@ -271,7 +267,7 @@ export class MiningOverlord extends Overlord {
 			if (this.container.hits < this.container.hitsMax
 				&& miner.carry.energy >= Math.min(miner.carryCapacity, REPAIR_POWER * miner.getActiveBodyparts(WORK))) {
 				return miner.repair(this.container);
-			} else {
+			} else if (this.container.store.getFreeCapacity(RESOURCE_ENERGY)) {
 				return miner.harvest(this.source!);
 			}
 		}

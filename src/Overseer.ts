@@ -54,7 +54,7 @@ export class Overseer implements IOverseer {
 	static settings = {
 		outpostCheckFrequency: onPublicServer() ? 512 : 100,
 		cpuBucketLowerBound: 7000,
-		cpuUsageLowerBound: 0.85,
+		cpuUsageLowerBound: 0.75,
 	};
 
 	constructor() {
@@ -226,21 +226,8 @@ export class Overseer implements IOverseer {
 
 	private handleColonyInvasions(colony: Colony) {
 		// Defend against invasions in owned rooms
-		if (colony.room) {
-
-			// See if invasion is big enough to warrant creep defenses
-			const effectiveInvaderCount = _.sum(_.map(colony.room.hostiles,
-													invader => invader.boosts.length > 0 ? 2 : 1));
-			const safetyData = RoomIntel.getSafetyData(colony.room.name);
-			const needsDefending = effectiveInvaderCount >= 3
-			|| colony.room.dangerousPlayerHostiles.length > 0 || 
-				safetyData.unsafeFor > 200;
-
-			// Place defensive directive after hostiles have been present for a long enough time
-			const invasionIsPersistent = safetyData.unsafeFor > 20;
-			if (needsDefending || invasionIsPersistent) {
-				DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
-			}
+		if (colony.room.dangerousPlayerHostiles.length) {
+			DirectiveInvasionDefense.createIfNotPresent(colony.controller.pos, 'room');
 		}
 	}
 
@@ -255,10 +242,13 @@ export class Overseer implements IOverseer {
 
 	/* Place new event-driven flags where needed to be instantiated on the next tick */
 	private placeDirectives(colony: Colony): void {
+		if (colony.memory.sleep) return;
 		this.handleBootstrapping(colony);
-		this.handleOutpostDefense(colony);
-		this.handleColonyInvasions(colony);
-		this.handleNukeResponse(colony);
+		if (Game.time%10 == colony.id) {
+			this.handleOutpostDefense(colony);
+			this.handleColonyInvasions(colony);
+		}
+		if (Game.time % 4 == 0) this.handleNukeResponse(colony);
 		if (getAutonomyLevel() > Autonomy.Manual) {
 			// Place pioneer directives in case the colony doesn't have a spawn for some reason
 			if (Game.time % 29 == 0 && colony.spawns.length == 0 &&

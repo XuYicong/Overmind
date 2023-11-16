@@ -12,7 +12,7 @@ interface DirectiveCreationOptions {
 	quiet?: boolean;
 }
 
-const DEFAULT_MAX_PATH_LENGTH = 600;
+const DEFAULT_MAX_PATH_LENGTH = 1200;
 const DEFAULT_MAX_LINEAR_RANGE = 10;
 
 /**
@@ -207,9 +207,11 @@ export abstract class Directive {
 		if (verbose) log.info(`Recalculating colony association for ${this.name} in ${this.pos.roomName}`);
 		let nearestColony: Colony | undefined;
 		let minDistance = Infinity;
+		let minLinearDistance = Infinity;
 		const colonyRooms = _.filter(Game.rooms, room => room.my);
 		for (const colony of getAllColonies()) {
-			if (Game.map.getRoomLinearDistance(this.pos.roomName, colony.name) > maxLinearRange) {
+			const linearDistance = Game.map.getRoomLinearDistance(this.pos.roomName, colony.name);
+			if (linearDistance > maxLinearRange) {
 				continue;
 			}
 			if (!colonyFilter || colonyFilter(colony)) {
@@ -221,6 +223,10 @@ export abstract class Directive {
 					}
 					if (verbose) log.info(`Path length to ${colony.room.print}: ${ret.path.length}`);
 				} else {
+					if (!nearestColony && linearDistance < minLinearDistance) {
+						minLinearDistance = linearDistance;
+						nearestColony = colony;
+					} 
 					if (verbose) log.info(`Incomplete path from ${colony.room.print}`);
 				}
 			}

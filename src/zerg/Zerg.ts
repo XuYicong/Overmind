@@ -9,6 +9,8 @@ import {profile} from '../profiler/decorator';
 import {initializeTask} from '../tasks/initializer';
 import {Task} from '../tasks/Task';
 import {NEW_OVERMIND_INTERVAL} from '../~settings';
+import { Mission } from 'missions/Mission';
+import { initializeMission } from 'missions/initializer';
 
 export function getOverlord(creep: Zerg | Creep): Overlord | null {
 	if (creep.memory[_MEM.OVERLORD]) {
@@ -111,6 +113,7 @@ export class Zerg {
 	taskPreference: { [id: string]: number };	// Prefer efficient tasks to avoid task jamming
 	blockMovement: boolean; 			// Whether the zerg is allowed to move or not
 	private _task: Task | null; 		// Cached Task object that is instantiated once per tick and on change
+	private _mission: Mission | null;
 
 	constructor(creep: Creep, notifyWhenAttacked = false) {
 		// Copy over creep references
@@ -607,6 +610,18 @@ export class Zerg {
 		return !this.task || !this.task.isValid();
 	}
 
+	get mission(): Mission | null {
+		if (!this._mission) {
+			this._mission = this.memory.mission ? initializeMission(this.memory.mission) : null;
+		}
+		return this._mission;
+	}
+
+	set mission(misn: Mission | null) {
+		this.memory.mission = misn?.proto;
+		this._mission = misn;
+	}
+
 	/**
 	 * Execute the task you currently have.
 	 */
@@ -659,12 +674,12 @@ export class Zerg {
 		return Movement.goToRoom(this, roomName, options);
 	}
 
-	inSameRoomAs(target: HasPos): boolean {
-		return this.pos.roomName == target.pos.roomName;
+	inSameRoomAs(target: HasPos, shard = Game.shard): boolean {
+		return this.pos.roomName == target.pos.roomName && Game.shard == shard;
 	}
 
-	safelyInRoom(roomName: string): boolean {
-		return this.room.name == roomName && !this.pos.isEdge;
+	safelyInRoom(roomName: string, shard = Game.shard): boolean {
+		return this.room.name == roomName && !this.pos.isEdge && Game.shard == shard;
 	}
 
 	get inRampart(): boolean {

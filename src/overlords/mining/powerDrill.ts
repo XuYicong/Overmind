@@ -53,8 +53,11 @@ export class PowerDrillOverlord extends CombatOverlord {
 		const numPairs = Math.min(3, this.directive.pos.availableNeighbors(true).length);
 		// TODO: account for travel distance while determining prespawn
 		const prespawn = 0;
-		this.wishlist(numPairs, CombatSetups.drill.default, {reassignIdle: true, prespawn: prespawn});
-		this.wishlist(numPairs *2, CombatSetups.coolant.small, {reassignIdle: true, prespawn: prespawn});
+		if (this.coolant.length < this.drills.length*2) {
+			this.wishlist(numPairs *2, CombatSetups.coolant.small, {reassignIdle: true, prespawn: prespawn});
+		} else {
+			this.wishlist(numPairs, CombatSetups.drill.default, {reassignIdle: true, prespawn: prespawn});
+		}
 	}
 
 	private getHostileDrill(powerBank: StructurePowerBank) {
@@ -116,7 +119,7 @@ export class PowerDrillOverlord extends CombatOverlord {
 			drill.attack(this.directive.powerBank);
 		} else {
 			PowerDrillOverlord.periodicSay(drill, '🚗Traveling🚗');
-			drill.goTo(this.directive.powerBank);
+			drill.goTo(this.directive.powerBank, {range: 1, ignoreCreeps: Math.random() < 0.5});
 		}
 	}
 

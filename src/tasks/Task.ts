@@ -12,10 +12,12 @@
  * If you use Travler, change all occurrences of creep.moveTo() to creep.goTo()
  */
 
+import { MoveOptions } from 'movement/Movement';
 import {log} from '../console/log';
 import {profile} from '../profiler/decorator';
 import {Zerg} from '../zerg/Zerg';
 import {initializeTask} from './initializer';
+import { Overshard } from 'Overshard';
 
 type targetType = { ref: string, pos: ProtoPos }; // overwrite this variable to specify more precise typing
 
@@ -257,7 +259,10 @@ export abstract class Task {
 	 * Move to within range of the target
 	 */
 	moveToTarget(range = this.settings.targetRange): number {
-		return this.creep.goTo(this.targetPos, {range: range});
+		let options: MoveOptions | undefined = this.options.moveOptions;
+		if (!options) options = {};
+		if (!options.range) options.range = range;
+		return this.creep.goTo(this.targetPos, options);
 	}
 
 	/**

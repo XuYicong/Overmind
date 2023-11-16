@@ -231,12 +231,12 @@ let _Overmind = class _Overmind {
                     continue;
                 }
             }
-            const _0x5cd134 = DirectiveWrapper(Game[_0x9e16('0x3e')][_0x4d31b6]);
+            const directive = DirectiveWrapper(Game[_0x9e16('0x3e')][_0x4d31b6]);
             const _0x2a3fe2 = !!this.directives[_0x4d31b6];
-            if (_0x5cd134 && _0x2a3fe2 && _0x7bd91) {
-                _0x5cd134.spawnMoarOverlords();
+            if (directive && _0x2a3fe2 && _0x7bd91) {
+                directive.spawnMoarOverlords();
             }
-            if (!_0x5cd134 && Game.time % 0xa == 0x0) {
+            if (!directive && Game.time % 0xa == 0x0) {
                 log[_0x9e16('0x3b')](_0x9e16('0x45') + _0x4d31b6 + _0x9e16('0x46') + Game[_0x9e16('0x3e')][_0x4d31b6][_0x9e16('0x41')][_0x9e16('0x47')] + _0x9e16('0x48') + _0x9e16('0x49') + alignedNewline + _0x9e16('0x4a'));
             }
         }

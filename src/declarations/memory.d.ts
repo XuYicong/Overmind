@@ -86,17 +86,13 @@ interface StatsMemory {
 		}
 	};
 }
-
-interface PublicSegment {
-
-}
-
 interface CreepMemory {
 	[_MEM.OVERLORD]: string | null;
 	[_MEM.COLONY]: string | null;
 	[_MEM.SHARD]?: string;
 	role: string;
 	task: ProtoTask | null;
+	mission?: ProtoMission;
 	data: {
 		origin: string;
 	};

@@ -142,7 +142,7 @@ export class CommandCenter extends HiveCluster {
 			}
 		}
 		// Refill power spawn
-		if (this.powerSpawn && this.powerSpawn.store.getUsedCapacity(RESOURCE_ENERGY) <= 0 && this.storage.store[RESOURCE_ENERGY] > 100000) {
+		if (this.powerSpawn && this.powerSpawn.store.getUsedCapacity(RESOURCE_ENERGY) <= 0 && this.storage.store[RESOURCE_ENERGY] > 2.5e5) {
 			this.transportRequests.requestInput(this.powerSpawn, Priority.NormalLow);
 		}
 		if (this.powerSpawn && this.powerSpawn.store.getUsedCapacity(RESOURCE_POWER) <= 0

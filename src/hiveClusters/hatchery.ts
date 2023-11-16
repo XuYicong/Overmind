@@ -207,12 +207,12 @@ export class Hatchery extends HiveCluster {
 
 	private generateCreepName(roleName: string): string {
 		// Generate a creep name based on the role and add a suffix to make it unique
-		// Xyct: in multi-shard cases, change suffix to Game tick.
-		let i = Game.time % 1e6;
-		while (Game.creeps[(roleName + i)]) {
+		let i = Game.time % 1e5;
+		const shd = Game.shard.name[Game.shard.name.length-1];
+		while (Game.creeps[(roleName + shd + i)]) {
 			i++;
 		}
-		return (roleName + i);
+		return (roleName + shd + i);
 	}
 
 	private spawnCreep(protoCreep: ProtoCreep, options: SpawnRequestOptions = {}): number {
@@ -426,7 +426,7 @@ export class Hatchery extends HiveCluster {
 			}
 		});
 		const boxCoords = Visualizer.section(`${this.colony.name} Hatchery`, {x, y, roomName: this.room.name},
-											 9.5, 3 + spawning.length + .1);
+											 9.5, 1 + spawning.length + .1);
 		const boxX = boxCoords.x;
 		y = boxCoords.y + 0.25;
 
@@ -436,17 +436,17 @@ export class Hatchery extends HiveCluster {
 							{x: boxX + 4, y: y, roomName: this.room.name}, 5);
 		y += 1;
 
-		// Log uptime
-		const uptime = this.memory.stats.uptime;
-		Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
-		Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
-		y += 1;
+		// // Log uptime
+		// const uptime = this.memory.stats.uptime;
+		// Visualizer.text('Uptime', {x: boxX, y: y, roomName: this.room.name});
+		// Visualizer.barGraph(uptime, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
+		// y += 1;
 
-		// Log overload status
-		const overload = this.memory.stats.overload;
-		Visualizer.text('Overload', {x: boxX, y: y, roomName: this.room.name});
-		Visualizer.barGraph(overload, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
-		y += 1;
+		// // Log overload status
+		// const overload = this.memory.stats.overload;
+		// Visualizer.text('Overload', {x: boxX, y: y, roomName: this.room.name});
+		// Visualizer.barGraph(overload, {x: boxX + 4, y: y, roomName: this.room.name}, 5);
+		// y += 1;
 
 		for (const i in spawning) {
 			Visualizer.text(spawning[i], {x: boxX, y: y, roomName: this.room.name});

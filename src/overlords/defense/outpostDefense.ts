@@ -47,7 +47,7 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		if (this.room && this.room.hostiles.length == 0) {
 			zerg.doMedicActions(this.room.name);
 		} else {
-			zerg.autoSkirmish(this.pos.roomName);
+			zerg.autoSkirmish(this.pos.roomName, this.directive.waypoints);
 		}
 	}
 

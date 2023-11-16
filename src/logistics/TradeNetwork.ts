@@ -62,9 +62,10 @@ export const maxMarketPrices: { [resourceType: string]: number } = {
 };
 // TODO: decide by room owner instead of room name
 export const hostileTraders = [
-	'W54N7',	// V1king
-	'W49N6',	// V1king
-	'W54N12',	// V1king
+	'W6S39',	// OneWayIsWar
+	'E4S49',	// OneWayIsWar
+	'E1S44',	// OneWayIsWar
+	'E46S51',	// OneWayIsWar
 ];
 
 export const MAX_ENERGY_SELL_ORDERS = 5;

@@ -189,7 +189,7 @@ export class Visualizer {
 		});
 		// Draw text
 		if (mode == 'percent') {
-			vis.text(`${Math.round(100 * percent)}%`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
+			vis.text(`${percent.truncate(8)}`, pos.x + width / 2, pos.y - .1 * CHAR_HEIGHT,
 					 this.textStyle(1, {align: 'center'}));
 		} else {
 			const [num, den] = <[number, number]>progress;

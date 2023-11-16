@@ -145,7 +145,7 @@ export class SourceReaperOverlord extends CombatOverlord {
 	private handleDefender(defender: CombatZerg) {
 
 		// Go to keeper room
-		if (!this.targetLair || !this.room || defender.room != this.room || defender.pos.isEdge) {
+		if (!this.targetLair || !this.room) {
 			debug(defender, `Going to room!`);
 			defender.healSelfIfPossible();
 			defender.goToRoom(this.pos.roomName);

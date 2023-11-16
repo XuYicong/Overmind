@@ -8,11 +8,7 @@ declare namespace NodeJS {
 
 		_cache: IGlobalCache;
 
-		__VERSION__: string;
-
 		Overmind: IOvermind;
-
-		Assimilator: IAssimilator;
 
 		print(...args: any[]): string;
 
@@ -72,16 +68,6 @@ interface IExpansionPlanner {
 interface IOvermindMemory {
 	terminalNetwork: any;
 	versionUpdater: any;
-}
-
-declare const Assimilator: IAssimilator;
-
-interface IAssimilator {
-
-	validate(code: any): void;
-
-	run(): void;
-
 }
 
 interface IOvermind {

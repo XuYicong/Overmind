@@ -10,6 +10,8 @@ import {Zerg} from '../../zerg/Zerg';
 import {Overlord} from '../Overlord';
 import { Overseer } from 'Overseer';
 import { MoveOptions } from 'movement/Movement';
+import { Missions } from 'missions/Missions';
+import { missionClaimName } from 'missions/claim';
 
 /**
  * Claim an unowned room
@@ -45,28 +47,17 @@ export class ClaimingOverlord extends Overlord {
 			}
 			return 1; // otherwise ask for 1 claimer
 		});
-		this.wishlist(amount, Setups.infestors.claim);
+		this.wishlist(amount, Setups.infestors.claim, {noLifetimeFilter:true});
 	}
 
 	private handleClaimer(claimer: Zerg): void {
-		if (claimer.room == this.room && !claimer.pos.isEdge) {
-			// if (!this.room.controller!.signedByMe) {
-			// 	// Takes care of an edge case where planned newbie zone signs prevents signing until room is reserved
-			// 	if (!this.room.my && this.room.controller!.signedByScreeps) {
-			// 		claimer.task = Tasks.claim(this.room.controller!);
-			// 	} else {
-			// 		claimer.task = Tasks.signController(this.room.controller!);
-			// 	}
-			// } else {
-				claimer.task = Tasks.claim(this.room.controller!);
-			// }
-		} else {
-			let option: MoveOptions = {ensurePath: true, avoidSK: true,};
-			if (this.pos.roomName[1] != claimer.pos.roomName[1]) {
-				option.waypoints = this.directive.waypoints;
-			}
-			claimer.goTo(this.pos, option);
+		let target = this.pos;
+		let waypointsString = this.directive.memory.waypoints;
+		if (this.pos.roomName[this.pos.roomName.length -1] == '0' || this.pos.roomName[2] == '0' || this.pos.roomName[1] == '0') {
+			target = this.directive.waypoints![this.directive.waypoints!.length -1];
+			waypointsString = waypointsString?.slice(0, -1);
 		}
+		claimer.mission = Missions.create(missionClaimName, target, waypointsString || [])
 	}
 
 	run() {

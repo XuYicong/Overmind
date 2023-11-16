@@ -1,3 +1,4 @@
+import { isAlly } from 'utilities/utils';
 import {$} from '../caching/GlobalCache';
 import {log} from '../console/log';
 import {hasPos} from '../declarations/typeGuards';
@@ -48,7 +49,8 @@ export class Pathing {
 			return;
 		}
 		if (room.controller) {
-			if (room.controller.owner && !room.controller.my && room.towers.length > 0) {
+			if (room.controller.owner && !room.controller.my && 
+				!isAlly(room.controller.owner.username) && room.towers.length > 0) {
 				room.memory[_RM.AVOID] = true;
 			} else {
 				delete room.memory[_RM.AVOID];
@@ -100,12 +102,13 @@ export class Pathing {
 				// handle case where pathfinder failed at a short distance due to not using findRoute
 				// can happen for situations where the creep would have to take an uncommonly indirect path
 				// options.allowedRooms and options.routeCallback can also be used to handle this situation
-				if (roomDistance <= 2) {
+				if (roomDistance <= 8) {
 					log.warning(`Movement: path failed without findroute. Origin: ${origin.print}, ` +
 								`destination: ${destination.print}. Trying again with options.useFindRoute = true...`);
 					options.useFindRoute = true;
-					ret = this.findPath(origin, destination, options);
-					log.warning(`Movement: second attempt was ${ret.incomplete ? 'not ' : ''}successful`);
+					const p = this.findPath(origin, destination, options);
+					log.warning(`Movement: second attempt was ${p.incomplete ? 'not ' : ''}successful`);
+					if (p.incomplete && p.path.length < ret.path.length) return ret;
 					return ret;
 				}
 			} else {

@@ -53,8 +53,8 @@ export class QueenOverlord extends Overlord {
 		// Chain two tasks only for now
 		if(loader.task && loader.task._parent) return;
 		// Select the closest supply target out of the highest priority and refill it
-		// TODO: closest to existing task pos, not to self
-		const request = this.hatchery.transportRequests.popPrioritizedClosestRequest(loader.pos, 'supply', 
+		const basePos = loader.task ? loader.task.targetPos : loader.pos;
+		const request = this.hatchery.transportRequests.popPrioritizedClosestRequest(basePos, 'supply', 
 						(req)=>req.resourceType == RESOURCE_ENERGY);
 		if (request) {
 			const task = Tasks.transfer(request.target);

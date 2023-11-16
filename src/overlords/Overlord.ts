@@ -1,7 +1,7 @@
 import {Colony} from '../Colony';
 import {log} from '../console/log';
 import {CreepSetup} from '../creepSetups/CreepSetup';
-import {SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
+import {Hatchery, SpawnRequest, SpawnRequestOptions} from '../hiveClusters/hatchery';
 import {SpawnGroup} from '../logistics/SpawnGroup';
 import {Pathing} from '../movement/Pathing';
 import {profile} from '../profiler/decorator';
@@ -341,7 +341,10 @@ export abstract class Overlord {
 	 */
 	protected requestCreep(setup: CreepSetup, opts = {} as CreepRequestOptions) {
 		_.defaults(opts, {priority: this.priority, prespawn: DEFAULT_PRESPAWN});
-		const spawner = this.spawnGroup || this.colony.spawnGroup || this.colony.hatchery;
+		let spawner: SpawnGroup|Hatchery|undefined = this.spawnGroup || this.colony.spawnGroup;
+		if (!spawner || spawner.colonyNames.length <= 0) {
+			spawner = this.colony.hatchery;
+		}
 		if (spawner) {
 			const request: SpawnRequest = {
 				setup   : setup,
@@ -522,6 +525,8 @@ export abstract class Overlord {
 			if (!fleed && creep.isIdle) {
 				if (this.shouldBoost(creep)) {
 					this.handleBoosting(creep);
+				} else if (creep.mission) {
+					creep.mission.run(creep);
 				} else {
 					taskHandler(creep);
 				}
