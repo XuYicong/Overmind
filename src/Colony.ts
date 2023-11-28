@@ -464,8 +464,8 @@ export class Colony {
 	 */
 	private registerHiveClusters(): void {
 		this.hiveClusters = [];
-		// Instantiate the command center if there is level 6 - this must be done first!
-		if (this.level >= 6) {
+		// Instantiate the command center if there is link in center - this must be done first!
+		if (this.level >= 5) {
 			this.commandCenter = new CommandCenter(this, this.storage!);
 		}
 		// Instantiate the hatchery - the incubation directive assignes hatchery to incubator's hatchery if none exists
