@@ -34,7 +34,7 @@ export class StationaryScoutOverlord extends Overlord {
 			// }
 
 			if (!(scout.pos.inRangeTo(this.pos, 3) && !scout.pos.isEdge)) {
-				scout.goTo(this.pos, {range: 3});
+				scout.goTo(this.pos, {range: 3, ensurePath:true});
 			}
 		}
 	}

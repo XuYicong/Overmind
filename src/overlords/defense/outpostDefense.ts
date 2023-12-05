@@ -25,8 +25,8 @@ export class OutpostDefenseOverlord extends CombatOverlord {
 		super(directive, 'outpostDefense', priority, 1);
 		this.spawnGroup.settings.flexibleEnergy = true;
 		this.melees = this.combatZerg(Roles.melee, { 
-			boostWishlist: [boostResources.attack[1],
-				boostResources.heal[1]]
+			// boostWishlist: [boostResources.attack[1],
+			// 	boostResources.heal[1]]
 		}).concat(this.combatZerg(Roles.police));
 
 		this.broodlings = this.combatZerg(Roles.guardMelee, { 

@@ -240,7 +240,7 @@ export const CombatSetups = {
 
 	police: {
 		default: new CreepSetup(Roles.melee, {
-			pattern  : [MOVE, MOVE, ATTACK],
+			pattern  : [MOVE, MOVE, ATTACK, ATTACK],
 			sizeLimit: 1,
 		}),
 	},
@@ -337,6 +337,11 @@ export const CombatSetups = {
 
 		boosted_T1: new CreepSetup(Roles.healer, {
 			pattern  : [HEAL, HEAL, MOVE],
+			sizeLimit: Infinity,
+		}),
+
+		inverted: new CreepSetup(Roles.healer, {
+			pattern  : [MOVE, HEAL],
 			sizeLimit: Infinity,
 		}),
 

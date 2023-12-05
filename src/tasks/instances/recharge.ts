@@ -1,9 +1,10 @@
 import {log} from '../../console/log';
 import {isResource} from '../../declarations/typeGuards';
 import {profile} from '../../profiler/decorator';
-import {maxBy, minMax} from '../../utilities/utils';
+import {getUsername, maxBy, minMax} from '../../utilities/utils';
 import {Zerg} from '../../zerg/Zerg';
 import {Task} from '../Task';
+import { TaskDismantle } from './dismantle';
 import { TaskGoToRoom } from './goToRoom';
 import {TaskHarvest} from './harvest';
 import {pickupTaskName, TaskPickup} from './pickup';
@@ -86,10 +87,13 @@ export class TaskRecharge extends Task {
 		if (target) {
 			if (isResource(target)) {
 				creep.task = new TaskPickup(target);
-				return;
 			} else {
-				creep.task = new TaskWithdraw(target);
-				return;
+				const rampart = target.pos.lookForStructure(STRUCTURE_RAMPART) as StructureRampart|undefined;
+				if (rampart && rampart.owner.username != getUsername()) {
+					creep.task = new TaskDismantle(rampart);
+				} else {
+					creep.task = new TaskWithdraw(target);
+				}
 			}
 		} else {
 			// if (creep.roleName == 'queen') {

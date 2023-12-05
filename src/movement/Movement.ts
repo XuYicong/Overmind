@@ -752,7 +752,7 @@ export class Movement {
 	 * Moves a pair of creeps; the follower will always attempt to be in the last position of the leader
 	 */
 	static pairwiseMove(leader: Zerg, follower: Zerg, target: HasPos | RoomPosition,
-						opts = {} as MoveOptions, allowedRange = 1): number | undefined {
+						opts = {ensurePath: true} as MoveOptions, allowedRange = 1): number | undefined {
 		let outcome;
 		if (leader.room != follower.room) {
 			if (leader.pos.rangeToEdge == 0) {

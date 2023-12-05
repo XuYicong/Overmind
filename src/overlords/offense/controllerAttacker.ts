@@ -59,7 +59,7 @@ export class ControllerAttackerOverlord extends Overlord {
 		for (const controllerAttacker of this.controllerAttackers) {
 			const attackPos = this.assignments[controllerAttacker.name];
 			if (attackPos) {
-				controllerAttacker.goTo(attackPos, {waypoints: hasColony(this.initializer) ?  this.initializer.waypoints : []});
+				controllerAttacker.goTo(attackPos, {ensurePath: true, waypoints: hasColony(this.initializer) ? this.initializer.waypoints : []});
 			} else {
 				log.debug(`No attack position for ${controllerAttacker.print}!`);
 			}

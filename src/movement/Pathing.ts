@@ -49,6 +49,7 @@ export class Pathing {
 			return;
 		}
 		if (room.controller) {
+			if (Game.shard.name == 'shard3') return;
 			if (room.controller.owner && !room.controller.my && 
 				!isAlly(room.controller.owner.username) && room.towers.length > 0) {
 				room.memory[_RM.AVOID] = true;

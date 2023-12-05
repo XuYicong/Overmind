@@ -42,7 +42,7 @@ export class DismantleOverlord extends CombatOverlord {
 		ce.autoDismantle();
 		ce.autoRanged();
 		if (!ce.inSameRoomAs(this)) {
-			ce.goToRoom(this.pos.roomName);
+			ce.goToRoom(this.pos.roomName, {ensurePath: true});
 		}else {
 			const target = ce.pos.findClosestByRange(ce.room.hostileStructures);
 			if (target == null) {

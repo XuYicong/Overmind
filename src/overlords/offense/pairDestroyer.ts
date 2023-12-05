@@ -33,11 +33,11 @@ export class PairDestroyerOverlord extends Overlord {
 		this.directive = directive;
 		this.attackers = this.combatZerg(Roles.melee, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
+			// boostWishlist     : [boostResources.attack[1], boostResources.tough[1], boostResources.move[1]]
 		});
 		this.healers = this.combatZerg(Roles.healer, {
 			notifyWhenAttacked: false,
-			boostWishlist     : [boostResources.heal[1], boostResources.tough[1], boostResources.move[1]]
+			boostWishlist     : [boostResources.heal[3]]
 		});
 	}
 
@@ -189,10 +189,10 @@ export class PairDestroyerOverlord extends Overlord {
 		this.wishlist(amount, attackerSetup, {priority: attackerPriority});
 
 		const healerPriority = this.healers.length < this.attackers.length ? this.priority - 0.1 : this.priority + 0.1;
-		const healerSetup = this.canBoostSetup(CombatSetups.healers.boosted_T1) ? CombatSetups.healers.boosted_T1
-								: (
-									this.room && this.room.controller && this.room.controller.owner!=undefined && !this.room.controller.my
-								) ? CombatSetups.healers.armored : CombatSetups.healers.default;
+		const healerSetup = // this.canBoostSetup(CombatSetups.healers.boosted_T1) ? CombatSetups.healers.boosted_T1 :
+								 (
+									!this.room || (this.room.controller && this.room.controller.owner!=undefined && !this.room.controller.my)
+								) ? CombatSetups.healers.inverted : CombatSetups.healers.default;
 		this.wishlist(amount, healerSetup, {priority: healerPriority});
 	}
 
